@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equilibrio — Estructura del proyecto</title>
+<style>
+  :root {
+    --bg: #F5F7F3;
+    --surface: #FFFFFF;
+    --surface-2: #FBFCFA;
+    --ink: #1C2420;
+    --ink-muted: #5B675E;
+    --border: #E3E8E3;
+    --green: #2F7D5B;
+    --green-deep: #1D4F3A;
+    --purple: #6C4CE0;
+    --purple-soft: #EDE9FB;
+    --green-soft: #E3EFE7;
+    --code-bg: #EFF3EF;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, ui-sans-serif, system-ui, sans-serif;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 0 80px;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 24px 32px;
+  }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  .eyebrow {
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--green);
+  }
+
+  h1 {
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: clamp(26px, 4vw, 36px);
+    margin: 8px 0 0;
+    text-wrap: balance;
+  }
+
+  .lede {
+    font-size: 16px;
+    color: var(--ink-muted);
+    max-width: 68ch;
+    margin: 12px 0 0;
+  }
+
+  main.wrap { padding: 40px 24px 0; display: flex; flex-direction: column; gap: 48px; }
+
+  h2 {
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    margin: 0 0 4px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--green-soft);
+  }
+
+  h3 {
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    margin: 28px 0 8px;
+    color: var(--green-deep);
+  }
+
+  section { display: flex; flex-direction: column; gap: 8px; }
+
+  p { margin: 0 0 8px; }
+
+  code, .path {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.92em;
+    background: var(--code-bg);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    margin: 4px 0 16px;
+  }
+
+  caption { text-align: left; caption-side: top; font-weight: 600; margin-bottom: 6px; color: var(--ink); }
+
+  thead th {
+    text-align: left;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody td:first-child { white-space: nowrap; font-weight: 600; }
+
+  .table-wrap { overflow-x: auto; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--green-soft);
+    color: var(--green-deep);
+    margin-left: 8px;
+  }
+
+  .badge.purple { background: var(--purple-soft); color: #4E35B0; }
+
+  .entry-point {
+    background: var(--purple-soft);
+    border: 1px solid #D9CFF5;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin: 8px 0;
+  }
+
+  .entry-point .path { background: transparent; font-weight: 700; font-size: 1em; padding: 0; }
+
+  .tree {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 13.5px;
+    line-height: 1.75;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .tree .dir { color: var(--green-deep); font-weight: 600; }
+  .tree .comment { color: var(--ink-muted); font-style: italic; }
+
+  footer {
+    max-width: 980px;
+    margin: 40px auto 0;
+    padding: 20px 24px 0;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Equilibrio · Documentación técnica</div>
+    <h1>Estructura del proyecto</h1>
+    <p class="lede">Qué hace cada carpeta y cada archivo del repositorio, y dónde está cada punto de entrada. Versión inicial: registrar ingresos y gastos, verlos en una lista, ver el saldo. Sin login, sin red, Room local.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section>
+    <h2>Puntos de entrada</h2>
+    <p>Si vas a abrir el proyecto por primera vez, empieza aquí:</p>
+
+    <div class="entry-point">
+      <div class="path">app/src/main/java/mx/equilibrio/app/MainActivity.kt</div>
+      <p style="margin-top:6px">La única <code>Activity</code> de la app. Arranca Compose y monta <code>EquilibrioNavHost</code>. Esto es lo que se ejecuta al abrir la app en el teléfono/emulador.</p>
+    </div>
+
+    <div class="entry-point">
+      <div class="path">app/src/main/java/mx/equilibrio/app/EquilibrioApp.kt</div>
+      <p style="margin-top:6px">La clase <code>Application</code>, anotada <code>@HiltAndroidApp</code>. Es lo primero que se inicializa (antes que cualquier Activity) — aquí arranca el grafo de inyección de dependencias de Hilt.</p>
+    </div>
+
+    <div class="entry-point">
+      <div class="path">app/src/main/java/mx/equilibrio/app/navigation/EquilibrioNavHost.kt</div>
+      <p style="margin-top:6px">El mapa de pantallas. Define las dos rutas de esta versión: <code>home</code> (Inicio) y <code>quick_entry</code> (Registro rápido / edición). Si agregas una pantalla nueva, se registra aquí.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Arquitectura en tres capas</h2>
+    <p>Cada módulo de Gradle es una carpeta en la raíz del proyecto. La regla dura: <code>core-domain</code> no depende de nada de Android; <code>feature-*</code> nunca importa <code>core-data</code> directamente — solo habla con <code>core-domain</code>.</p>
+
+    <div class="tree">
+<span class="comment">Presentación (pantallas) ──▶ Dominio (reglas de negocio) ──▶ Datos (Room)</span>
+
+<span class="dir">:feature-home</span>    <span class="dir">:feature-entry</span>        ← pantallas Compose
+      │                │
+      └───────┬────────┘
+              ▼
+        <span class="dir">:core-domain</span>              ← Kotlin puro, sin Android
+              ▲
+              │
+        <span class="dir">:core-data</span>                ← Room, implementa las interfaces de core-domain
+
+        <span class="dir">:core-ui</span>                  ← design system, no depende de nada del proyecto
+
+        <span class="dir">:app</span>                      ← Application, MainActivity, navegación, conecta todo con Hilt
+    </div>
+  </section>
+
+  <section>
+    <h2>Módulos, carpeta por carpeta</h2>
+
+    <h3><span class="path">core-domain/</span> <span class="badge">Kotlin puro</span></h3>
+    <p>Modelos y reglas de negocio. Cero dependencias de Android, Room o red — por eso sus tests corren en milisegundos sin emulador.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td>model/TransactionKind.kt</td><td>Enum <code>INCOME</code> / <code>EXPENSE</code>.</td></tr>
+        <tr><td>model/Classification.kt</td><td>Enum <code>FIXED</code>/<code>VARIABLE</code>/<code>ESSENTIAL</code>/<code>RECREATIONAL</code> + <code>isValidFor(kind)</code>, la regla que dice qué clasificación es válida para cada tipo.</td></tr>
+        <tr><td>model/AccountType.kt</td><td>Enum <code>CASH</code>/<code>BANK</code>/<code>CREDIT_CARD</code> (solo <code>CASH</code> se usa en esta versión).</td></tr>
+        <tr><td>model/Account.kt</td><td>Modelo de una cuenta (id, nombre, tipo).</td></tr>
+        <tr><td>model/Transaction.kt</td><td>Modelo de un movimiento. Su constructor <strong>rechaza</strong> un par (kind, classification) inválido o un monto ≤ 0 — un movimiento incorrecto no puede existir en memoria.</td></tr>
+        <tr><td>repository/TransactionRepository.kt</td><td>Interfaz: qué puede hacerse con movimientos (observar, guardar, borrar). <code>core-data</code> la implementa.</td></tr>
+        <tr><td>repository/AccountRepository.kt</td><td>Interfaz: observar las cuentas.</td></tr>
+        <tr><td>usecase/*.kt</td><td>Un caso de uso por acción: <code>ObserveTransactions</code>, <code>ObserveBalance</code>, <code>ObserveAccounts</code>, <code>SaveTransaction</code>, <code>DeleteTransaction</code>, <code>GetTransaction</code>. Cada uno es una clase con un solo método <code>invoke()</code>.</td></tr>
+        <tr><td>src/test/.../ClassificationTest.kt</td><td>8 tests: los pares válidos e inválidos de clasificación.</td></tr>
+        <tr><td>src/test/.../TransactionTest.kt</td><td>5 tests: constructor de <code>Transaction</code> con datos válidos e inválidos.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="path">core-data/</span> <span class="badge">Android · Room</span></h3>
+    <p>Persistencia. Implementa las interfaces que pide <code>core-domain</code>.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td>local/entity/UserEntity.kt</td><td>Tabla <code>users</code> — el usuario local único (sin login).</td></tr>
+        <tr><td>local/entity/AccountEntity.kt</td><td>Tabla <code>accounts</code> — incluye columnas de RF04 (tarjetas) que esta versión no usa todavía, para no migrar después.</td></tr>
+        <tr><td>local/entity/TransactionEntity.kt</td><td>Tabla <code>transactions</code>. <code>classification</code> es nullable a propósito: un movimiento sin clasificar existe, solo no se cuenta para nada que dependa de eso.</td></tr>
+        <tr><td>local/dao/TransactionDao.kt</td><td><code>observeAll</code>, <code>observeBalanceCents</code> (suma ingresos − gastos <strong>en SQL</strong>, no en Kotlin), <code>upsert</code>, <code>markDeleted</code> (borrado lógico).</td></tr>
+        <tr><td>local/dao/AccountDao.kt</td><td>Observar cuentas, contar cuántas hay.</td></tr>
+        <tr><td>local/dao/UserDao.kt</td><td>Leer/crear el usuario local.</td></tr>
+        <tr><td>local/EquilibrioDatabase.kt</td><td>La base Room: declara las 3 entidades, versión 1, <code>exportSchema = true</code>.</td></tr>
+        <tr><td>mapper/TransactionMapper.kt</td><td>Convierte entidad Room ↔ modelo de dominio (incluye fecha ↔ epoch millis).</td></tr>
+        <tr><td>mapper/AccountMapper.kt</td><td>Igual, para cuentas.</td></tr>
+        <tr><td>prefs/LocalSession.kt</td><td>En el primer arranque: genera un <code>userId</code> (UUID), lo guarda en DataStore, crea la cuenta "Efectivo". Después de eso, siempre devuelve el mismo id.</td></tr>
+        <tr><td>repository/TransactionRepositoryImpl.kt</td><td>Implementación real de <code>TransactionRepository</code> usando el DAO.</td></tr>
+        <tr><td>repository/AccountRepositoryImpl.kt</td><td>Igual, para cuentas.</td></tr>
+        <tr><td>di/DataModule.kt</td><td>Módulos de Hilt: cómo se construye la base de datos y qué implementación usar para cada interfaz.</td></tr>
+        <tr><td>schemas/…/1.json</td><td>Esquema exportado de Room versión 1 — <strong>no se edita a mano</strong>, se regenera solo. Sirve para escribir migraciones cuando haya versión 2.</td></tr>
+        <tr><td>src/androidTest/.../TransactionDaoTest.kt</td><td>4 tests instrumentados (corren en emulador/dispositivo): upsert, saldo agregado, borrado lógico.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="path">core-ui/</span> <span class="badge">Android · Compose</span></h3>
+    <p>El sistema de diseño. Traduce el manual de identidad a código — nadie fuera de aquí usa un <code>Color</code> crudo.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td>theme/Color.kt</td><td>Toda la paleta, claro y oscuro (verde, morado, neutros, colores de estado).</td></tr>
+        <tr><td>theme/Tone.kt</td><td><code>DomainTone</code> (verde/morado, clasifica dinero) y <code>FeedbackTone</code> (éxito/error/advertencia/info, describe confianza del sistema). Son dos tipos distintos a propósito: ningún componente acepta ambos.</td></tr>
+        <tr><td>theme/Type.kt</td><td>Tipografía: Plus Jakarta Sans (variable) para cifras/títulos, Inter (variable) para cuerpo. Los montos siempre usan cifras tabulares.</td></tr>
+        <tr><td>theme/Spacing.kt</td><td>Escala de espaciado de 4pt y tamaños táctiles mínimos.</td></tr>
+        <tr><td>theme/Shape.kt</td><td>Radios de esquina (chip, tarjeta, pill).</td></tr>
+        <tr><td>theme/Motion.kt</td><td>Curvas de animación — ninguna con rebote, a propósito.</td></tr>
+        <tr><td>theme/Elevation.kt</td><td>Sombras con tinta a baja opacidad, nunca negro puro.</td></tr>
+        <tr><td>theme/Theme.kt</td><td><code>EquilibrioTheme</code>: junta todo lo anterior y también puentea a <code>MaterialTheme</code>, para que componentes crudos de Material 3 (como el selector de fecha) hereden la marca en vez del morado por defecto de Material.</td></tr>
+        <tr><td>res/font/*.ttf</td><td>Las dos fuentes variables, empaquetadas localmente (licencia SIL OFL incluida en <code>core-ui/licenses/</code>).</td></tr>
+        <tr><td>components/Eq*.kt</td><td>Los componentes: <code>EqAmount</code> (montos), <code>EqBadge</code> (insignias de clasificación), <code>EqCard</code>, <code>EqButton</code>, <code>EqTextField</code>, <code>EqSegmentedControl</code>, <code>EqDomainToggleOption</code> (el toggle Esencial/Recreativo), <code>EqInlineValidation</code>, <code>EqSnackbar</code>, <code>EqDialog</code>, <code>EqEmptyState</code>, <code>EqTopBar</code>, <code>EqFab</code>. Cada archivo trae su <code>@Preview</code>.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="path">feature-entry/</span> <span class="badge">Pantalla</span></h3>
+    <p>Registro rápido — sirve para dar de alta y para editar (recibe un <code>transactionId</code> opcional por navegación).</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td>QuickEntryUiState.kt</td><td>El estado de la pantalla: monto, tipo, clasificación, fecha, nota, si está guardando.</td></tr>
+        <tr><td>QuickEntryEvent.kt</td><td>Los eventos que la UI puede disparar (cambiar monto, cambiar clasificación, guardar…).</td></tr>
+        <tr><td>QuickEntryViewModel.kt</td><td>La lógica: si cambias de Gasto a Ingreso, resetea la clasificación; valida fecha futura; guarda usando los casos de uso de <code>core-domain</code>.</td></tr>
+        <tr><td>QuickEntryScreen.kt</td><td>La UI en Compose: toggle Gasto/Ingreso, campo de monto, toggle de clasificación, selector de fecha, nota, botón guardar.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="path">feature-home/</span> <span class="badge">Pantalla</span></h3>
+    <p>Inicio — saldo y lista de movimientos.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td>HomeUiState.kt</td><td>Estado de la pantalla + <code>TransactionUi</code>, que traduce un movimiento a lo que se muestra (color, etiqueta, signo).</td></tr>
+        <tr><td>HomeEvent.kt</td><td>Eventos: pedir borrar, confirmar borrado, cancelar borrado.</td></tr>
+        <tr><td>HomeViewModel.kt</td><td>Combina el saldo y la lista de movimientos en un solo <code>StateFlow</code> reactivo — se actualiza solo, sin recargar nada a mano.</td></tr>
+        <tr><td>HomeScreen.kt</td><td>La UI: tarjeta de saldo, lista de movimientos, estado vacío, estado de carga, diálogo de confirmación al borrar.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3><span class="path">app/</span> <span class="badge">Módulo raíz</span></h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td>EquilibrioApp.kt</td><td>Ver "Puntos de entrada" arriba.</td></tr>
+        <tr><td>MainActivity.kt</td><td>Ver "Puntos de entrada" arriba.</td></tr>
+        <tr><td>navigation/EquilibrioNavHost.kt</td><td>Ver "Puntos de entrada" arriba.</td></tr>
+        <tr><td>res/values/strings.xml</td><td>Nombre de la app.</td></tr>
+        <tr><td>AndroidManifest.xml</td><td>Declara la Application, la Activity y el ícono/tema.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Archivos de configuración (raíz del proyecto)</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td>settings.gradle.kts</td><td>Lista los 6 módulos del proyecto y los repositorios de dependencias.</td></tr>
+        <tr><td>build.gradle.kts</td><td>Declara los plugins de Gradle disponibles (Android, Kotlin, Hilt, KSP…) sin aplicarlos todavía — cada módulo elige cuáles usar.</td></tr>
+        <tr><td>gradle/libs.versions.toml</td><td>El catálogo de versiones: <strong>todas</strong> las versiones de librerías y plugins están aquí, en un solo lugar.</td></tr>
+        <tr><td>gradle.properties</td><td>Configuración de Gradle/AGP. Incluye <code>android.builtInKotlin=false</code> y <code>android.newDsl=false</code> — AGP 9 cambió su forma de compilar Kotlin por defecto; esas dos líneas mantienen el estilo clásico (<code>org.jetbrains.kotlin.android</code> + bloque <code>android {}</code>) que usa este proyecto.</td></tr>
+        <tr><td>gradlew / gradlew.bat</td><td>El wrapper de Gradle — para que todo el equipo compile con la misma versión de Gradle (9.7.1) sin instalarla a mano.</td></tr>
+        <tr><td>gradle/wrapper/</td><td>Archivos de soporte del wrapper (no se editan a mano).</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Documentación y diseño</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Carpeta</th><th>Qué contiene</th></tr></thead>
+      <tbody>
+        <tr><td>docs/PLAN_DESARROLLO.md</td><td>El plan técnico completo de las tres fases del producto (arquitectura, modelo de datos, algoritmo del indicador de equilibrio, requisitos, design system).</td></tr>
+        <tr><td>docs/identidad/</td><td>El manual de identidad visual (PDF, Markdown y HTML) — de aquí sale todo lo que hay en <code>core-ui</code>.</td></tr>
+        <tr><td>docs/Equilibrio.pdf</td><td>La propuesta original del proyecto.</td></tr>
+        <tr><td>docs/superpowers/specs/</td><td>Specs de diseño de cada iteración: la propuesta inicial (31-ago) y el plan de implementación de esta versión (13-sep).</td></tr>
+        <tr><td>designs/</td><td>Mockups: archivo editable <code>.pen</code>, exportado <code>.png</code>, y el reporte de la propuesta en HTML/Markdown.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+</main>
+
+<footer>
+  Equilibrio · Documento generado el 13 de septiembre de 2026, describe el estado del repositorio en ese commit.
+</footer>
+
+</body>
+</html>

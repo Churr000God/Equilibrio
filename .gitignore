@@ -12,5 +12,5 @@ captures/
 /.kotlin/
 
 # Cachés de herramientas locales, no forman parte del código fuente
-/.impeccable/
+/.impeccable/hook.cache.json
 /Proyecto /

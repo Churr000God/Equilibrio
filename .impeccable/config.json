@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "files": [
+          "docs/ESTRUCTURA_PROYECTO.html"
+        ],
+        "createdAt": "2026-09-13T18:51:14.988Z",
+        "reason": "Reuses Equilibrio's own brand typeface (core-ui/theme/Type.kt) for consistency with the app it documents, not a generic default"
+      },
+      {
+        "rule": "overused-font",
+        "value": "plus jakarta sans",
+        "files": [
+          "docs/ESTRUCTURA_PROYECTO.html"
+        ],
+        "createdAt": "2026-09-13T18:51:15.018Z",
+        "reason": "Reuses Equilibrio's own brand typeface (core-ui/theme/Type.kt) for consistency with the app it documents, not a generic default"
+      }
+    ]
+  }
+}

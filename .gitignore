@@ -1,0 +1,16 @@
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+/.kotlin/
+
+# Cachés de herramientas locales, no forman parte del código fuente
+/.impeccable/
+/Proyecto /

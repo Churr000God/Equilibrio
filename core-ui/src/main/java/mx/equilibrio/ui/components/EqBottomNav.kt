@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Category
 import androidx.compose.material.icons.rounded.CreditCard
 import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.Home
@@ -35,6 +36,7 @@ import mx.equilibrio.ui.theme.eqShadow
 enum class EqNavDestination(val label: String, val icon: ImageVector) {
     HOME("Inicio", Icons.Rounded.Home),
     ACCOUNTS("Cuentas", Icons.Rounded.CreditCard),
+    CATEGORIES("Categorías", Icons.Rounded.Category),
     GOALS("Metas", Icons.Rounded.Flag),
     REPORTS("Reportes", Icons.Rounded.PieChart),
 }

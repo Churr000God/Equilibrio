@@ -16,6 +16,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import mx.equilibrio.feature.accounts.AccountsScreen
 import mx.equilibrio.feature.accounts.AddAccountScreen
+import mx.equilibrio.feature.categories.AddCategoryScreen
+import mx.equilibrio.feature.categories.CategoriesScreen
 import mx.equilibrio.feature.entry.QuickEntryScreen
 import mx.equilibrio.feature.home.HomeScreen
 import mx.equilibrio.ui.components.EqBottomNav
@@ -26,6 +28,8 @@ import mx.equilibrio.ui.theme.EquilibrioTheme
 private const val ROUTE_HOME = "home"
 private const val ROUTE_ACCOUNTS = "accounts"
 private const val ROUTE_ADD_ACCOUNT = "add_account"
+private const val ROUTE_CATEGORIES = "categories"
+private const val ROUTE_ADD_CATEGORY = "add_category"
 private const val ROUTE_GOALS = "goals"
 private const val ROUTE_REPORTS = "reports"
 private const val ARG_TRANSACTION_ID = "transactionId"
@@ -37,6 +41,7 @@ private fun quickEntryRoute(transactionId: String? = null) =
 private val ROUTE_TO_DESTINATION = mapOf(
     ROUTE_HOME to EqNavDestination.HOME,
     ROUTE_ACCOUNTS to EqNavDestination.ACCOUNTS,
+    ROUTE_CATEGORIES to EqNavDestination.CATEGORIES,
     ROUTE_GOALS to EqNavDestination.GOALS,
     ROUTE_REPORTS to EqNavDestination.REPORTS,
 )
@@ -44,6 +49,7 @@ private val ROUTE_TO_DESTINATION = mapOf(
 private val DESTINATION_TO_ROUTE = mapOf(
     EqNavDestination.HOME to ROUTE_HOME,
     EqNavDestination.ACCOUNTS to ROUTE_ACCOUNTS,
+    EqNavDestination.CATEGORIES to ROUTE_CATEGORIES,
     EqNavDestination.GOALS to ROUTE_GOALS,
     EqNavDestination.REPORTS to ROUTE_REPORTS,
 )
@@ -89,6 +95,15 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
             }
             composable(ROUTE_ADD_ACCOUNT) {
                 AddAccountScreen(
+                    onSaved = { navController.popBackStack() },
+                    onCancel = { navController.popBackStack() },
+                )
+            }
+            composable(ROUTE_CATEGORIES) {
+                CategoriesScreen(onAddCategoryClicked = { navController.navigate(ROUTE_ADD_CATEGORY) })
+            }
+            composable(ROUTE_ADD_CATEGORY) {
+                AddCategoryScreen(
                     onSaved = { navController.popBackStack() },
                     onCancel = { navController.popBackStack() },
                 )

@@ -234,7 +234,7 @@
     <div class="tree">
 <span class="comment">Presentación (pantallas) ──▶ Dominio (reglas de negocio) ──▶ Datos (Room)</span>
 
-<span class="dir">:feature-home</span>    <span class="dir">:feature-entry</span>    <span class="dir">:feature-accounts</span>    ← pantallas Compose
+<span class="dir">:feature-home</span>    <span class="dir">:feature-entry</span>    <span class="dir">:feature-accounts</span>    <span class="dir">:feature-categories</span>    ← pantallas Compose
       │                │                │
       └───────┬────────┴────────┬───────┘
               ▼
@@ -315,7 +315,7 @@
         <tr><td>theme/Elevation.kt</td><td>Sombras con tinta a baja opacidad, nunca negro puro.</td></tr>
         <tr><td>theme/Theme.kt</td><td><code>EquilibrioTheme</code>: junta todo lo anterior y también puentea a <code>MaterialTheme</code>, para que componentes crudos de Material 3 (como el selector de fecha) hereden la marca en vez del morado por defecto de Material.</td></tr>
         <tr><td>res/font/*.ttf</td><td>Las dos fuentes variables, empaquetadas localmente (licencia SIL OFL incluida en <code>core-ui/licenses/</code>).</td></tr>
-        <tr><td>components/Eq*.kt</td><td>Los componentes: <code>EqAmount</code> (montos), <code>EqBadge</code> (insignias de clasificación), <code>EqCard</code>, <code>EqButton</code>, <code>EqTextField</code>, <code>EqSegmentedControl</code>, <code>EqDomainToggleOption</code> (el toggle Esencial/Recreativo), <code>EqInlineValidation</code>, <code>EqSnackbar</code>, <code>EqDialog</code>, <code>EqEmptyState</code>, <code>EqTopBar</code>, <code>EqFab</code>, <code>EqBottomNav</code> (barra de navegación capsular flotante inferior). Cada archivo trae su <code>@Preview</code>.</td></tr>
+        <tr><td>components/Eq*.kt</td><td>Los componentes: <code>EqAmount</code> (montos), <code>EqBadge</code> (insignias de clasificación), <code>EqCard</code>, <code>EqButton</code>, <code>EqTextField</code>, <code>EqSegmentedControl</code>, <code>EqDomainToggleOption</code> (el toggle Esencial/Recreativo), <code>EqInlineValidation</code>, <code>EqSnackbar</code>, <code>EqDialog</code>, <code>EqEmptyState</code>, <code>EqTopBar</code>, <code>EqFab</code>, <code>EqBottomNav</code> (barra de navegación capsular flotante inferior, destinos <code>EqNavDestination</code>: HOME/ACCOUNTS/CATEGORIES/GOALS/REPORTS). Cada archivo trae su <code>@Preview</code>.</td></tr>
       </tbody>
     </table></div>
 
@@ -360,6 +360,22 @@
       </tbody>
     </table></div>
 
+    <h3><span class="path">feature-categories/</span> <span class="badge">Pantalla</span></h3>
+    <p>Categorías — listado y alta de categoría nueva (tipo INCOME/EXPENSE).</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td>CategoriesUiState.kt</td><td>Estado de la pantalla + <code>CategoryUi</code>, que traduce una categoría a lo que se muestra (<code>typeLabel</code> "Ingreso"/"Gasto").</td></tr>
+        <tr><td>CategoriesViewModel.kt</td><td>Observa <code>GetCategories</code> (Flow, pese al nombre), ordena por <code>sortOrder</code>.</td></tr>
+        <tr><td>CategoriesScreen.kt</td><td>La UI: topbar "Categorías" + lista + FAB que navega a <code>AddCategoryScreen</code>.</td></tr>
+        <tr><td>CategoryRow.kt</td><td>La fila de cada categoría: avatar circular con la inicial del nombre (color sólido, sin gradiente) + nombre + tipo. <code>categoryPalette()</code> calca <code>accountPalette()</code> de feature-accounts: INCOME=verde, EXPENSE=morado, <code>colorSlot%3</code> elige el tono. El campo <code>icon: String</code> de <code>Category</code> todavía no se usa — no hay catálogo de íconos en el repo.</td></tr>
+        <tr><td>AddCategoryEvent.kt</td><td>Eventos del formulario de alta: cambios de campo + <code>SaveClicked</code>.</td></tr>
+        <tr><td>AddCategoryUiState.kt</td><td>Estado del formulario de alta.</td></tr>
+        <tr><td>AddCategoryViewModel.kt</td><td>Arma la <code>Category</code> completa al guardar: id con <code>UUID.randomUUID()</code>, <code>sortOrder</code> = tamaño actual de la lista (se agrega al final), <code>userId</code> sacado de <code>observeAccounts().first()</code> (el módulo no depende de core-data, no puede inyectar la sesión local directo — mismo truco que <code>AddAccountViewModel</code>).</td></tr>
+        <tr><td>AddCategoryScreen.kt</td><td>Formulario de alta: nombre, tipo (<code>EqSegmentedControl</code> INCOME/EXPENSE), selector de <code>colorSlot</code>.</td></tr>
+      </tbody>
+    </table></div>
+
     <h3><span class="path">app/</span> <span class="badge">Módulo raíz</span></h3>
     <div class="table-wrap"><table>
       <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
@@ -378,7 +394,7 @@
     <div class="table-wrap"><table>
       <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
       <tbody>
-        <tr><td>settings.gradle.kts</td><td>Lista los 7 módulos del proyecto (app, core-ui, core-domain, core-data, feature-home, feature-entry, feature-accounts) y los repositorios de dependencias.</td></tr>
+        <tr><td>settings.gradle.kts</td><td>Lista los 8 módulos del proyecto (app, core-ui, core-domain, core-data, feature-home, feature-entry, feature-accounts, feature-categories) y los repositorios de dependencias.</td></tr>
         <tr><td>build.gradle.kts</td><td>Declara los plugins de Gradle disponibles (Android, Kotlin, Hilt, KSP…) sin aplicarlos todavía — cada módulo elige cuáles usar.</td></tr>
         <tr><td>gradle/libs.versions.toml</td><td>El catálogo de versiones: <strong>todas</strong> las versiones de librerías y plugins están aquí, en un solo lugar.</td></tr>
         <tr><td>gradle.properties</td><td>Configuración de Gradle/AGP. Incluye <code>android.builtInKotlin=false</code> y <code>android.newDsl=false</code> — AGP 9 cambió su forma de compilar Kotlin por defecto; esas dos líneas mantienen el estilo clásico (<code>org.jetbrains.kotlin.android</code> + bloque <code>android {}</code>) que usa este proyecto.</td></tr>
@@ -405,7 +421,7 @@
 </main>
 
 <footer>
-  Equilibrio · Documento generado el 13 de septiembre de 2026, actualizado el 14 de septiembre de 2026 (feature-accounts, categorías, last_digits), describe el estado del repositorio en ese commit.
+  Equilibrio · Documento generado el 13 de septiembre de 2026, actualizado el 14 de septiembre de 2026 (feature-accounts, feature-categories, last_digits), describe el estado del repositorio en ese commit.
 </footer>
 
 </body>

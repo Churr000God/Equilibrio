@@ -23,6 +23,7 @@ fun TransactionEntity.toDomain(): Transaction = Transaction(
     amountCents = amountCents,
     occurredAt = occurredAt.toLocalDate(),
     note = note,
+    categoryId = categoryId,
 )
 
 fun Transaction.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean = false): TransactionEntity = TransactionEntity(
@@ -34,6 +35,7 @@ fun Transaction.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean 
     amountCents = amountCents,
     occurredAt = occurredAt.toEpochMillis(),
     note = note,
+    categoryId = categoryId,
     updatedAt = updatedAt,
     syncState = syncState,
     isDeleted = isDeleted,

@@ -166,7 +166,8 @@ Clean Architecture en tres capas (cumple **RNF06 — Mantenibilidad: arquitectur
 | `:core-data` | Room (`EquilibrioDatabase`, entidades, DAOs), `RepositoryImpl`, mappers, `DataStore` de preferencias | `:core-domain` |
 | `:feature-home` | Pantalla Inicio | `:core-domain`, `:core-ui` |
 | `:feature-entry` | Pantalla Registro rápido | `:core-domain`, `:core-ui` |
-| *(Fase 2)* `:feature-accounts`, `:feature-goals`, `:feature-reports` | | igual patrón |
+| `:feature-accounts` | Pantalla Cuentas (carrusel de tarjetas + alta de cuenta) — adelantada de Fase 2, implementada ya | `:core-domain`, `:core-ui` |
+| *(Fase 2)* `:feature-goals`, `:feature-reports` | | igual patrón |
 
 **Regla de dependencia:** `:core-domain` no depende de nada. `:feature-*` nunca importa `:core-data`. Se verifica con una tarea Gradle de comprobación de dependencias en CI.
 
@@ -311,10 +312,12 @@ Todas las entidades incluyen el bloque común de sincronización: `id: String` (
 | `creditLimitCents` | INTEGER? | Solo `CREDIT_CARD` |
 | `statementDay` | INTEGER? | Día de corte, 1–31 — alimenta la alerta de RF09 |
 | `dueDay` | INTEGER? | Día de pago |
-| `colorSlot` | INTEGER | Índice de variante visual, no un color crudo |
+| `colorSlot` | INTEGER | Índice de variante visual (0–2), no un color crudo — el catálogo de gradientes vive hardcodeado en `:core-ui`/`AccountCard.kt`, no en esquema |
+| `lastDigits` | INTEGER? | Últimos 4 dígitos de la tarjeta/cuenta. Nullable: sin dato, la UI muestra "****". Agregado en migración 1→2 |
 | bloque común | | |
 
 > En Fase 1 se crea automáticamente una cuenta `CASH` llamada "Efectivo" en el primer arranque, para que `Transaction.accountId` nunca sea nulo.
+> El alta manual de cuentas (RF04) se adelantó: el formulario tiene 3 variantes según `type` — `CREDIT_CARD` pide `creditLimitCents`/`statementDay`/`dueDay`/`lastDigits`, `BANK` pide `lastDigits` sin los campos de crédito, `CASH` no pide ninguno de los dos.
 
 #### `transactions`
 
@@ -328,8 +331,22 @@ Todas las entidades incluyen el bloque común de sincronización: `id: String` (
 | `amountCents` | INTEGER | Siempre positivo; el signo lo da `kind` |
 | `occurredAt` | INTEGER | epoch millis — índice compuesto con `userId` |
 | `note` | TEXT? | |
-| `categoryKey` | TEXT? | `food`, `transport`, `groceries`, `outings`, `subscriptions`, `music`… — mapea a iconografía |
+| `categoryId` | TEXT? FK → categories | Renombrado desde `categoryKey` en migración 2→3: pasó de string suelto a FK real. Nullable — un movimiento sin categoría existe |
 | `receiptUri` | TEXT? | Comprobante opcional (RF03) |
+| bloque común | | |
+
+#### `categories` *(agregado en migración 2→3, adelantado de Fase 2)*
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `id` | TEXT PK | UUID |
+| `userId` | TEXT FK → users | índice |
+| `name` | TEXT | |
+| `type` | TEXT | `INCOME` / `EXPENSE` |
+| `colorSlot` | INTEGER | Mismo mecanismo que `accounts.colorSlot` |
+| `icon` | TEXT | Key de ícono (ej. "food", "transport"), mapeado a `Icons.*` en `:core-ui`, no una imagen |
+| `isSystem` | INTEGER (bool) | Categoría sembrada por la app vs. creada por el usuario — protege las default de borrado accidental |
+| `sortOrder` | INTEGER | Orden manual en listas/pickers |
 | bloque común | | |
 
 Índices: `(userId, occurredAt DESC)` para la lista de movimientos recientes y para el agregado por periodo; `(userId, kind, classification, occurredAt)` para el cálculo del indicador.
@@ -394,8 +411,9 @@ El indicador **no se calcula recorriendo la lista en Kotlin**: SQLite agrega y d
 ### 4.4 Migraciones
 
 - `exportSchema = true`, esquemas versionados en `:core-data/schemas/` y **bajo control de versiones**.
-- Toda migración se escribe a mano (`Migration(n, n+1)`) y se prueba con `MigrationTestHelper`. `fallbackToDestructiveMigration()` está **prohibido** en release: borraría datos financieros del usuario.
-- El esquema v1 ya contiene las columnas de las tres fases, por lo que la primera migración esperada es aditiva y menor.
+- Toda migración se escribe a mano (`Migration(n, n+1)`) en `Migrations.kt`. `fallbackToDestructiveMigration()` está **prohibido** en release: borraría datos financieros del usuario.
+- Aplicadas hasta ahora: `MIGRATION_1_2` (agrega `accounts.lastDigits`, aditiva simple) y `MIGRATION_2_3` (crea `categories` y recrea `transactions` completa para agregar la FK real `categoryId` — SQLite no soporta agregar constraint FK con `ALTER`/`RENAME COLUMN` directo, así que el patrón es: tabla nueva con el esquema final → copiar datos → drop de la vieja → rename).
+- Pendiente: no hay todavía un test con `MigrationTestHelper` corriendo estas migraciones contra una DB con datos reales — se validaron a mano contra el `createSql` exportado por Room. Se recomienda agregarlo antes de la primera migración destructiva real.
 
 ---
 

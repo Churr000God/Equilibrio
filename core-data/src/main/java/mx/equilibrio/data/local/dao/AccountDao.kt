@@ -15,6 +15,14 @@ interface AccountDao {
     @Query("SELECT COUNT(*) FROM accounts WHERE user_id = :userId AND is_deleted = 0")
     suspend fun count(userId: String): Int
 
+    @Query("SELECT * FROM accounts WHERE id = :id AND is_deleted = 0 LIMIT 1")
+    suspend fun getById(id: String): AccountEntity?
+
     @Upsert
     suspend fun upsert(entity: AccountEntity)
+
+    @Query(
+        "UPDATE accounts SET is_deleted = 1, sync_state = 'PENDING', updated_at = :now WHERE id = :id",
+    )
+    suspend fun markDeleted(id: String, now: Long)
 }

@@ -223,7 +223,7 @@
 
     <div class="entry-point">
       <div class="path">app/src/main/java/mx/equilibrio/app/navigation/EquilibrioNavHost.kt</div>
-      <p style="margin-top:6px">El mapa de pantallas. Define las dos rutas de esta versión: <code>home</code> (Inicio) y <code>quick_entry</code> (Registro rápido / edición). Si agregas una pantalla nueva, se registra aquí.</p>
+      <p style="margin-top:6px">El mapa de pantallas. Rutas actuales: <code>home</code> (Inicio), <code>quick_entry</code> (Registro rápido / edición), <code>accounts</code> (Cuentas) y <code>add_account</code> (alta de cuenta). Si agregas una pantalla nueva, se registra aquí.</p>
     </div>
   </section>
 
@@ -234,9 +234,9 @@
     <div class="tree">
 <span class="comment">Presentación (pantallas) ──▶ Dominio (reglas de negocio) ──▶ Datos (Room)</span>
 
-<span class="dir">:feature-home</span>    <span class="dir">:feature-entry</span>        ← pantallas Compose
-      │                │
-      └───────┬────────┘
+<span class="dir">:feature-home</span>    <span class="dir">:feature-entry</span>    <span class="dir">:feature-accounts</span>    ← pantallas Compose
+      │                │                │
+      └───────┬────────┴────────┬───────┘
               ▼
         <span class="dir">:core-domain</span>              ← Kotlin puro, sin Android
               ▲
@@ -259,12 +259,15 @@
       <tbody>
         <tr><td>model/TransactionKind.kt</td><td>Enum <code>INCOME</code> / <code>EXPENSE</code>.</td></tr>
         <tr><td>model/Classification.kt</td><td>Enum <code>FIXED</code>/<code>VARIABLE</code>/<code>ESSENTIAL</code>/<code>RECREATIONAL</code> + <code>isValidFor(kind)</code>, la regla que dice qué clasificación es válida para cada tipo.</td></tr>
-        <tr><td>model/AccountType.kt</td><td>Enum <code>CASH</code>/<code>BANK</code>/<code>CREDIT_CARD</code> (solo <code>CASH</code> se usa en esta versión).</td></tr>
-        <tr><td>model/Account.kt</td><td>Modelo de una cuenta (id, nombre, tipo).</td></tr>
-        <tr><td>model/Transaction.kt</td><td>Modelo de un movimiento. Su constructor <strong>rechaza</strong> un par (kind, classification) inválido o un monto ≤ 0 — un movimiento incorrecto no puede existir en memoria.</td></tr>
+        <tr><td>model/AccountType.kt</td><td>Enum <code>CASH</code>/<code>BANK</code>/<code>CREDIT_CARD</code> — las tres se usan ya (alta de cuentas tiene una variante de formulario por tipo).</td></tr>
+        <tr><td>model/Account.kt</td><td>Modelo de una cuenta: id, userId, name, type, balanceCents, creditLimitCents, statementDay, dueDay, colorSlot, <code>lastDigits: Int?</code> (últimos 4 dígitos de la tarjeta/cuenta, nullable — <code>null</code> se muestra como "****" en la UI).</td></tr>
+        <tr><td>model/CategoryType.kt</td><td>Enum <code>INCOME</code>/<code>EXPENSE</code> para categorías.</td></tr>
+        <tr><td>model/Category.kt</td><td>Modelo de una categoría: id, userId, name, type, colorSlot, icon, isSystem, sortOrder.</td></tr>
+        <tr><td>model/Transaction.kt</td><td>Modelo de un movimiento. Su constructor <strong>rechaza</strong> un par (kind, classification) inválido o un monto ≤ 0 — un movimiento incorrecto no puede existir en memoria. Incluye <code>categoryId: String?</code> (FK a Category, nullable).</td></tr>
         <tr><td>repository/TransactionRepository.kt</td><td>Interfaz: qué puede hacerse con movimientos (observar, guardar, borrar). <code>core-data</code> la implementa.</td></tr>
-        <tr><td>repository/AccountRepository.kt</td><td>Interfaz: observar las cuentas.</td></tr>
-        <tr><td>usecase/*.kt</td><td>Un caso de uso por acción: <code>ObserveTransactions</code>, <code>ObserveBalance</code>, <code>ObserveAccounts</code>, <code>SaveTransaction</code>, <code>DeleteTransaction</code>, <code>GetTransaction</code>. Cada uno es una clase con un solo método <code>invoke()</code>.</td></tr>
+        <tr><td>repository/AccountRepository.kt</td><td>Interfaz: observar/guardar/borrar cuentas.</td></tr>
+        <tr><td>repository/CategoryRepository.kt</td><td>Interfaz: observar/guardar/borrar categorías. Mismo patrón que AccountRepository.</td></tr>
+        <tr><td>usecase/*.kt</td><td>Un caso de uso por acción: <code>ObserveTransactions</code>, <code>ObserveBalance</code>, <code>ObserveAccounts</code>, <code>SaveTransaction</code>, <code>DeleteTransaction</code>, <code>GetTransaction</code>, <code>GetAccount</code>, <code>SaveAccount</code>, <code>DeleteAccount</code>, <code>GetCategories</code>, <code>SaveCategory</code>, <code>DeleteCategory</code>. Cada uno es una clase con un solo método <code>invoke()</code>.</td></tr>
         <tr><td>src/test/.../ClassificationTest.kt</td><td>8 tests: los pares válidos e inválidos de clasificación.</td></tr>
         <tr><td>src/test/.../TransactionTest.kt</td><td>5 tests: constructor de <code>Transaction</code> con datos válidos e inválidos.</td></tr>
       </tbody>
@@ -276,19 +279,24 @@
       <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
       <tbody>
         <tr><td>local/entity/UserEntity.kt</td><td>Tabla <code>users</code> — el usuario local único (sin login).</td></tr>
-        <tr><td>local/entity/AccountEntity.kt</td><td>Tabla <code>accounts</code> — incluye columnas de RF04 (tarjetas) que esta versión no usa todavía, para no migrar después.</td></tr>
-        <tr><td>local/entity/TransactionEntity.kt</td><td>Tabla <code>transactions</code>. <code>classification</code> es nullable a propósito: un movimiento sin clasificar existe, solo no se cuenta para nada que dependa de eso.</td></tr>
+        <tr><td>local/entity/AccountEntity.kt</td><td>Tabla <code>accounts</code> — incluye columnas de RF04 (tarjetas). <code>last_digits: Int?</code> (últimos 4 dígitos, nullable) agregado en la migración 1→2.</td></tr>
+        <tr><td>local/entity/TransactionEntity.kt</td><td>Tabla <code>transactions</code>. <code>classification</code> es nullable a propósito: un movimiento sin clasificar existe, solo no se cuenta para nada que dependa de eso. <code>category_id: String?</code> (renombrado desde <code>category_key</code> en la migración 2→3) es FK real a <code>categories.id</code>.</td></tr>
+        <tr><td>local/entity/CategoryEntity.kt</td><td>Tabla <code>categories</code> (migración 2→3): id, user_id (FK), name, type, color_slot, icon, is_system, sort_order + bloque de sync. Mismo patrón que AccountEntity.</td></tr>
         <tr><td>local/dao/TransactionDao.kt</td><td><code>observeAll</code>, <code>observeBalanceCents</code> (suma ingresos − gastos <strong>en SQL</strong>, no en Kotlin), <code>upsert</code>, <code>markDeleted</code> (borrado lógico).</td></tr>
-        <tr><td>local/dao/AccountDao.kt</td><td>Observar cuentas, contar cuántas hay.</td></tr>
+        <tr><td>local/dao/AccountDao.kt</td><td>Observar/guardar/borrar cuentas, contar cuántas hay.</td></tr>
+        <tr><td>local/dao/CategoryDao.kt</td><td>Observar/guardar/borrar categorías por user_id, borrado lógico. Mismo patrón que AccountDao.</td></tr>
         <tr><td>local/dao/UserDao.kt</td><td>Leer/crear el usuario local.</td></tr>
-        <tr><td>local/EquilibrioDatabase.kt</td><td>La base Room: declara las 3 entidades, versión 1, <code>exportSchema = true</code>.</td></tr>
-        <tr><td>mapper/TransactionMapper.kt</td><td>Convierte entidad Room ↔ modelo de dominio (incluye fecha ↔ epoch millis).</td></tr>
-        <tr><td>mapper/AccountMapper.kt</td><td>Igual, para cuentas.</td></tr>
+        <tr><td>local/EquilibrioDatabase.kt</td><td>La base Room: declara las entidades (incluye CategoryEntity), <strong>versión 3</strong>, <code>exportSchema = true</code>.</td></tr>
+        <tr><td>local/Migrations.kt</td><td><code>MIGRATION_1_2</code>: agrega <code>accounts.last_digits</code>. <code>MIGRATION_2_3</code>: crea <code>categories</code> y recrea <code>transactions</code> completa para agregar la FK real <code>category_id</code> (SQLite no soporta agregar FK con ALTER directo). Ambas no destructivas.</td></tr>
+        <tr><td>mapper/TransactionMapper.kt</td><td>Convierte entidad Room ↔ modelo de dominio (incluye fecha ↔ epoch millis, categoryId).</td></tr>
+        <tr><td>mapper/AccountMapper.kt</td><td>Igual, para cuentas (incluye lastDigits).</td></tr>
+        <tr><td>mapper/CategoryMapper.kt</td><td>Igual, para categorías.</td></tr>
         <tr><td>prefs/LocalSession.kt</td><td>En el primer arranque: genera un <code>userId</code> (UUID), lo guarda en DataStore, crea la cuenta "Efectivo". Después de eso, siempre devuelve el mismo id.</td></tr>
         <tr><td>repository/TransactionRepositoryImpl.kt</td><td>Implementación real de <code>TransactionRepository</code> usando el DAO.</td></tr>
         <tr><td>repository/AccountRepositoryImpl.kt</td><td>Igual, para cuentas.</td></tr>
-        <tr><td>di/DataModule.kt</td><td>Módulos de Hilt: cómo se construye la base de datos y qué implementación usar para cada interfaz.</td></tr>
-        <tr><td>schemas/…/1.json</td><td>Esquema exportado de Room versión 1 — <strong>no se edita a mano</strong>, se regenera solo. Sirve para escribir migraciones cuando haya versión 2.</td></tr>
+        <tr><td>repository/CategoryRepositoryImpl.kt</td><td>Igual, para categorías.</td></tr>
+        <tr><td>di/DataModule.kt</td><td>Módulos de Hilt: cómo se construye la base de datos (con las migraciones registradas) y qué implementación usar para cada interfaz, incluyendo CategoryDao/CategoryRepository.</td></tr>
+        <tr><td>schemas/…/{1,2,3}.json</td><td>Esquemas exportados de Room por versión — <strong>no se editan a mano</strong>, se regeneran solos. Versión 1 = esquema inicial, 2 = + last_digits, 3 = + categories y category_id.</td></tr>
         <tr><td>src/androidTest/.../TransactionDaoTest.kt</td><td>4 tests instrumentados (corren en emulador/dispositivo): upsert, saldo agregado, borrado lógico.</td></tr>
       </tbody>
     </table></div>
@@ -307,7 +315,7 @@
         <tr><td>theme/Elevation.kt</td><td>Sombras con tinta a baja opacidad, nunca negro puro.</td></tr>
         <tr><td>theme/Theme.kt</td><td><code>EquilibrioTheme</code>: junta todo lo anterior y también puentea a <code>MaterialTheme</code>, para que componentes crudos de Material 3 (como el selector de fecha) hereden la marca en vez del morado por defecto de Material.</td></tr>
         <tr><td>res/font/*.ttf</td><td>Las dos fuentes variables, empaquetadas localmente (licencia SIL OFL incluida en <code>core-ui/licenses/</code>).</td></tr>
-        <tr><td>components/Eq*.kt</td><td>Los componentes: <code>EqAmount</code> (montos), <code>EqBadge</code> (insignias de clasificación), <code>EqCard</code>, <code>EqButton</code>, <code>EqTextField</code>, <code>EqSegmentedControl</code>, <code>EqDomainToggleOption</code> (el toggle Esencial/Recreativo), <code>EqInlineValidation</code>, <code>EqSnackbar</code>, <code>EqDialog</code>, <code>EqEmptyState</code>, <code>EqTopBar</code>, <code>EqFab</code>. Cada archivo trae su <code>@Preview</code>.</td></tr>
+        <tr><td>components/Eq*.kt</td><td>Los componentes: <code>EqAmount</code> (montos), <code>EqBadge</code> (insignias de clasificación), <code>EqCard</code>, <code>EqButton</code>, <code>EqTextField</code>, <code>EqSegmentedControl</code>, <code>EqDomainToggleOption</code> (el toggle Esencial/Recreativo), <code>EqInlineValidation</code>, <code>EqSnackbar</code>, <code>EqDialog</code>, <code>EqEmptyState</code>, <code>EqTopBar</code>, <code>EqFab</code>, <code>EqBottomNav</code> (barra de navegación capsular flotante inferior). Cada archivo trae su <code>@Preview</code>.</td></tr>
       </tbody>
     </table></div>
 
@@ -335,6 +343,23 @@
       </tbody>
     </table></div>
 
+    <h3><span class="path">feature-accounts/</span> <span class="badge">Pantalla</span></h3>
+    <p>Cuentas — carrusel de tarjetas (una por cuenta) y alta de cuenta nueva.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td>AccountsUiState.kt</td><td>Estado de la pantalla + <code>AccountUi</code>, que traduce una cuenta a lo que se muestra: incluye <code>colorSlot</code>, <code>lastDigits: Int?</code> y <code>maskedDigits</code> ("•••• 4821" o "****" si <code>lastDigits</code> es null). También trae <code>selectedAccountId</code> para saber qué cuenta está activa en el carrusel.</td></tr>
+        <tr><td>AccountsViewModel.kt</td><td>Combina las cuentas observadas con la selección activa; expone <code>onAccountSelected(id)</code> como hook para conectar después la sección de detalle (todavía no implementada).</td></tr>
+        <tr><td>AccountsScreen.kt</td><td>La UI: topbar "Cuentas" + <code>AccountsCarousel</code> + FAB que navega a <code>AddAccountScreen</code>.</td></tr>
+        <tr><td>AccountsCarousel.kt</td><td><code>HorizontalPager</code> con peek (se asoma la siguiente tarjeta), snap, y escala/alpha por página para dar profundidad al cambiar de cuenta — animación continua, sin curvas con rebote (respeta <code>Motion.kt</code>).</td></tr>
+        <tr><td>AccountCard.kt</td><td>La tarjeta individual: gradiente por tipo/colorSlot (<code>accountGradient()</code>, <code>internal</code> para reusarse en el color picker del formulario), nombre, dígitos enmascarados, disponible, vencimiento si aplica. Sin ícono NFC (no se maneja todavía).</td></tr>
+        <tr><td>AddAccountEvent.kt</td><td>Eventos del formulario de alta: cambios de campo + <code>SaveClicked</code>.</td></tr>
+        <tr><td>AddAccountUiState.kt</td><td>Estado del formulario: inputs como String, validación centralizada en <code>validate()</code> (se ejecuta al guardar, no en cada tecla).</td></tr>
+        <tr><td>AddAccountViewModel.kt</td><td>Arma el <code>Account</code> completo al guardar: <code>creditLimitCents</code>/<code>statementDay</code>/<code>dueDay</code> solo si el tipo es <code>CREDIT_CARD</code>; <code>lastDigits</code> null si es <code>CASH</code>. El id de cuenta nuevo se genera con <code>UUID.randomUUID()</code>, igual que el resto de las PK del esquema.</td></tr>
+        <tr><td>AddAccountScreen.kt</td><td>Formulario con 3 variantes según <code>AccountType</code> (un solo composable data-driven, no 3 pantallas separadas): <code>EqSegmentedControl</code> para elegir tipo, campos de crédito solo si aplica, últimos 4 dígitos si no es efectivo, y el selector de <code>colorSlot</code> con los 3 gradientes reales de <code>AccountCard.kt</code>.</td></tr>
+      </tbody>
+    </table></div>
+
     <h3><span class="path">app/</span> <span class="badge">Módulo raíz</span></h3>
     <div class="table-wrap"><table>
       <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
@@ -353,7 +378,7 @@
     <div class="table-wrap"><table>
       <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
       <tbody>
-        <tr><td>settings.gradle.kts</td><td>Lista los 6 módulos del proyecto y los repositorios de dependencias.</td></tr>
+        <tr><td>settings.gradle.kts</td><td>Lista los 7 módulos del proyecto (app, core-ui, core-domain, core-data, feature-home, feature-entry, feature-accounts) y los repositorios de dependencias.</td></tr>
         <tr><td>build.gradle.kts</td><td>Declara los plugins de Gradle disponibles (Android, Kotlin, Hilt, KSP…) sin aplicarlos todavía — cada módulo elige cuáles usar.</td></tr>
         <tr><td>gradle/libs.versions.toml</td><td>El catálogo de versiones: <strong>todas</strong> las versiones de librerías y plugins están aquí, en un solo lugar.</td></tr>
         <tr><td>gradle.properties</td><td>Configuración de Gradle/AGP. Incluye <code>android.builtInKotlin=false</code> y <code>android.newDsl=false</code> — AGP 9 cambió su forma de compilar Kotlin por defecto; esas dos líneas mantienen el estilo clásico (<code>org.jetbrains.kotlin.android</code> + bloque <code>android {}</code>) que usa este proyecto.</td></tr>
@@ -380,7 +405,7 @@
 </main>
 
 <footer>
-  Equilibrio · Documento generado el 13 de septiembre de 2026, describe el estado del repositorio en ese commit.
+  Equilibrio · Documento generado el 13 de septiembre de 2026, actualizado el 14 de septiembre de 2026 (feature-accounts, categorías, last_digits), describe el estado del repositorio en ese commit.
 </footer>
 
 </body>

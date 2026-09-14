@@ -9,4 +9,26 @@ fun AccountEntity.toDomain(): Account = Account(
     userId = userId,
     name = name,
     type = AccountType.valueOf(type),
+    balanceCents = balanceCents,
+    creditLimitCents = creditLimitCents,
+    statementDay = statementDay,
+    dueDay = dueDay,
+    colorSlot = colorSlot,
+    lastDigits = lastDigits,
+)
+
+fun Account.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean = false): AccountEntity = AccountEntity(
+    id = id,
+    userId = userId,
+    name = name,
+    type = type.name,
+    balanceCents = balanceCents,
+    creditLimitCents = creditLimitCents,
+    statementDay = statementDay,
+    dueDay = dueDay,
+    colorSlot = colorSlot,
+    lastDigits = lastDigits,
+    updatedAt = updatedAt,
+    syncState = syncState,
+    isDeleted = isDeleted,
 )

@@ -11,10 +11,12 @@ import androidx.room.PrimaryKey
     foreignKeys = [
         ForeignKey(entity = UserEntity::class, parentColumns = ["id"], childColumns = ["user_id"]),
         ForeignKey(entity = AccountEntity::class, parentColumns = ["id"], childColumns = ["account_id"]),
+        ForeignKey(entity = CategoryEntity::class, parentColumns = ["id"], childColumns = ["category_id"]),
     ],
     indices = [
         Index(value = ["user_id", "occurred_at"]),
         Index(value = ["account_id"]),
+        Index(value = ["category_id"]),
     ],
 )
 data class TransactionEntity(
@@ -26,7 +28,7 @@ data class TransactionEntity(
     @ColumnInfo(name = "amount_cents") val amountCents: Long,
     @ColumnInfo(name = "occurred_at") val occurredAt: Long,
     val note: String?,
-    @ColumnInfo(name = "category_key") val categoryKey: String? = null,
+    @ColumnInfo(name = "category_id") val categoryId: String? = null,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     @ColumnInfo(name = "sync_state") val syncState: String,
     @ColumnInfo(name = "is_deleted") val isDeleted: Boolean = false,

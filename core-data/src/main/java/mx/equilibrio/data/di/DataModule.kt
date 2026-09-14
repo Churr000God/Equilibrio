@@ -9,12 +9,17 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import mx.equilibrio.data.local.EquilibrioDatabase
+import mx.equilibrio.data.local.MIGRATION_1_2
+import mx.equilibrio.data.local.MIGRATION_2_3
 import mx.equilibrio.data.local.dao.AccountDao
+import mx.equilibrio.data.local.dao.CategoryDao
 import mx.equilibrio.data.local.dao.TransactionDao
 import mx.equilibrio.data.local.dao.UserDao
 import mx.equilibrio.data.repository.AccountRepositoryImpl
+import mx.equilibrio.data.repository.CategoryRepositoryImpl
 import mx.equilibrio.data.repository.TransactionRepositoryImpl
 import mx.equilibrio.domain.repository.AccountRepository
+import mx.equilibrio.domain.repository.CategoryRepository
 import mx.equilibrio.domain.repository.TransactionRepository
 import javax.inject.Singleton
 
@@ -26,6 +31,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): EquilibrioDatabase =
         Room.databaseBuilder(context, EquilibrioDatabase::class.java, EquilibrioDatabase.DATABASE_NAME)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
 
     @Provides
@@ -36,6 +42,9 @@ object DatabaseModule {
 
     @Provides
     fun provideTransactionDao(database: EquilibrioDatabase): TransactionDao = database.transactionDao()
+
+    @Provides
+    fun provideCategoryDao(database: EquilibrioDatabase): CategoryDao = database.categoryDao()
 }
 
 @Module
@@ -47,4 +56,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindAccountRepository(impl: AccountRepositoryImpl): AccountRepository
+
+    @Binds
+    abstract fun bindCategoryRepository(impl: CategoryRepositoryImpl): CategoryRepository
 }

@@ -15,6 +15,7 @@ data class Transaction(
     val amountCents: Long,
     val occurredAt: LocalDate,
     val note: String? = null,
+    val categoryId: String? = null,
 ) {
     init {
         require(amountCents > 0) { "amountCents debe ser positivo, fue $amountCents" }

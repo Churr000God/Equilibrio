@@ -74,3 +74,39 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_category_id` ON `transactions` (`category_id`)")
     }
 }
+
+/** RF01 — perfil de Google en `users` (google_id/email/nombre/foto) + plan freemium (RF10). */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE users ADD COLUMN google_id TEXT DEFAULT NULL")
+        db.execSQL("ALTER TABLE users ADD COLUMN email TEXT DEFAULT NULL")
+        db.execSQL("ALTER TABLE users ADD COLUMN given_name TEXT DEFAULT NULL")
+        db.execSQL("ALTER TABLE users ADD COLUMN family_name TEXT DEFAULT NULL")
+        db.execSQL("ALTER TABLE users ADD COLUMN photo_url TEXT DEFAULT NULL")
+        db.execSQL("ALTER TABLE users ADD COLUMN plan TEXT NOT NULL DEFAULT 'FREE'")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_users_google_id` ON `users` (`google_id`)")
+    }
+}
+
+/** RF09 — tabla `alerts` para los banners de Inicio/Cuentas/Metas. */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `alerts` (
+                `id` TEXT NOT NULL,
+                `user_id` TEXT NOT NULL,
+                `type` TEXT NOT NULL,
+                `reference_id` TEXT,
+                `is_read` INTEGER NOT NULL DEFAULT 0,
+                `triggered_at` INTEGER NOT NULL,
+                `updated_at` INTEGER NOT NULL,
+                `is_deleted` INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY(`id`),
+                FOREIGN KEY(`user_id`) REFERENCES `users`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION
+            )
+            """.trimIndent(),
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_alerts_user_id` ON `alerts` (`user_id`)")
+    }
+}

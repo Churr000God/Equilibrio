@@ -24,6 +24,7 @@ fun EqTopBar(
     title: String,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -42,7 +43,9 @@ fun EqTopBar(
             text = title,
             style = EquilibrioTheme.typography.h1,
             color = EquilibrioTheme.colors.ink,
+            modifier = Modifier.weight(1f),
         )
+        trailing?.invoke()
     }
 }
 

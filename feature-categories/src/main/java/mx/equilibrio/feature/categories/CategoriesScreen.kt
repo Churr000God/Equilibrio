@@ -23,6 +23,7 @@ import mx.equilibrio.ui.theme.EquilibrioTheme
 fun CategoriesScreen(
     onAddCategoryClicked: () -> Unit,
     modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
     viewModel: CategoriesViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -30,7 +31,7 @@ fun CategoriesScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = EquilibrioTheme.colors.background,
-        topBar = { EqTopBar(title = "Categorías") },
+        topBar = { EqTopBar(title = "Categorías", trailing = trailing) },
         floatingActionButton = { EqFab(onClick = onAddCategoryClicked) },
     ) { padding ->
         when {

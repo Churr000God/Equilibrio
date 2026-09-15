@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import mx.equilibrio.ui.components.EqAlertBanner
 import mx.equilibrio.ui.components.EqAmount
 import mx.equilibrio.ui.components.EqBadge
 import mx.equilibrio.ui.components.EqCard
@@ -45,6 +46,7 @@ fun HomeScreen(
     onAddClicked: () -> Unit,
     onTransactionClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -62,7 +64,10 @@ fun HomeScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = EquilibrioTheme.colors.background,
-        topBar = { EqTopBar(title = "Hola") },
+        topBar = {
+            val title = state.greetingName?.let { "Hola, $it" } ?: "Hola"
+            EqTopBar(title = title, trailing = trailing)
+        },
         floatingActionButton = { EqFab(onClick = onAddClicked) },
     ) { padding ->
         when {
@@ -87,6 +92,12 @@ fun HomeScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(Spacing.base),
             ) {
+                items(state.pendingAlerts, key = { it.id }) { alert ->
+                    EqAlertBanner(
+                        message = alert.message,
+                        onDismiss = { viewModel.onEvent(HomeEvent.AlertDismissed(alert.id)) },
+                    )
+                }
                 item {
                     BalanceHeaderCard(state.balanceCents)
                 }

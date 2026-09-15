@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mx.equilibrio.domain.model.Account
 import mx.equilibrio.domain.model.AccountType
+import mx.equilibrio.domain.model.FreemiumResult
+import mx.equilibrio.domain.usecase.CheckFreemiumLimitUseCase
 import mx.equilibrio.domain.usecase.ObserveAccounts
 import mx.equilibrio.domain.usecase.SaveAccount
 import java.util.UUID
@@ -20,6 +22,7 @@ import javax.inject.Inject
 class AddAccountViewModel @Inject constructor(
     private val observeAccounts: ObserveAccounts,
     private val saveAccount: SaveAccount,
+    private val checkFreemiumLimit: CheckFreemiumLimitUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AddAccountUiState())
@@ -62,6 +65,7 @@ class AddAccountViewModel @Inject constructor(
             is AddAccountEvent.ColorSlotChanged -> _state.update { it.copy(colorSlot = event.slot) }
 
             AddAccountEvent.SaveClicked -> save()
+            AddAccountEvent.FreemiumDialogDismissed -> _state.update { it.copy(freemiumLimitReached = false) }
         }
     }
 
@@ -76,6 +80,11 @@ class AddAccountViewModel @Inject constructor(
         _state.update { it.copy(isSaving = true) }
 
         viewModelScope.launch {
+            if (checkFreemiumLimit() == FreemiumResult.LIMIT_REACHED) {
+                _state.update { it.copy(isSaving = false, freemiumLimitReached = true) }
+                return@launch
+            }
+
             val ownerId = observeAccounts().first().firstOrNull()?.userId
             if (ownerId == null) {
                 _state.update { it.copy(isSaving = false) }

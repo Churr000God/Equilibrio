@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -59,6 +60,38 @@ fun EqDestructiveDialog(
                 variant = EqButtonVariant.PRIMARY,
                 fullWidth = false,
             )
+        },
+        containerColor = colors.surface,
+        shape = ShapeMedium,
+    )
+}
+
+/** Diálogo informativo, no destructivo (p. ej. límite del plan freemium en RF10). */
+@Composable
+fun EqInfoDialog(
+    title: String,
+    body: String,
+    confirmLabel: String,
+    onConfirm: () -> Unit,
+) {
+    val colors = EquilibrioTheme.colors
+    AlertDialog(
+        onDismissRequest = onConfirm,
+        icon = {
+            Icon(
+                Icons.Rounded.Info,
+                contentDescription = null,
+                tint = colors.info,
+                modifier = Modifier
+                    .background(colors.infoSoft, ShapeMedium)
+                    .padding(Spacing.sm)
+                    .size(24.dp),
+            )
+        },
+        title = { Text(title, style = EquilibrioTheme.typography.h2, color = colors.ink) },
+        text = { Text(body, style = EquilibrioTheme.typography.body, color = colors.inkMuted) },
+        confirmButton = {
+            EqButton(text = confirmLabel, onClick = onConfirm, fullWidth = false)
         },
         containerColor = colors.surface,
         shape = ShapeMedium,

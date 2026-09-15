@@ -1,6 +1,8 @@
 package mx.equilibrio.feature.home
 
 import kotlinx.datetime.LocalDate
+import mx.equilibrio.domain.model.Alert
+import mx.equilibrio.domain.model.AlertType
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.ui.theme.DomainTone
@@ -34,11 +36,29 @@ data class TransactionUi(
     val isExpense: Boolean get() = kind == TransactionKind.EXPENSE
 }
 
+data class AlertUi(
+    val id: String,
+    val message: String,
+)
+
+private fun Alert.toUi() = AlertUi(
+    id = id,
+    message = when (type) {
+        AlertType.BALANCE_DEVIATION -> "Tu gasto recreativo se desvió de tu equilibrio habitual."
+        AlertType.GOAL_AT_RISK -> "Una de tus metas está en riesgo."
+        AlertType.CARD_DUE -> "Tienes un pago de tarjeta próximo a vencer."
+    },
+)
+
+fun List<Alert>.toUi(): List<AlertUi> = map { it.toUi() }
+
 data class HomeUiState(
     val isLoading: Boolean = true,
     val balanceCents: Long = 0,
     val transactions: List<TransactionUi> = emptyList(),
     val pendingDeletion: TransactionUi? = null,
+    val pendingAlerts: List<AlertUi> = emptyList(),
+    val greetingName: String? = null,
 ) {
     val isEmpty: Boolean get() = !isLoading && transactions.isEmpty()
 }

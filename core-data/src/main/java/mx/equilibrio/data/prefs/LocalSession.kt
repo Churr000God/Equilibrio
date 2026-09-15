@@ -5,7 +5,9 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mx.equilibrio.data.local.dao.AccountDao
@@ -42,6 +44,25 @@ class LocalSession @Inject constructor(
             val userId = existing ?: createLocalUser()
             cachedUserId = userId
             userId
+        }
+    }
+
+    /** Cambia la sesión activa a [userId] (login/switch de cuenta explícito). */
+    suspend fun setCurrentUserId(userId: String) {
+        mutex.withLock {
+            context.dataStore.edit { it[KEY_USER_ID] = userId }
+            cachedUserId = userId
+        }
+    }
+
+    /** Emite el id de sesión crudo (o `null` si aún no hay ninguno), sin auto-crear. */
+    fun observeCurrentUserId(): Flow<String?> = context.dataStore.data.map { it[KEY_USER_ID] }
+
+    /** Cierra sesión: la próxima llamada a [currentUserId] crea un usuario local nuevo. */
+    suspend fun clear() {
+        mutex.withLock {
+            context.dataStore.edit { it.remove(KEY_USER_ID) }
+            cachedUserId = null
         }
     }
 

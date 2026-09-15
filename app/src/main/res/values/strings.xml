@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Equilibrio</string>
+
+    <!--
+      TODO(RF01): Reemplazar con el "Web client ID" (tipo OAuth "Web application")
+      de un proyecto en Google Cloud Console → APIs & Services → Credentials.
+      Ese mismo proyecto necesita el SHA-1 de debug y de release registrado.
+      Sin este valor real, Credential Manager fallará el sign-in (el flujo lo
+      captura y lo muestra como error, no crashea la app).
+    -->
+    <string name="default_web_client_id" translatable="false">TODO-REPLACE-WITH-GOOGLE-CLOUD-WEB-CLIENT-ID.apps.googleusercontent.com</string>
 </resources>

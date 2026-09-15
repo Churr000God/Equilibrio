@@ -22,6 +22,7 @@ data class AddAccountUiState(
     val lastDigitsError: String? = null,
     val isSaving: Boolean = false,
     val saved: Boolean = false,
+    val freemiumLimitReached: Boolean = false,
 ) {
     val balanceCents: Long? get() = amountToCentsOrNull(balanceInput)
     val creditLimitCents: Long? get() = amountToCentsOrNull(creditLimitInput)

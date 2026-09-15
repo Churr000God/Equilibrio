@@ -22,6 +22,7 @@ import mx.equilibrio.ui.theme.Spacing
 fun AccountsScreen(
     onAddAccountClicked: () -> Unit,
     modifier: Modifier = Modifier,
+    trailing: (@Composable () -> Unit)? = null,
     viewModel: AccountsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -29,9 +30,10 @@ fun AccountsScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = EquilibrioTheme.colors.background,
-        topBar = { EqTopBar(title = "Cuentas") },
+        topBar = { EqTopBar(title = "Cuentas", trailing = trailing) },
         floatingActionButton = { EqFab(onClick = onAddAccountClicked) },
     ) { padding ->
+        // TODO: insertar AlertBanner aquí — coordinar con Persona 1
         when {
             state.isEmpty -> Box(
                 modifier = Modifier.fillMaxSize().padding(padding),

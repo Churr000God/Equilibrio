@@ -11,7 +11,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mx.equilibrio.domain.usecase.DeleteTransaction
+import mx.equilibrio.domain.usecase.GetPendingAlertsUseCase
+import mx.equilibrio.domain.usecase.MarkAlertAsReadUseCase
 import mx.equilibrio.domain.usecase.ObserveBalance
+import mx.equilibrio.domain.usecase.ObserveCurrentUser
 import mx.equilibrio.domain.usecase.ObserveTransactions
 import javax.inject.Inject
 
@@ -19,7 +22,10 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     observeTransactions: ObserveTransactions,
     observeBalance: ObserveBalance,
+    getPendingAlerts: GetPendingAlertsUseCase,
+    observeCurrentUser: ObserveCurrentUser,
     private val deleteTransaction: DeleteTransaction,
+    private val markAlertAsRead: MarkAlertAsReadUseCase,
 ) : ViewModel() {
 
     private val pendingDeletion = MutableStateFlow<TransactionUi?>(null)
@@ -28,7 +34,9 @@ class HomeViewModel @Inject constructor(
         observeTransactions(),
         observeBalance(),
         pendingDeletion,
-    ) { transactions, balance, pending ->
+        getPendingAlerts(),
+        observeCurrentUser(),
+    ) { transactions, balance, pending, alerts, user ->
         HomeUiState(
             isLoading = false,
             balanceCents = balance,
@@ -43,6 +51,8 @@ class HomeViewModel @Inject constructor(
                 )
             },
             pendingDeletion = pending,
+            pendingAlerts = alerts.toUi(),
+            greetingName = user?.givenName?.takeIf { it.isNotBlank() },
         )
     }.stateIn(
         scope = viewModelScope,
@@ -59,6 +69,8 @@ class HomeViewModel @Inject constructor(
                 pendingDeletion.update { null }
                 viewModelScope.launch { deleteTransaction(target.id) }
             }
+
+            is HomeEvent.AlertDismissed -> viewModelScope.launch { markAlertAsRead(event.alertId) }
         }
     }
 }

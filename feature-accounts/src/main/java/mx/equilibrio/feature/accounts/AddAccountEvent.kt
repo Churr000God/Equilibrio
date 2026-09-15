@@ -12,4 +12,5 @@ sealed interface AddAccountEvent {
     data class LastDigitsChanged(val raw: String) : AddAccountEvent
     data class ColorSlotChanged(val slot: Int) : AddAccountEvent
     data object SaveClicked : AddAccountEvent
+    data object FreemiumDialogDismissed : AddAccountEvent
 }

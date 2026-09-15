@@ -30,6 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mx.equilibrio.domain.model.AccountType
 import mx.equilibrio.ui.components.EqButton
+import mx.equilibrio.ui.components.EqInfoDialog
 import mx.equilibrio.ui.components.EqSegmentedControl
 import mx.equilibrio.ui.components.EqTextField
 import mx.equilibrio.ui.components.EqTopBar
@@ -50,6 +51,15 @@ fun AddAccountScreen(
 
     LaunchedEffect(state.saved) {
         if (state.saved) onSaved()
+    }
+
+    if (state.freemiumLimitReached) {
+        EqInfoDialog(
+            title = "Límite del plan gratuito",
+            body = "El plan FREE permite hasta 2 cuentas. Actualiza a Premium para agregar más.",
+            confirmLabel = "Entendido",
+            onConfirm = { viewModel.onEvent(AddAccountEvent.FreemiumDialogDismissed) },
+        )
     }
 
     Scaffold(

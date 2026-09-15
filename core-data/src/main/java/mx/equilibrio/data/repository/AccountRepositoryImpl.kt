@@ -21,6 +21,8 @@ class AccountRepositoryImpl @Inject constructor(
         emitAll(dao.observeAll(session.currentUserId()).map { list -> list.map { it.toDomain() } })
     }
 
+    override suspend fun count(): Int = dao.count(session.currentUserId())
+
     override suspend fun getById(id: String): Account? = dao.getById(id)?.toDomain()
 
     override suspend fun upsert(account: Account) {

@@ -14,6 +14,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import mx.equilibrio.app.auth.ProfileHud
+import mx.equilibrio.app.auth.ProfileScreen
 import mx.equilibrio.feature.accounts.AccountsScreen
 import mx.equilibrio.feature.accounts.AddAccountScreen
 import mx.equilibrio.feature.categories.AddCategoryScreen
@@ -32,6 +34,7 @@ private const val ROUTE_CATEGORIES = "categories"
 private const val ROUTE_ADD_CATEGORY = "add_category"
 private const val ROUTE_GOALS = "goals"
 private const val ROUTE_REPORTS = "reports"
+private const val ROUTE_PROFILE = "profile"
 private const val ARG_TRANSACTION_ID = "transactionId"
 private const val ROUTE_QUICK_ENTRY = "quick_entry?transactionId={$ARG_TRANSACTION_ID}"
 
@@ -88,10 +91,14 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                 HomeScreen(
                     onAddClicked = { navController.navigate(quickEntryRoute()) },
                     onTransactionClicked = { id -> navController.navigate(quickEntryRoute(id)) },
+                    trailing = { ProfileHud(onOpenProfile = { navController.navigate(ROUTE_PROFILE) }) },
                 )
             }
             composable(ROUTE_ACCOUNTS) {
-                AccountsScreen(onAddAccountClicked = { navController.navigate(ROUTE_ADD_ACCOUNT) })
+                AccountsScreen(
+                    onAddAccountClicked = { navController.navigate(ROUTE_ADD_ACCOUNT) },
+                    trailing = { ProfileHud(onOpenProfile = { navController.navigate(ROUTE_PROFILE) }) },
+                )
             }
             composable(ROUTE_ADD_ACCOUNT) {
                 AddAccountScreen(
@@ -100,7 +107,13 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                 )
             }
             composable(ROUTE_CATEGORIES) {
-                CategoriesScreen(onAddCategoryClicked = { navController.navigate(ROUTE_ADD_CATEGORY) })
+                CategoriesScreen(
+                    onAddCategoryClicked = { navController.navigate(ROUTE_ADD_CATEGORY) },
+                    trailing = { ProfileHud(onOpenProfile = { navController.navigate(ROUTE_PROFILE) }) },
+                )
+            }
+            composable(ROUTE_PROFILE) {
+                ProfileScreen(onBack = { navController.popBackStack() })
             }
             composable(ROUTE_ADD_CATEGORY) {
                 AddCategoryScreen(
@@ -109,6 +122,7 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                 )
             }
             composable(ROUTE_GOALS) {
+                // TODO: insertar AlertBanner aquí — coordinar con Persona 2
                 EqEmptyState(title = "Próximamente", body = "Las metas llegarán en una próxima versión.")
             }
             composable(ROUTE_REPORTS) {

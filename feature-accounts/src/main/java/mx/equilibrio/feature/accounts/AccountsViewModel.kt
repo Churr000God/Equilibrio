@@ -8,24 +8,38 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import mx.equilibrio.domain.model.Account
+import mx.equilibrio.domain.model.AccountType
+import mx.equilibrio.domain.usecase.GetPendingAlertsUseCase
+import mx.equilibrio.domain.usecase.MarkAlertAsReadUseCase
 import mx.equilibrio.domain.usecase.ObserveAccounts
+import mx.equilibrio.domain.usecase.ObserveAvailableBalances
 import javax.inject.Inject
 
 @HiltViewModel
 class AccountsViewModel @Inject constructor(
     observeAccounts: ObserveAccounts,
+    observeAvailableBalances: ObserveAvailableBalances,
+    getPendingAlerts: GetPendingAlertsUseCase,
+    private val markAlertAsRead: MarkAlertAsReadUseCase,
 ) : ViewModel() {
 
     private val selectedAccountId = MutableStateFlow<String?>(null)
 
-    val state: StateFlow<AccountsUiState> = combine(observeAccounts(), selectedAccountId) { accounts, selectedId ->
-        val uiAccounts = accounts.map { it.toUi() }
+    val state: StateFlow<AccountsUiState> = combine(
+        observeAccounts(),
+        selectedAccountId,
+        observeAvailableBalances(),
+        getPendingAlerts(),
+    ) { accounts, selectedId, availableBalances, alerts ->
+        val uiAccounts = accounts.map { it.toUi(availableBalances) }
         AccountsUiState(
             isLoading = false,
             accounts = uiAccounts,
             selectedAccountId = selectedId?.takeIf { id -> uiAccounts.any { it.id == id } }
                 ?: uiAccounts.firstOrNull()?.id,
+            pendingAlerts = alerts.toUi(),
         )
     }
         .stateIn(
@@ -39,11 +53,19 @@ class AccountsViewModel @Inject constructor(
         selectedAccountId.value = id
     }
 
-    private fun Account.toUi() = AccountUi(
+    fun onAlertDismissed(alertId: String) {
+        viewModelScope.launch { markAlertAsRead(alertId) }
+    }
+
+    private fun Account.toUi(availableBalances: Map<String, Long>) = AccountUi(
         id = id,
         name = name,
         type = type,
-        balanceCents = balanceCents,
+        balanceCents = if (type == AccountType.CASH || type == AccountType.BANK) {
+            availableBalances[id] ?: balanceCents
+        } else {
+            balanceCents
+        },
         colorSlot = colorSlot,
         lastDigits = lastDigits,
         creditLimitCents = creditLimitCents,

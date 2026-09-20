@@ -1,5 +1,5 @@
 [versions]
-agp = "9.3.2"
+agp = "9.3.3"
 kotlin = "2.3.20"
 ksp = "2.3.12"
 coreKtx = "1.19.0"
@@ -22,6 +22,7 @@ espresso = "3.7.0"
 credentials = "1.6.0"
 googleid = "1.2.0"
 coil = "3.6.2"
+argon2kt = "1.6.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -71,6 +72,8 @@ google-identity-googleid = { group = "com.google.android.libraries.identity.goog
 
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
+
+lambdapioneer-argon2kt = { group = "com.lambdapioneer.argon2kt", name = "argon2kt", version.ref = "argon2kt" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

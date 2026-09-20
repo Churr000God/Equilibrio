@@ -18,6 +18,9 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE google_id = :googleId LIMIT 1")
     suspend fun getByGoogleId(googleId: String): UserEntity?
 
+    @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
+    suspend fun getByEmail(email: String): UserEntity?
+
     @Upsert
     suspend fun upsert(entity: UserEntity)
 }

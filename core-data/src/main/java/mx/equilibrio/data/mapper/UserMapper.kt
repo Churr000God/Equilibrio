@@ -13,4 +13,5 @@ fun UserEntity.toDomain(): User = User(
     familyName = familyName,
     photoUrl = photoUrl,
     plan = PlanTier.valueOf(plan),
+    hasPassword = passwordHash != null,
 )

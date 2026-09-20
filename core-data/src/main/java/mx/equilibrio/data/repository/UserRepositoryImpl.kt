@@ -9,6 +9,7 @@ import mx.equilibrio.data.local.dao.UserDao
 import mx.equilibrio.data.local.entity.UserEntity
 import mx.equilibrio.data.mapper.toDomain
 import mx.equilibrio.data.prefs.LocalSession
+import mx.equilibrio.data.security.PasswordHasher
 import mx.equilibrio.domain.model.User
 import mx.equilibrio.domain.repository.UserRepository
 import javax.inject.Inject
@@ -16,6 +17,7 @@ import javax.inject.Inject
 class UserRepositoryImpl @Inject constructor(
     private val dao: UserDao,
     private val session: LocalSession,
+    private val passwordHasher: PasswordHasher,
 ) : UserRepository {
 
     override suspend fun getCurrentUser(): User? = dao.getById(session.currentUserId())?.toDomain()
@@ -51,7 +53,9 @@ class UserRepositoryImpl @Inject constructor(
         val updated = base.copy(
             googleId = googleId,
             email = email ?: base.email,
-            displayName = displayName ?: base.displayName,
+            // El nombre de usuario es una elección del usuario (Perfil) — Google nunca lo
+            // sobreescribe en re-logins, solo lo siembra la primera vez si aún no existe.
+            displayName = base.displayName ?: displayName,
             givenName = givenName ?: base.givenName,
             familyName = familyName ?: base.familyName,
             photoUrl = photoUrl ?: base.photoUrl,
@@ -86,5 +90,52 @@ class UserRepositoryImpl @Inject constructor(
         )
         dao.upsert(updated)
         return updated.toDomain()
+    }
+
+    override suspend fun registerWithPassword(displayName: String?, email: String, password: String): Result<User> {
+        val normalizedEmail = email.trim().lowercase()
+        if (dao.getByEmail(normalizedEmail) != null) {
+            return Result.failure(IllegalStateException("Ya existe una cuenta con ese correo."))
+        }
+
+        return try {
+            val now = System.currentTimeMillis()
+            val targetId = session.currentUserId()
+            val base = dao.getById(targetId) ?: UserEntity(
+                id = targetId,
+                displayName = null,
+                createdAt = now,
+                updatedAt = now,
+                syncState = "PENDING",
+            )
+
+            val updated = base.copy(
+                email = normalizedEmail,
+                displayName = displayName ?: base.displayName,
+                passwordHash = passwordHasher.hash(password),
+                updatedAt = now,
+                syncState = "PENDING",
+            )
+
+            dao.upsert(updated)
+            session.setCurrentUserId(targetId)
+            Result.success(updated.toDomain())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun signInWithPassword(email: String, password: String): Result<User> {
+        val invalidCredentials = IllegalArgumentException("Correo o contraseña incorrectos.")
+        return try {
+            val entity = dao.getByEmail(email.trim().lowercase()) ?: return Result.failure(invalidCredentials)
+            val hash = entity.passwordHash ?: return Result.failure(invalidCredentials)
+            if (!passwordHasher.verify(password, hash)) return Result.failure(invalidCredentials)
+
+            session.setCurrentUserId(entity.id)
+            Result.success(entity.toDomain())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

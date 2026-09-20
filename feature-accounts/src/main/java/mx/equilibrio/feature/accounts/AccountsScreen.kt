@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import mx.equilibrio.ui.components.EqAlertBanner
 import mx.equilibrio.ui.components.EqEmptyState
 import mx.equilibrio.ui.components.EqFab
 import mx.equilibrio.ui.components.EqTopBar
@@ -33,28 +34,35 @@ fun AccountsScreen(
         topBar = { EqTopBar(title = "Cuentas", trailing = trailing) },
         floatingActionButton = { EqFab(onClick = onAddAccountClicked) },
     ) { padding ->
-        // TODO: insertar AlertBanner aquí — coordinar con Persona 1
-        when {
-            state.isEmpty -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center,
-            ) {
-                EqEmptyState(
-                    title = "Aún no tienes cuentas",
-                    body = "Agrega tu primera cuenta para empezar a registrar movimientos.",
+        Column(modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
+            state.pendingAlerts.forEach { alert ->
+                EqAlertBanner(
+                    message = alert.message,
+                    onDismiss = { viewModel.onAlertDismissed(alert.id) },
+                    modifier = Modifier.padding(horizontal = Spacing.base, vertical = Spacing.xs),
                 )
             }
 
-            else -> Column(
-                modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding()),
-            ) {
-                AccountsCarousel(
-                    accounts = state.accounts,
-                    selectedAccountId = state.selectedAccountId,
-                    onAccountSelected = viewModel::onAccountSelected,
-                    modifier = Modifier.padding(top = Spacing.base),
-                )
-                // El detalle de la cuenta seleccionada (state.selectedAccountId) se conecta en otra tarea.
+            when {
+                state.isEmpty -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    EqEmptyState(
+                        title = "Aún no tienes cuentas",
+                        body = "Agrega tu primera cuenta para empezar a registrar movimientos.",
+                    )
+                }
+
+                else -> Column(modifier = Modifier.fillMaxSize()) {
+                    AccountsCarousel(
+                        accounts = state.accounts,
+                        selectedAccountId = state.selectedAccountId,
+                        onAccountSelected = viewModel::onAccountSelected,
+                        modifier = Modifier.padding(top = Spacing.base),
+                    )
+                    // El detalle de la cuenta seleccionada (state.selectedAccountId) se conecta en otra tarea.
+                }
             }
         }
     }

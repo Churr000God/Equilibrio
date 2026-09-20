@@ -35,6 +35,7 @@ import mx.equilibrio.ui.theme.Spacing
 @Composable
 fun ProfileScreen(
     onBack: () -> Unit,
+    onLoginWithPassword: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -126,7 +127,7 @@ fun ProfileScreen(
                     )
                 } else {
                     Text(
-                        text = "Inicia sesión con Google para respaldar tu perfil.",
+                        text = "Usas Equilibrio como invitado. Inicia sesión, si quieres, para respaldar tu perfil.",
                         style = EquilibrioTheme.typography.bodySmall,
                         color = colors.inkMuted,
                     )
@@ -137,6 +138,11 @@ fun ProfileScreen(
                         text = "Iniciar sesión con Google",
                         onClick = { viewModel.signIn(context) },
                         loading = state.isSigningIn,
+                    )
+                    EqButton(
+                        text = "Usar correo y contraseña",
+                        onClick = onLoginWithPassword,
+                        variant = EqButtonVariant.SECONDARY,
                     )
                     if (BuildConfig.DEBUG) {
                         EqButton(

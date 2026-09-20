@@ -1,10 +1,13 @@
 package mx.equilibrio.data.repository
 
+import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import mx.equilibrio.data.local.EquilibrioDatabase
 import mx.equilibrio.data.local.dao.TransactionDao
+import mx.equilibrio.data.local.dao.TransferDao
 import mx.equilibrio.data.mapper.toDomain
 import mx.equilibrio.data.mapper.toEntity
 import mx.equilibrio.data.prefs.LocalSession
@@ -13,7 +16,9 @@ import mx.equilibrio.domain.repository.TransactionRepository
 import javax.inject.Inject
 
 class TransactionRepositoryImpl @Inject constructor(
+    private val db: EquilibrioDatabase,
     private val dao: TransactionDao,
+    private val transferDao: TransferDao,
     private val session: LocalSession,
 ) : TransactionRepository {
 
@@ -36,7 +41,26 @@ class TransactionRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun delete(id: String) {
-        dao.markDeleted(id, now = System.currentTimeMillis())
+    override suspend fun confirm(id: String) = db.withTransaction {
+        val now = System.currentTimeMillis()
+        val transfer = transferDao.findByTransactionId(id)
+        if (transfer != null) {
+            dao.confirm(transfer.egresoId, now)
+            dao.confirm(transfer.ingresoId, now)
+        } else {
+            dao.confirm(id, now)
+        }
+    }
+
+    override suspend fun delete(id: String) = db.withTransaction {
+        val now = System.currentTimeMillis()
+        val transfer = transferDao.findByTransactionId(id)
+        if (transfer != null) {
+            dao.markDeleted(transfer.egresoId, now)
+            dao.markDeleted(transfer.ingresoId, now)
+            transferDao.markDeleted(transfer.id, now)
+        } else {
+            dao.markDeleted(id, now)
+        }
     }
 }

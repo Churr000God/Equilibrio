@@ -1,6 +1,8 @@
 package mx.equilibrio.feature.accounts
 
 import mx.equilibrio.domain.model.AccountType
+import mx.equilibrio.domain.model.Alert
+import mx.equilibrio.domain.model.AlertType
 import mx.equilibrio.ui.theme.DomainTone
 
 data class AccountUi(
@@ -28,10 +30,23 @@ data class AccountUi(
         get() = lastDigits?.let { "•••• " + it.toString().padStart(4, '0').takeLast(4) } ?: "****"
 }
 
+data class AlertUi(
+    val id: String,
+    val message: String,
+)
+
+private fun Alert.toUi() = AlertUi(
+    id = id,
+    message = "Tu gasto recreativo se desvió de tu equilibrio habitual.",
+)
+
+fun List<Alert>.toUi(): List<AlertUi> = filter { it.type == AlertType.BALANCE_DEVIATION }.map { it.toUi() }
+
 data class AccountsUiState(
     val isLoading: Boolean = true,
     val accounts: List<AccountUi> = emptyList(),
     val selectedAccountId: String? = null,
+    val pendingAlerts: List<AlertUi> = emptyList(),
 ) {
     val isEmpty: Boolean get() = !isLoading && accounts.isEmpty()
 }

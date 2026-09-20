@@ -22,7 +22,7 @@ interface TransactionDao {
         """
         SELECT COALESCE(SUM(CASE WHEN kind = 'INCOME' THEN amount_cents ELSE -amount_cents END), 0)
         FROM transactions
-        WHERE user_id = :userId AND is_deleted = 0
+        WHERE user_id = :userId AND is_deleted = 0 AND status = 'COMPLETED'
         """,
     )
     fun observeBalanceCents(userId: String): Flow<Long>
@@ -37,4 +37,9 @@ interface TransactionDao {
         "UPDATE transactions SET is_deleted = 1, sync_state = 'PENDING', updated_at = :now WHERE id = :id",
     )
     suspend fun markDeleted(id: String, now: Long)
+
+    @Query(
+        "UPDATE transactions SET status = 'COMPLETED', sync_state = 'PENDING', updated_at = :now WHERE id = :id",
+    )
+    suspend fun confirm(id: String, now: Long)
 }

@@ -49,6 +49,8 @@ dependencies {
 
     implementation(libs.androidx.datastore.preferences)
 
+    implementation(libs.lambdapioneer.argon2kt)
+
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
 

@@ -52,7 +52,8 @@ class HomeViewModel @Inject constructor(
             },
             pendingDeletion = pending,
             pendingAlerts = alerts.toUi(),
-            greetingName = user?.givenName?.takeIf { it.isNotBlank() },
+            // RF01 — el saludo usa el nombre de usuario elegido en Perfil, no el nombre de Google.
+            greetingName = user?.displayName?.takeIf { it.isNotBlank() },
         )
     }.stateIn(
         scope = viewModelScope,

@@ -9,6 +9,7 @@ import mx.equilibrio.data.local.entity.TransactionEntity
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
+import mx.equilibrio.domain.model.TransactionStatus
 
 fun LocalDate.toEpochMillis(): Long = atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
 
@@ -24,6 +25,7 @@ fun TransactionEntity.toDomain(): Transaction = Transaction(
     occurredAt = occurredAt.toLocalDate(),
     note = note,
     categoryId = categoryId,
+    status = TransactionStatus.valueOf(status),
 )
 
 fun Transaction.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean = false): TransactionEntity = TransactionEntity(
@@ -39,4 +41,5 @@ fun Transaction.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean 
     updatedAt = updatedAt,
     syncState = syncState,
     isDeleted = isDeleted,
+    status = status.name,
 )

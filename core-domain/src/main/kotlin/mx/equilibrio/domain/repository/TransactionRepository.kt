@@ -9,4 +9,5 @@ interface TransactionRepository {
     suspend fun getById(id: String): Transaction?
     suspend fun upsert(transaction: Transaction)
     suspend fun delete(id: String)
+    suspend fun confirm(id: String)
 }

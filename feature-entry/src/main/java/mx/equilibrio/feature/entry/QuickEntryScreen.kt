@@ -1,5 +1,8 @@
 package mx.equilibrio.feature.entry
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,14 +11,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,9 +37,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import mx.equilibrio.domain.model.Account
+import mx.equilibrio.domain.model.AccountType
+import mx.equilibrio.domain.model.Category
+import mx.equilibrio.domain.model.CategoryType
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.TransactionKind
+import mx.equilibrio.domain.model.TransactionStatus
+import mx.equilibrio.ui.components.EqBadge
 import mx.equilibrio.ui.components.EqButton
+import mx.equilibrio.ui.components.EqColorSlotPicker
 import mx.equilibrio.ui.components.EqDestructiveDialog
 import mx.equilibrio.ui.components.EqDomainToggleOption
 import mx.equilibrio.ui.components.EqInlineValidation
@@ -38,8 +54,28 @@ import mx.equilibrio.ui.components.EqSegmentedControl
 import mx.equilibrio.ui.components.EqTextField
 import mx.equilibrio.ui.components.EqTopBar
 import mx.equilibrio.ui.theme.DomainTone
+import mx.equilibrio.ui.theme.EquilibrioColors
 import mx.equilibrio.ui.theme.EquilibrioTheme
+import mx.equilibrio.ui.theme.ShapeSmall
 import mx.equilibrio.ui.theme.Spacing
+
+/** Slots de color fijos para categorías (mismo criterio que categoryColor en :feature-categories). */
+private const val CategoryColorSlotCount = 3
+
+/** (profundo, base, medio) de la familia de dominio de este tipo, espejo de categoryPalette en :feature-categories. */
+private fun categoryPalette(type: CategoryType, colors: EquilibrioColors) = when (type) {
+    CategoryType.INCOME -> Triple(colors.greenDeep, colors.green, colors.greenMid)
+    CategoryType.EXPENSE -> Triple(colors.purpleDeep, colors.purple, colors.purpleMid)
+}
+
+private fun categoryColor(type: CategoryType, colorSlot: Int, colors: EquilibrioColors): androidx.compose.ui.graphics.Color {
+    val (deep, base, mid) = categoryPalette(type, colors)
+    return when (((colorSlot % 3) + 3) % 3) {
+        0 -> base
+        1 -> deep
+        else -> mid
+    }
+}
 
 @Composable
 fun QuickEntryScreen(
@@ -50,15 +86,14 @@ fun QuickEntryScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    androidx.compose.runtime.LaunchedEffect(state.saved) {
+    LaunchedEffect(state.saved) {
         if (state.saved) onSaved()
     }
 
     var showDiscardConfirm by remember { mutableStateOf(false) }
-    val hasUnsavedInput = state.amountInput.isNotBlank() || state.note.isNotBlank() || state.classification != null
 
     fun handleBack() {
-        if (hasUnsavedInput) showDiscardConfirm = true else onCancel()
+        if (state.hasUnsavedInput) showDiscardConfirm = true else onCancel()
     }
 
     if (showDiscardConfirm) {
@@ -89,54 +124,107 @@ fun QuickEntryScreen(
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
-            EqSegmentedControl(
-                options = listOf("Gasto", "Ingreso"),
-                selectedIndex = if (state.kind == TransactionKind.EXPENSE) 0 else 1,
-                onSelect = { index ->
-                    viewModel.onEvent(
-                        QuickEntryEvent.KindChanged(
-                            if (index == 0) TransactionKind.EXPENSE else TransactionKind.INCOME,
-                        ),
-                    )
-                },
-            )
-
-            Column {
-                EqTextField(
-                    value = state.amountInput,
-                    onValueChange = { viewModel.onEvent(QuickEntryEvent.AmountChanged(it)) },
-                    label = "Monto",
-                    keyboardType = KeyboardType.Decimal,
-                    isError = state.amountError != null,
-                    helperOrError = state.amountError,
+            if (state.isEditing) {
+                EqSegmentedControl(
+                    options = listOf("Ver", "Editar"),
+                    selectedIndex = if (state.viewTab == EntryViewTab.VIEW) 0 else 1,
+                    onSelect = { index ->
+                        val tab = if (index == 0) EntryViewTab.VIEW else EntryViewTab.EDIT
+                        viewModel.onEvent(QuickEntryEvent.ViewTabChanged(tab))
+                    },
                 )
             }
 
-            ClassificationSection(
-                kind = state.kind,
-                selected = state.classification,
-                onSelect = { viewModel.onEvent(QuickEntryEvent.ClassificationChanged(it)) },
-            )
+            if (state.isEditing && state.viewTab == EntryViewTab.VIEW) {
+                TransactionViewSection(
+                    state = state,
+                    onConfirmClicked = { viewModel.onEvent(QuickEntryEvent.ConfirmClicked) },
+                )
+            } else {
+                EqSegmentedControl(
+                    options = listOf("Gasto", "Ingreso", "Transferencia"),
+                    selectedIndex = when (state.mode) {
+                        EntryMode.EXPENSE -> 0
+                        EntryMode.INCOME -> 1
+                        EntryMode.TRANSFER -> 2
+                    },
+                    onSelect = { index ->
+                        val mode = when (index) {
+                            0 -> EntryMode.EXPENSE
+                            1 -> EntryMode.INCOME
+                            else -> EntryMode.TRANSFER
+                        }
+                        viewModel.onEvent(QuickEntryEvent.EntryModeChanged(mode))
+                    },
+                )
 
-            DateSection(
-                dateLabel = state.occurredAt.toString(),
-                error = state.dateError,
-                onDateSelected = { viewModel.onEvent(QuickEntryEvent.DateChanged(it)) },
-            )
+                Column {
+                    EqTextField(
+                        value = state.amountInput,
+                        onValueChange = { viewModel.onEvent(QuickEntryEvent.AmountChanged(it)) },
+                        label = "Monto",
+                        keyboardType = KeyboardType.Decimal,
+                        isError = state.amountError != null,
+                        helperOrError = state.amountError,
+                    )
+                }
 
-            EqTextField(
-                value = state.note,
-                onValueChange = { viewModel.onEvent(QuickEntryEvent.NoteChanged(it)) },
-                label = "Nota (opcional)",
-            )
+                if (state.mode == EntryMode.TRANSFER) {
+                    TransferAccountsSection(
+                        accounts = state.accounts,
+                        originId = state.originAccountId,
+                        destinationId = state.destinationAccountId,
+                        error = state.transferError,
+                        onOriginSelected = { viewModel.onEvent(QuickEntryEvent.OriginAccountSelected(it)) },
+                        onDestinationSelected = { viewModel.onEvent(QuickEntryEvent.DestinationAccountSelected(it)) },
+                    )
+                } else {
+                    ClassificationSection(
+                        kind = state.kind,
+                        selected = state.classification,
+                        onSelect = { viewModel.onEvent(QuickEntryEvent.ClassificationChanged(it)) },
+                    )
 
-            EqButton(
-                text = if (state.kind == TransactionKind.EXPENSE) "Guardar gasto" else "Guardar ingreso",
-                onClick = { viewModel.onEvent(QuickEntryEvent.SaveClicked) },
-                enabled = state.canSave,
-                loading = state.isSaving,
-                modifier = Modifier.padding(vertical = Spacing.base),
-            )
+                    CategorySection(
+                        kind = state.kind,
+                        categories = state.categories,
+                        selectedId = state.categoryId,
+                        isCreating = state.isCreatingCategory,
+                        newCategoryName = state.newCategoryName,
+                        newCategoryNameError = state.newCategoryNameError,
+                        newCategoryColorSlot = state.newCategoryColorSlot,
+                        isSavingCategory = state.isSavingCategory,
+                        onSelect = { viewModel.onEvent(QuickEntryEvent.CategorySelected(it)) },
+                        onToggleCreate = { viewModel.onEvent(QuickEntryEvent.CreateCategoryTabToggled(it)) },
+                        onNewNameChanged = { viewModel.onEvent(QuickEntryEvent.NewCategoryNameChanged(it)) },
+                        onNewColorSlotChanged = { viewModel.onEvent(QuickEntryEvent.NewCategoryColorSlotChanged(it)) },
+                        onSaveCategory = { viewModel.onEvent(QuickEntryEvent.SaveCategoryClicked) },
+                    )
+                }
+
+                DateSection(
+                    dateLabel = state.occurredAt.toString(),
+                    onDateSelected = { viewModel.onEvent(QuickEntryEvent.DateChanged(it)) },
+                )
+
+                EqTextField(
+                    value = state.note,
+                    onValueChange = { viewModel.onEvent(QuickEntryEvent.NoteChanged(it)) },
+                    label = "Nota (opcional)",
+                )
+
+                EqButton(
+                    text = when (state.mode) {
+                        EntryMode.EXPENSE -> "Guardar gasto"
+                        EntryMode.INCOME -> "Guardar ingreso"
+                        EntryMode.TRANSFER -> "Guardar transferencia"
+                    },
+                    onClick = { viewModel.onEvent(QuickEntryEvent.SaveClicked) },
+                    enabled = state.canSave,
+                    loading = state.isSaving,
+                    modifier = Modifier.padding(vertical = Spacing.base),
+                )
+            }
         }
     }
 }
@@ -193,23 +281,219 @@ private fun ClassificationSection(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DateSection(
-    dateLabel: String,
-    error: String?,
-    onDateSelected: (kotlinx.datetime.LocalDate) -> Unit,
+private fun CategorySection(
+    kind: TransactionKind,
+    categories: List<Category>,
+    selectedId: String?,
+    isCreating: Boolean,
+    newCategoryName: String,
+    newCategoryNameError: String?,
+    newCategoryColorSlot: Int,
+    isSavingCategory: Boolean,
+    onSelect: (String?) -> Unit,
+    onToggleCreate: (Boolean) -> Unit,
+    onNewNameChanged: (String) -> Unit,
+    onNewColorSlotChanged: (Int) -> Unit,
+    onSaveCategory: () -> Unit,
 ) {
-    var showPicker by remember { mutableStateOf(false) }
+    val type = if (kind == TransactionKind.EXPENSE) CategoryType.EXPENSE else CategoryType.INCOME
+    val tone = if (kind == TransactionKind.EXPENSE) DomainTone.RECREATIONAL else DomainTone.INCOME_FIXED
+    val filtered = categories.filter { it.type == type }.sortedBy { it.name }
 
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-        TextButton(onClick = { showPicker = true }) {
-            Text("Fecha: $dateLabel", style = EquilibrioTheme.typography.bodyStrong)
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        Text(
+            text = "Categoría (opcional)",
+            style = EquilibrioTheme.typography.bodySmall,
+            color = EquilibrioTheme.colors.inkMuted,
+        )
+
+        EqSegmentedControl(
+            options = listOf("Elegir", "Nueva categoría"),
+            selectedIndex = if (isCreating) 1 else 0,
+            onSelect = { index -> onToggleCreate(index == 1) },
+        )
+
+        if (isCreating) {
+            EqTextField(
+                value = newCategoryName,
+                onValueChange = onNewNameChanged,
+                label = "Nombre de la categoría",
+                isError = newCategoryNameError != null,
+                helperOrError = newCategoryNameError,
+            )
+            EqColorSlotPicker(
+                colors = (0 until CategoryColorSlotCount).map { slot ->
+                    categoryColor(type, slot, EquilibrioTheme.colors)
+                },
+                selectedSlot = newCategoryColorSlot,
+                onSelect = onNewColorSlotChanged,
+            )
+            EqButton(
+                text = "Guardar categoría",
+                onClick = onSaveCategory,
+                enabled = newCategoryName.isNotBlank() && !isSavingCategory,
+                loading = isSavingCategory,
+            )
+        } else {
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            ) {
+                EqDomainToggleOption(
+                    label = "Sin categoría",
+                    tone = DomainTone.NEUTRAL,
+                    selected = selectedId == null,
+                    onClick = { onSelect(null) },
+                )
+                filtered.forEach { category ->
+                    EqDomainToggleOption(
+                        label = category.name,
+                        tone = tone,
+                        selected = selectedId == category.id,
+                        onClick = { onSelect(category.id) },
+                    )
+                }
+            }
         }
+    }
+}
+
+@Composable
+private fun TransferAccountsSection(
+    accounts: List<Account>,
+    originId: String?,
+    destinationId: String?,
+    error: String?,
+    onOriginSelected: (String) -> Unit,
+    onDestinationSelected: (String) -> Unit,
+) {
+    val transferable = accounts.filter { it.type != AccountType.CREDIT_CARD }
+
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            Text(
+                text = "Cuenta origen",
+                style = EquilibrioTheme.typography.bodySmall,
+                color = EquilibrioTheme.colors.inkMuted,
+            )
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            ) {
+                transferable.forEach { account ->
+                    EqDomainToggleOption(
+                        label = account.name,
+                        tone = DomainTone.NEUTRAL,
+                        selected = originId == account.id,
+                        onClick = { onOriginSelected(account.id) },
+                    )
+                }
+            }
+        }
+
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            Text(
+                text = "Cuenta destino",
+                style = EquilibrioTheme.typography.bodySmall,
+                color = EquilibrioTheme.colors.inkMuted,
+            )
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            ) {
+                transferable.forEach { account ->
+                    EqDomainToggleOption(
+                        label = account.name,
+                        tone = DomainTone.NEUTRAL,
+                        selected = destinationId == account.id,
+                        onClick = { onDestinationSelected(account.id) },
+                    )
+                }
+            }
+        }
+
         if (error != null) {
             EqInlineValidation(error)
         }
     }
+}
+
+@Composable
+private fun TransactionViewSection(
+    state: QuickEntryUiState,
+    onConfirmClicked: () -> Unit,
+) {
+    val accountName = state.accounts.firstOrNull { it.id == state.accountId }?.name ?: "—"
+    val categoryName = state.categories.firstOrNull { it.id == state.categoryId }?.name ?: "Sin categoría"
+
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+        if (state.status == TransactionStatus.SCHEDULED) {
+            EqBadge(text = "Programada", tone = DomainTone.NEUTRAL)
+        }
+
+        SummaryRow(label = "Monto", value = state.amountInput)
+        SummaryRow(label = "Cuenta", value = accountName)
+        SummaryRow(label = "Categoría", value = categoryName)
+        SummaryRow(label = "Fecha", value = state.occurredAt.toString())
+        if (state.note.isNotBlank()) {
+            SummaryRow(label = "Nota", value = state.note)
+        }
+
+        if (state.status == TransactionStatus.SCHEDULED) {
+            EqButton(
+                text = "Confirmar",
+                onClick = onConfirmClicked,
+                loading = state.isConfirming,
+                modifier = Modifier.padding(top = Spacing.base),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SummaryRow(label: String, value: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        Text(text = label, style = EquilibrioTheme.typography.bodySmall, color = EquilibrioTheme.colors.inkMuted)
+        Text(text = value, style = EquilibrioTheme.typography.bodyStrong, color = EquilibrioTheme.colors.ink)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateSection(
+    dateLabel: String,
+    onDateSelected: (kotlinx.datetime.LocalDate) -> Unit,
+) {
+    var showPicker by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collect { interaction ->
+            if (interaction is PressInteraction.Release) showPicker = true
+        }
+    }
+
+    val colors = EquilibrioTheme.colors
+    OutlinedTextField(
+        value = dateLabel,
+        onValueChange = {},
+        readOnly = true,
+        label = { Text("Fecha de ejecución") },
+        leadingIcon = { Icon(Icons.Default.DateRange, contentDescription = null) },
+        singleLine = true,
+        shape = ShapeSmall,
+        interactionSource = interactionSource,
+        textStyle = EquilibrioTheme.typography.body,
+        modifier = Modifier.fillMaxWidth(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = colors.info,
+            unfocusedBorderColor = colors.border,
+            focusedTextColor = colors.ink,
+            unfocusedTextColor = colors.ink,
+            cursorColor = colors.info,
+        ),
+    )
 
     if (showPicker) {
         val pickerState = rememberDatePickerState()

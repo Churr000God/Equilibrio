@@ -30,7 +30,7 @@ data class TransactionUi(
             Classification.VARIABLE -> "Variable"
             Classification.ESSENTIAL -> "Esencial"
             Classification.RECREATIONAL -> "Recreativo"
-            null -> "Sin clasificar"
+            null -> "Transferencia"
         }
 
     val isExpense: Boolean get() = kind == TransactionKind.EXPENSE

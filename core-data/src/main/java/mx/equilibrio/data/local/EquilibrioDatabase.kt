@@ -6,11 +6,13 @@ import mx.equilibrio.data.local.dao.AccountDao
 import mx.equilibrio.data.local.dao.AlertDao
 import mx.equilibrio.data.local.dao.CategoryDao
 import mx.equilibrio.data.local.dao.TransactionDao
+import mx.equilibrio.data.local.dao.TransferDao
 import mx.equilibrio.data.local.dao.UserDao
 import mx.equilibrio.data.local.entity.AccountEntity
 import mx.equilibrio.data.local.entity.AlertEntity
 import mx.equilibrio.data.local.entity.CategoryEntity
 import mx.equilibrio.data.local.entity.TransactionEntity
+import mx.equilibrio.data.local.entity.TransferEntity
 import mx.equilibrio.data.local.entity.UserEntity
 
 @Database(
@@ -20,8 +22,9 @@ import mx.equilibrio.data.local.entity.UserEntity
         TransactionEntity::class,
         CategoryEntity::class,
         AlertEntity::class,
+        TransferEntity::class,
     ],
-    version = 5,
+    version = 7,
     exportSchema = true,
 )
 abstract class EquilibrioDatabase : RoomDatabase() {
@@ -30,6 +33,7 @@ abstract class EquilibrioDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun categoryDao(): CategoryDao
     abstract fun alertDao(): AlertDao
+    abstract fun transferDao(): TransferDao
 
     companion object {
         const val DATABASE_NAME = "equilibrio.db"

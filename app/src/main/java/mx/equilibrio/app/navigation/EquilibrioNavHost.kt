@@ -21,6 +21,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import mx.equilibrio.app.ui.ComingSoonScreen
 import mx.equilibrio.feature.entry.QuickEntryScreen
+import mx.equilibrio.feature.goals.GoalEditorScreen
+import mx.equilibrio.feature.goals.GoalsScreen
 import mx.equilibrio.feature.home.HomeScreen
 import mx.equilibrio.ui.components.EqBottomNav
 import mx.equilibrio.ui.components.EqNavDestination
@@ -28,6 +30,11 @@ import mx.equilibrio.ui.theme.Spacing
 
 private const val ARG_TRANSACTION_ID = "transactionId"
 private const val ROUTE_QUICK_ENTRY = "quick_entry?transactionId={$ARG_TRANSACTION_ID}"
+private const val ARG_GOAL_ID = "goalId"
+private const val ROUTE_GOAL_EDITOR = "goal_editor?goalId={$ARG_GOAL_ID}"
+
+private fun goalEditorRoute(goalId: String? = null) =
+    "goal_editor" + if (goalId != null) "?goalId=$goalId" else ""
 
 private fun quickEntryRoute(transactionId: String? = null) =
     "quick_entry" + if (transactionId != null) "?transactionId=$transactionId" else ""
@@ -59,7 +66,13 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                 )
             }
             composable(EqNavDestination.ACCOUNTS.route) { ComingSoonScreen(title = "Tus cuentas") }
-            composable(EqNavDestination.GOALS.route) { ComingSoonScreen(title = "Tus metas") }
+            composable(EqNavDestination.GOALS.route) {
+                GoalsScreen(
+                    onAddClicked = { navController.navigate(goalEditorRoute()) },
+                    onGoalClicked = { id -> navController.navigate(goalEditorRoute(id)) },
+                    bottomInset = TabBarInset,
+                )
+            }
             composable(EqNavDestination.REPORTS.route) { ComingSoonScreen(title = "Tu resumen") }
             composable(
                 route = ROUTE_QUICK_ENTRY,
@@ -72,6 +85,21 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                 ),
             ) {
                 QuickEntryScreen(
+                    onSaved = { navController.popBackStack() },
+                    onCancel = { navController.popBackStack() },
+                )
+            }
+            composable(
+                route = ROUTE_GOAL_EDITOR,
+                arguments = listOf<NamedNavArgument>(
+                    navArgument(ARG_GOAL_ID) {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                ),
+            ) {
+                GoalEditorScreen(
                     onSaved = { navController.popBackStack() },
                     onCancel = { navController.popBackStack() },
                 )

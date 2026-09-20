@@ -1,9 +1,12 @@
 package mx.equilibrio.data.repository
 
+import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import mx.equilibrio.data.local.EquilibrioDatabase
+import mx.equilibrio.data.local.dao.GoalDao
 import mx.equilibrio.data.local.dao.TransactionDao
 import mx.equilibrio.data.mapper.toDomain
 import mx.equilibrio.data.mapper.toEntity
@@ -13,7 +16,9 @@ import mx.equilibrio.domain.repository.TransactionRepository
 import javax.inject.Inject
 
 class TransactionRepositoryImpl @Inject constructor(
+    private val database: EquilibrioDatabase,
     private val dao: TransactionDao,
+    private val goalDao: GoalDao,
     private val session: LocalSession,
 ) : TransactionRepository {
 
@@ -36,7 +41,12 @@ class TransactionRepositoryImpl @Inject constructor(
         )
     }
 
+    /** Si el movimiento era el espejo de un abono, el abono también se borra. */
     override suspend fun delete(id: String) {
-        dao.markDeleted(id, now = System.currentTimeMillis())
+        val now = System.currentTimeMillis()
+        database.withTransaction {
+            dao.markDeleted(id, now)
+            goalDao.markContributionDeletedByTransaction(id, now)
+        }
     }
 }

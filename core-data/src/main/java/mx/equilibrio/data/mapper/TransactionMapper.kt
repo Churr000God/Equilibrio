@@ -6,6 +6,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 import mx.equilibrio.data.local.entity.TransactionEntity
+import mx.equilibrio.domain.model.Category
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
@@ -23,6 +24,7 @@ fun TransactionEntity.toDomain(): Transaction = Transaction(
     amountCents = amountCents,
     occurredAt = occurredAt.toLocalDate(),
     note = note,
+    category = Category.fromKey(categoryKey),
 )
 
 fun Transaction.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean = false): TransactionEntity = TransactionEntity(
@@ -34,6 +36,7 @@ fun Transaction.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean 
     amountCents = amountCents,
     occurredAt = occurredAt.toEpochMillis(),
     note = note,
+    categoryKey = category?.key,
     updatedAt = updatedAt,
     syncState = syncState,
     isDeleted = isDeleted,

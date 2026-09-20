@@ -136,7 +136,7 @@ Clean Architecture en tres capas (cumple **RNF06 — Mantenibilidad: arquitectur
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  PRESENTACIÓN            :feature-home  :feature-entry       │
+│  PRESENTACIÓN   :feature-home :feature-entry :feature-goals :feature-reports │
 │  Compose · ViewModel · UiState · UiEvent · Navigation        │
 │  Depende de: dominio                                          │
 └───────────────────────────┬──────────────────────────────────┘
@@ -166,7 +166,9 @@ Clean Architecture en tres capas (cumple **RNF06 — Mantenibilidad: arquitectur
 | `:core-data` | Room (`EquilibrioDatabase`, entidades, DAOs), `RepositoryImpl`, mappers, `DataStore` de preferencias | `:core-domain` |
 | `:feature-home` | Pantalla Inicio | `:core-domain`, `:core-ui` |
 | `:feature-entry` | Pantalla Registro rápido | `:core-domain`, `:core-ui` |
-| *(Fase 2)* `:feature-accounts`, `:feature-goals`, `:feature-reports` | | igual patrón |
+| `:feature-goals` | Pantalla Metas + editor de meta + hoja de abono (RF08) | `:core-domain`, `:core-ui` |
+| `:feature-reports` | Pantalla Reportes (RF06) | `:core-domain`, `:core-ui` |
+| *(Fase 2)* `:feature-accounts` | | igual patrón |
 
 **Regla de dependencia:** `:core-domain` no depende de nada. `:feature-*` nunca importa `:core-data`. Se verifica con una tarea Gradle de comprobación de dependencias en CI.
 

@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,11 +35,16 @@ import mx.equilibrio.ui.components.EqDestructiveDialog
 import mx.equilibrio.ui.components.EqEmptyState
 import mx.equilibrio.ui.components.EqFab
 import mx.equilibrio.ui.components.EqTopBar
+import mx.equilibrio.ui.components.icon
+import mx.equilibrio.ui.components.label
 import mx.equilibrio.ui.components.formatCents
 import mx.equilibrio.ui.theme.DomainTone
 import mx.equilibrio.ui.theme.Elevation
 import mx.equilibrio.ui.theme.EquilibrioTheme
 import mx.equilibrio.ui.theme.ShapeMedium
+import mx.equilibrio.ui.theme.ShapeSmall
+import mx.equilibrio.ui.theme.deepColor
+import mx.equilibrio.ui.theme.softColor
 import mx.equilibrio.ui.theme.Spacing
 import mx.equilibrio.ui.theme.TouchTarget
 
@@ -95,7 +102,7 @@ fun HomeScreen(
                 items(state.transactions, key = { it.id }) { transaction ->
                     TransactionRow(
                         transaction = transaction,
-                        onClick = { onTransactionClicked(transaction.id) },
+                        onClick = { if (!transaction.isSavings) onTransactionClicked(transaction.id) },
                         onDeleteRequested = { viewModel.onEvent(HomeEvent.DeleteRequested(transaction)) },
                     )
                 }
@@ -138,7 +145,23 @@ private fun TransactionRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
-        EqBadge(text = transaction.label, tone = transaction.tone)
+        if (transaction.category != null) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(transaction.tone.softColor(EquilibrioTheme.colors), ShapeSmall),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = transaction.category.icon,
+                    contentDescription = transaction.category.label,
+                    tint = transaction.tone.deepColor(EquilibrioTheme.colors),
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        } else {
+            EqBadge(text = transaction.label, tone = transaction.tone)
+        }
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = transaction.note?.takeIf { it.isNotBlank() } ?: transaction.label,
@@ -146,9 +169,9 @@ private fun TransactionRow(
                 color = EquilibrioTheme.colors.ink,
             )
             Text(
-                text = transaction.occurredAt.toString(),
+                text = if (transaction.category != null) "${transaction.label} · ${transaction.occurredAt}" else transaction.occurredAt.toString(),
                 style = EquilibrioTheme.typography.caption,
-                color = EquilibrioTheme.colors.inkFaint,
+                color = EquilibrioTheme.colors.inkMuted,
             )
         }
         EqAmount(

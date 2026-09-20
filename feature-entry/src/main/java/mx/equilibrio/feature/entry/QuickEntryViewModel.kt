@@ -14,6 +14,7 @@ import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import mx.equilibrio.domain.model.Transaction
+import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.usecase.GetTransaction
 import mx.equilibrio.domain.usecase.ObserveAccounts
 import mx.equilibrio.domain.usecase.SaveTransaction
@@ -53,6 +54,7 @@ class QuickEntryViewModel @Inject constructor(
                         kind = existing.kind,
                         amountInput = formatAmountInput(existing.amountCents),
                         classification = existing.classification,
+                        category = existing.category,
                         accountId = existing.accountId,
                         occurredAt = existing.occurredAt,
                         note = existing.note.orEmpty(),
@@ -68,7 +70,7 @@ class QuickEntryViewModel @Inject constructor(
     fun onEvent(event: QuickEntryEvent) {
         when (event) {
             is QuickEntryEvent.KindChanged -> _state.update {
-                it.copy(kind = event.kind, classification = null)
+                it.copy(kind = event.kind, classification = null, category = null)
             }
 
             is QuickEntryEvent.AmountChanged -> _state.update {
@@ -77,6 +79,10 @@ class QuickEntryViewModel @Inject constructor(
 
             is QuickEntryEvent.ClassificationChanged -> _state.update {
                 it.copy(classification = event.classification)
+            }
+
+            is QuickEntryEvent.CategoryChanged -> _state.update {
+                it.copy(category = if (it.category == event.category) null else event.category)
             }
 
             is QuickEntryEvent.DateChanged -> _state.update {
@@ -117,6 +123,7 @@ class QuickEntryViewModel @Inject constructor(
                     amountCents = current.amountCents,
                     occurredAt = current.occurredAt,
                     note = current.note.ifBlank { null },
+                    category = if (current.kind == TransactionKind.EXPENSE) current.category else null,
                 ),
             )
             _state.update { it.copy(isSaving = false, saved = true) }

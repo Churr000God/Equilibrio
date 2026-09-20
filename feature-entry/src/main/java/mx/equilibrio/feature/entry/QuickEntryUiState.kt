@@ -1,6 +1,7 @@
 package mx.equilibrio.feature.entry
 
 import kotlinx.datetime.LocalDate
+import mx.equilibrio.domain.model.Category
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.ui.components.toCentsOrZero
@@ -9,6 +10,7 @@ data class QuickEntryUiState(
     val kind: TransactionKind = TransactionKind.EXPENSE,
     val amountInput: String = "",
     val classification: Classification? = null,
+    val category: Category? = null,
     val accountId: String? = null,
     val occurredAt: LocalDate,
     val note: String = "",

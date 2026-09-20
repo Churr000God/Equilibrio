@@ -2,6 +2,8 @@ package mx.equilibrio.feature.entry
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,11 +30,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import mx.equilibrio.domain.model.Category
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.ui.components.EqButton
 import mx.equilibrio.ui.components.EqDestructiveDialog
+import mx.equilibrio.ui.components.EqChip
 import mx.equilibrio.ui.components.EqDomainToggleOption
+import mx.equilibrio.ui.components.icon
+import mx.equilibrio.ui.components.label
 import mx.equilibrio.ui.components.EqInlineValidation
 import mx.equilibrio.ui.components.EqSegmentedControl
 import mx.equilibrio.ui.components.EqTextField
@@ -118,6 +124,13 @@ fun QuickEntryScreen(
                 onSelect = { viewModel.onEvent(QuickEntryEvent.ClassificationChanged(it)) },
             )
 
+            if (state.kind == TransactionKind.EXPENSE) {
+                CategorySection(
+                    selected = state.category,
+                    onSelect = { viewModel.onEvent(QuickEntryEvent.CategoryChanged(it)) },
+                )
+            }
+
             DateSection(
                 dateLabel = state.occurredAt.toString(),
                 error = state.dateError,
@@ -189,6 +202,35 @@ private fun ClassificationSection(
                 onClick = { onSelect(options[1].second) },
                 modifier = Modifier.weight(1f),
             )
+        }
+    }
+}
+
+/** Opcional: alimenta el reporte "En qué se te va más". Nunca preseleccionada. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CategorySection(
+    selected: Category?,
+    onSelect: (Category) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        Text(
+            text = "Categoría (opcional)",
+            style = EquilibrioTheme.typography.bodySmall,
+            color = EquilibrioTheme.colors.inkMuted,
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        ) {
+            Category.selectable.forEach { category ->
+                EqChip(
+                    label = category.label,
+                    icon = category.icon,
+                    selected = category == selected,
+                    onClick = { onSelect(category) },
+                )
+            }
         }
     }
 }

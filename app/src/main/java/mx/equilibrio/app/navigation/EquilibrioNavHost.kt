@@ -24,6 +24,7 @@ import mx.equilibrio.feature.entry.QuickEntryScreen
 import mx.equilibrio.feature.goals.GoalEditorScreen
 import mx.equilibrio.feature.goals.GoalsScreen
 import mx.equilibrio.feature.home.HomeScreen
+import mx.equilibrio.feature.reports.ReportsScreen
 import mx.equilibrio.ui.components.EqBottomNav
 import mx.equilibrio.ui.components.EqNavDestination
 import mx.equilibrio.ui.theme.Spacing
@@ -73,7 +74,7 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                     bottomInset = TabBarInset,
                 )
             }
-            composable(EqNavDestination.REPORTS.route) { ComingSoonScreen(title = "Tu resumen") }
+            composable(EqNavDestination.REPORTS.route) { ReportsScreen(bottomInset = TabBarInset) }
             composable(
                 route = ROUTE_QUICK_ENTRY,
                 arguments = listOf<NamedNavArgument>(

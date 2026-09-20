@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.sp
 import mx.equilibrio.ui.theme.DomainTone
 import mx.equilibrio.ui.theme.EquilibrioTheme
 import mx.equilibrio.ui.theme.Spacing
+import mx.equilibrio.ui.theme.color
 import mx.equilibrio.ui.theme.tabularAmountStyle
 import java.text.NumberFormat
 import java.util.Locale
@@ -19,14 +20,6 @@ import java.util.Locale
 private val PesoFormat: NumberFormat = NumberFormat.getCurrencyInstance(Locale("es", "MX"))
 
 fun formatCents(amountCents: Long): String = PesoFormat.format(amountCents / 100.0)
-
-private fun DomainTone.toColor(colors: mx.equilibrio.ui.theme.EquilibrioColors) = when (this) {
-    DomainTone.INCOME_FIXED -> colors.greenDeep
-    DomainTone.INCOME_VARIABLE -> colors.greenMid
-    DomainTone.ESSENTIAL -> colors.green
-    DomainTone.RECREATIONAL -> colors.purple
-    DomainTone.NEUTRAL -> colors.inkMuted
-}
 
 /**
  * Todo monto pasa por aquí: cifras tabulares siempre, nunca un `Text` crudo
@@ -50,7 +43,7 @@ fun EqAmount(
     Text(
         text = prefix + formatCents(amountCents),
         style = tabularAmountStyle(fontSize = fontSize, weight = weight),
-        color = tone.toColor(EquilibrioTheme.colors),
+        color = tone.color(EquilibrioTheme.colors),
         textAlign = TextAlign.End,
         modifier = modifier,
     )

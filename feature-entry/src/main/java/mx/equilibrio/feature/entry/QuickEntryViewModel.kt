@@ -17,6 +17,8 @@ import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.usecase.GetTransaction
 import mx.equilibrio.domain.usecase.ObserveAccounts
 import mx.equilibrio.domain.usecase.SaveTransaction
+import mx.equilibrio.ui.components.formatAmountInput
+import mx.equilibrio.ui.components.sanitizeAmountInput
 import java.util.UUID
 import javax.inject.Inject
 
@@ -120,16 +122,4 @@ class QuickEntryViewModel @Inject constructor(
             _state.update { it.copy(isSaving = false, saved = true) }
         }
     }
-}
-
-private fun sanitizeAmountInput(raw: String): String {
-    val filtered = raw.filterIndexed { index, c -> c.isDigit() || (c == '.' && !raw.take(index).contains('.')) }
-    val parts = filtered.split(".")
-    return if (parts.size > 1) "${parts[0]}.${parts[1].take(2)}" else filtered
-}
-
-private fun formatAmountInput(cents: Long): String {
-    val whole = cents / 100
-    val fraction = cents % 100
-    return if (fraction == 0L) whole.toString() else "$whole.${fraction.toString().padStart(2, '0')}"
 }

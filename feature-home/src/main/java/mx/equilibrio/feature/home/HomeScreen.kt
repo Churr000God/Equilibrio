@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -45,6 +46,7 @@ fun HomeScreen(
     onAddClicked: () -> Unit,
     onTransactionClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
+    bottomInset: Dp = Spacing.xxl,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -63,7 +65,7 @@ fun HomeScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = EquilibrioTheme.colors.background,
         topBar = { EqTopBar(title = "Hola") },
-        floatingActionButton = { EqFab(onClick = onAddClicked) },
+        floatingActionButton = { EqFab(onClick = onAddClicked, modifier = Modifier.padding(bottom = bottomInset - Spacing.base)) },
     ) { padding ->
         when {
             state.isLoading -> HomeSkeleton(padding)
@@ -83,7 +85,7 @@ fun HomeScreen(
                     start = Spacing.base,
                     end = Spacing.base,
                     top = padding.calculateTopPadding() + Spacing.sm,
-                    bottom = Spacing.xxl,
+                    bottom = bottomInset,
                 ),
                 verticalArrangement = Arrangement.spacedBy(Spacing.base),
             ) {

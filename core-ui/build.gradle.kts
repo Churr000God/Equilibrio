@@ -30,6 +30,9 @@ kotlin {
 }
 
 dependencies {
+    // Solo modelos puros (Category → icono/etiqueta). Sin lógica.
+    implementation(project(":core-domain"))
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)

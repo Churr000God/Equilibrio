@@ -3,6 +3,7 @@ package mx.equilibrio.feature.entry
 import kotlinx.datetime.LocalDate
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.TransactionKind
+import mx.equilibrio.ui.components.toCentsOrZero
 
 data class QuickEntryUiState(
     val kind: TransactionKind = TransactionKind.EXPENSE,
@@ -18,7 +19,7 @@ data class QuickEntryUiState(
     val saved: Boolean = false,
 ) {
     val amountCents: Long
-        get() = amountInput.toDoubleOrNull()?.let { (it * 100).toLong() } ?: 0L
+        get() = amountInput.toCentsOrZero()
 
     val canSave: Boolean
         get() = amountCents > 0 && classification != null && accountId != null && dateError == null && !isSaving

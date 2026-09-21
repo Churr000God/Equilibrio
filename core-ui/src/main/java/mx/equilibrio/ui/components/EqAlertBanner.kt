@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -37,9 +39,9 @@ fun EqAlertBanner(
     val colors = EquilibrioTheme.colors
     val (background, foreground, icon) = when (tone) {
         FeedbackTone.SUCCESS -> Triple(colors.greenSoft, colors.greenDeep, Icons.Rounded.CheckCircle)
-        FeedbackTone.ERROR -> Triple(colors.errorSoft, colors.errorDeep, Icons.Rounded.Info)
+        FeedbackTone.ERROR -> Triple(colors.errorSoft, colors.errorDeep, Icons.Rounded.Error)
         FeedbackTone.INFO -> Triple(colors.infoSoft, colors.info, Icons.Rounded.Info)
-        FeedbackTone.WARNING -> Triple(colors.warningSoft, colors.warning, Icons.Rounded.Info)
+        FeedbackTone.WARNING -> Triple(colors.warningSoft, colors.warning, Icons.Rounded.Warning)
     }
 
     Row(

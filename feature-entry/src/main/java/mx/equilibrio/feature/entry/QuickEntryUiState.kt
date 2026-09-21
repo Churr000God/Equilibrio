@@ -4,6 +4,7 @@ import kotlinx.datetime.LocalDate
 import mx.equilibrio.domain.model.Account
 import mx.equilibrio.domain.model.Category
 import mx.equilibrio.domain.model.Classification
+import mx.equilibrio.domain.model.Period
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.TransactionStatus
 
@@ -44,6 +45,9 @@ data class QuickEntryUiState(
     val viewTab: EntryViewTab = EntryViewTab.EDIT,
     val isConfirming: Boolean = false,
     val loadedSnapshot: EntrySnapshot? = null,
+    val creditPeriod: Period? = null,
+    val creditAvailable: Map<String, Long> = emptyMap(),
+    val creditLimitError: String? = null,
 ) {
     val amountCents: Long
         get() = amountInput.toDoubleOrNull()?.let { (it * 100).toLong() } ?: 0L
@@ -55,6 +59,7 @@ data class QuickEntryUiState(
                 destinationAccountId != null &&
                 originAccountId != destinationAccountId &&
                 !isSaving
+            EntryMode.CREDIT_PURCHASE -> amountCents > 0 && accountId != null && !isSaving
             EntryMode.EXPENSE, EntryMode.INCOME -> amountCents > 0 &&
                 classification != null &&
                 accountId != null &&

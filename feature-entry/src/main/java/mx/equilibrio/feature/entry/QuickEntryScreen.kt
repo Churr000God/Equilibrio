@@ -1,5 +1,7 @@
 package mx.equilibrio.feature.entry
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -42,6 +44,8 @@ import mx.equilibrio.domain.model.AccountType
 import mx.equilibrio.domain.model.Category
 import mx.equilibrio.domain.model.CategoryType
 import mx.equilibrio.domain.model.Classification
+import mx.equilibrio.domain.model.Period
+import mx.equilibrio.domain.model.PeriodState
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.TransactionStatus
 import mx.equilibrio.ui.components.EqBadge
@@ -53,6 +57,7 @@ import mx.equilibrio.ui.components.EqInlineValidation
 import mx.equilibrio.ui.components.EqSegmentedControl
 import mx.equilibrio.ui.components.EqTextField
 import mx.equilibrio.ui.components.EqTopBar
+import mx.equilibrio.ui.components.formatCents
 import mx.equilibrio.ui.theme.DomainTone
 import mx.equilibrio.ui.theme.EquilibrioColors
 import mx.equilibrio.ui.theme.EquilibrioTheme
@@ -141,21 +146,18 @@ fun QuickEntryScreen(
                     onConfirmClicked = { viewModel.onEvent(QuickEntryEvent.ConfirmClicked) },
                 )
             } else {
+                val hasCreditCard = state.accounts.any { it.type == AccountType.CREDIT_CARD }
+                val modeOptions = buildList {
+                    add("Gasto" to EntryMode.EXPENSE)
+                    add("Ingreso" to EntryMode.INCOME)
+                    add("Transferencia" to EntryMode.TRANSFER)
+                    if (hasCreditCard) add("Compra con tarjeta" to EntryMode.CREDIT_PURCHASE)
+                }
+
                 EqSegmentedControl(
-                    options = listOf("Gasto", "Ingreso", "Transferencia"),
-                    selectedIndex = when (state.mode) {
-                        EntryMode.EXPENSE -> 0
-                        EntryMode.INCOME -> 1
-                        EntryMode.TRANSFER -> 2
-                    },
-                    onSelect = { index ->
-                        val mode = when (index) {
-                            0 -> EntryMode.EXPENSE
-                            1 -> EntryMode.INCOME
-                            else -> EntryMode.TRANSFER
-                        }
-                        viewModel.onEvent(QuickEntryEvent.EntryModeChanged(mode))
-                    },
+                    options = modeOptions.map { it.first },
+                    selectedIndex = modeOptions.indexOfFirst { it.second == state.mode }.coerceAtLeast(0),
+                    onSelect = { index -> viewModel.onEvent(QuickEntryEvent.EntryModeChanged(modeOptions[index].second)) },
                 )
 
                 Column {
@@ -169,8 +171,8 @@ fun QuickEntryScreen(
                     )
                 }
 
-                if (state.mode == EntryMode.TRANSFER) {
-                    TransferAccountsSection(
+                when (state.mode) {
+                    EntryMode.TRANSFER -> TransferAccountsSection(
                         accounts = state.accounts,
                         originId = state.originAccountId,
                         destinationId = state.destinationAccountId,
@@ -178,28 +180,67 @@ fun QuickEntryScreen(
                         onOriginSelected = { viewModel.onEvent(QuickEntryEvent.OriginAccountSelected(it)) },
                         onDestinationSelected = { viewModel.onEvent(QuickEntryEvent.DestinationAccountSelected(it)) },
                     )
-                } else {
-                    ClassificationSection(
-                        kind = state.kind,
-                        selected = state.classification,
-                        onSelect = { viewModel.onEvent(QuickEntryEvent.ClassificationChanged(it)) },
-                    )
 
-                    CategorySection(
-                        kind = state.kind,
-                        categories = state.categories,
-                        selectedId = state.categoryId,
-                        isCreating = state.isCreatingCategory,
-                        newCategoryName = state.newCategoryName,
-                        newCategoryNameError = state.newCategoryNameError,
-                        newCategoryColorSlot = state.newCategoryColorSlot,
-                        isSavingCategory = state.isSavingCategory,
-                        onSelect = { viewModel.onEvent(QuickEntryEvent.CategorySelected(it)) },
-                        onToggleCreate = { viewModel.onEvent(QuickEntryEvent.CreateCategoryTabToggled(it)) },
-                        onNewNameChanged = { viewModel.onEvent(QuickEntryEvent.NewCategoryNameChanged(it)) },
-                        onNewColorSlotChanged = { viewModel.onEvent(QuickEntryEvent.NewCategoryColorSlotChanged(it)) },
-                        onSaveCategory = { viewModel.onEvent(QuickEntryEvent.SaveCategoryClicked) },
-                    )
+                    EntryMode.CREDIT_PURCHASE -> {
+                        CreditCardAccountSection(
+                            accounts = state.accounts.filter { it.type == AccountType.CREDIT_CARD },
+                            selectedId = state.accountId,
+                            onSelect = { viewModel.onEvent(QuickEntryEvent.CreditAccountSelected(it)) },
+                        )
+
+                        ClassificationSection(
+                            kind = state.kind,
+                            selected = state.classification,
+                            onSelect = { viewModel.onEvent(QuickEntryEvent.ClassificationChanged(it)) },
+                        )
+
+                        CategorySection(
+                            kind = state.kind,
+                            categories = state.categories,
+                            selectedId = state.categoryId,
+                            isCreating = state.isCreatingCategory,
+                            newCategoryName = state.newCategoryName,
+                            newCategoryNameError = state.newCategoryNameError,
+                            newCategoryColorSlot = state.newCategoryColorSlot,
+                            isSavingCategory = state.isSavingCategory,
+                            onSelect = { viewModel.onEvent(QuickEntryEvent.CategorySelected(it)) },
+                            onToggleCreate = { viewModel.onEvent(QuickEntryEvent.CreateCategoryTabToggled(it)) },
+                            onNewNameChanged = { viewModel.onEvent(QuickEntryEvent.NewCategoryNameChanged(it)) },
+                            onNewColorSlotChanged = { viewModel.onEvent(QuickEntryEvent.NewCategoryColorSlotChanged(it)) },
+                            onSaveCategory = { viewModel.onEvent(QuickEntryEvent.SaveCategoryClicked) },
+                        )
+
+                        CreditPeriodInfo(
+                            period = state.creditPeriod,
+                            availableCents = state.accountId?.let { state.creditAvailable[it] },
+                        )
+
+                        state.creditLimitError?.let { EqInlineValidation(it) }
+                    }
+
+                    EntryMode.EXPENSE, EntryMode.INCOME -> {
+                        ClassificationSection(
+                            kind = state.kind,
+                            selected = state.classification,
+                            onSelect = { viewModel.onEvent(QuickEntryEvent.ClassificationChanged(it)) },
+                        )
+
+                        CategorySection(
+                            kind = state.kind,
+                            categories = state.categories,
+                            selectedId = state.categoryId,
+                            isCreating = state.isCreatingCategory,
+                            newCategoryName = state.newCategoryName,
+                            newCategoryNameError = state.newCategoryNameError,
+                            newCategoryColorSlot = state.newCategoryColorSlot,
+                            isSavingCategory = state.isSavingCategory,
+                            onSelect = { viewModel.onEvent(QuickEntryEvent.CategorySelected(it)) },
+                            onToggleCreate = { viewModel.onEvent(QuickEntryEvent.CreateCategoryTabToggled(it)) },
+                            onNewNameChanged = { viewModel.onEvent(QuickEntryEvent.NewCategoryNameChanged(it)) },
+                            onNewColorSlotChanged = { viewModel.onEvent(QuickEntryEvent.NewCategoryColorSlotChanged(it)) },
+                            onSaveCategory = { viewModel.onEvent(QuickEntryEvent.SaveCategoryClicked) },
+                        )
+                    }
                 }
 
                 DateSection(
@@ -218,6 +259,7 @@ fun QuickEntryScreen(
                         EntryMode.EXPENSE -> "Guardar gasto"
                         EntryMode.INCOME -> "Guardar ingreso"
                         EntryMode.TRANSFER -> "Guardar transferencia"
+                        EntryMode.CREDIT_PURCHASE -> "Guardar compra"
                     },
                     onClick = { viewModel.onEvent(QuickEntryEvent.SaveClicked) },
                     enabled = state.canSave,
@@ -415,6 +457,75 @@ private fun TransferAccountsSection(
 
         if (error != null) {
             EqInlineValidation(error)
+        }
+    }
+}
+
+@Composable
+private fun CreditCardAccountSection(
+    accounts: List<Account>,
+    selectedId: String?,
+    onSelect: (String) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        Text(
+            text = "Tarjeta",
+            style = EquilibrioTheme.typography.bodySmall,
+            color = EquilibrioTheme.colors.inkMuted,
+        )
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+        ) {
+            accounts.forEach { account ->
+                EqDomainToggleOption(
+                    label = account.name,
+                    tone = DomainTone.NEUTRAL,
+                    selected = selectedId == account.id,
+                    onClick = { onSelect(account.id) },
+                )
+            }
+        }
+    }
+}
+
+private fun periodStateLabel(state: PeriodState): String = when (state) {
+    PeriodState.OPEN -> "Periodo abierto"
+    PeriodState.AWAITING_PAYMENT -> "Esperando pago"
+    PeriodState.CLOSED -> "Cerrado"
+}
+
+@Composable
+private fun CreditPeriodInfo(period: Period?, availableCents: Long?) {
+    if (period == null && availableCents == null) return
+    val colors = EquilibrioTheme.colors
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colors.surface, ShapeSmall)
+            .border(1.dp, colors.border, ShapeSmall)
+            .padding(Spacing.base),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+    ) {
+        period?.let {
+            Text(
+                text = periodStateLabel(it.state),
+                style = EquilibrioTheme.typography.bodySmall,
+                color = colors.inkMuted,
+            )
+            Text(
+                text = "Corte: ${it.endAt} · Pago límite: ${it.payAt}",
+                style = EquilibrioTheme.typography.bodySmall,
+                color = colors.inkMuted,
+            )
+        }
+        availableCents?.let {
+            Text(
+                text = "Disponible: ${formatCents(it)}",
+                style = EquilibrioTheme.typography.bodyStrong,
+                color = if (it < 0) colors.error else colors.ink,
+            )
         }
     }
 }

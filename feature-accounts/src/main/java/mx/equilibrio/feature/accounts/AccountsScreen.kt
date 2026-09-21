@@ -3,7 +3,10 @@ package mx.equilibrio.feature.accounts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -13,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import mx.equilibrio.domain.model.AccountType
 import mx.equilibrio.ui.components.EqAlertBanner
 import mx.equilibrio.ui.components.EqEmptyState
 import mx.equilibrio.ui.components.EqFab
@@ -28,6 +32,7 @@ fun AccountsScreen(
     viewModel: AccountsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val cardPeriodsState by viewModel.cardPeriodsState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -62,15 +67,42 @@ fun AccountsScreen(
                     )
                 }
 
-                else -> Column(modifier = Modifier.fillMaxSize()) {
+                else -> Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
+                ) {
                     AccountsCarousel(
                         accounts = state.accounts,
                         selectedAccountId = state.selectedAccountId,
                         onAccountSelected = viewModel::onAccountSelected,
                         modifier = Modifier.padding(top = Spacing.base),
                     )
-                    // El detalle de la cuenta seleccionada (state.selectedAccountId) se conecta en otra tarea.
+
+                    val selectedAccount = state.accounts.firstOrNull { it.id == state.selectedAccountId }
+                    if (selectedAccount?.type == AccountType.CREDIT_CARD) {
+                        CardPeriodsSection(
+                            periods = cardPeriodsState.periods,
+                            onPayClicked = viewModel::onPayClicked,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = Spacing.lg),
+                        )
+                    }
                 }
+            }
+
+            if (cardPeriodsState.payTargetPeriodId != null) {
+                PayCreditDialog(
+                    state = cardPeriodsState,
+                    sourceAccounts = state.accounts.filter {
+                        it.type == AccountType.CASH || it.type == AccountType.BANK
+                    },
+                    onSourceSelected = viewModel::onPaySourceSelected,
+                    onAmountChanged = viewModel::onPayAmountChanged,
+                    onConfirm = viewModel::onPayConfirmed,
+                    onDismiss = viewModel::onPayDismissed,
+                )
             }
         }
     }

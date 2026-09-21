@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import mx.equilibrio.domain.model.AccountType
 import mx.equilibrio.domain.model.Category
 import mx.equilibrio.domain.model.CategoryType
 import mx.equilibrio.domain.model.Transaction
@@ -23,9 +24,12 @@ import mx.equilibrio.domain.usecase.CheckBalanceDeviationAlertUseCase
 import mx.equilibrio.domain.usecase.ConfirmTransaction
 import mx.equilibrio.domain.usecase.CreateTransfer
 import mx.equilibrio.domain.usecase.GetCategories
+import mx.equilibrio.domain.usecase.GetOrCreatePeriodForDate
 import mx.equilibrio.domain.usecase.GetTransaction
 import mx.equilibrio.domain.usecase.ObserveAccounts
+import mx.equilibrio.domain.usecase.ObserveCreditAvailable
 import mx.equilibrio.domain.usecase.SaveCategory
+import mx.equilibrio.domain.usecase.SaveCreditPurchase
 import mx.equilibrio.domain.usecase.SaveTransaction
 import java.util.UUID
 import javax.inject.Inject
@@ -43,6 +47,9 @@ class QuickEntryViewModel @Inject constructor(
     private val createTransfer: CreateTransfer,
     private val confirmTransaction: ConfirmTransaction,
     private val checkBalanceDeviation: CheckBalanceDeviationAlertUseCase,
+    private val saveCreditPurchaseUseCase: SaveCreditPurchase,
+    private val observeCreditAvailableUseCase: ObserveCreditAvailable,
+    private val getOrCreatePeriodForDate: GetOrCreatePeriodForDate,
 ) : ViewModel() {
 
     private val editingId: String? = savedStateHandle["transactionId"]
@@ -102,35 +109,61 @@ class QuickEntryViewModel @Inject constructor(
                 _state.update { it.copy(accounts = accounts) }
             }
         }
+
+        viewModelScope.launch {
+            observeCreditAvailableUseCase().collect { available ->
+                _state.update { it.copy(creditAvailable = available) }
+            }
+        }
     }
 
     fun onEvent(event: QuickEntryEvent) {
         when (event) {
-            is QuickEntryEvent.EntryModeChanged -> _state.update {
-                val newKind = when (event.mode) {
-                    EntryMode.EXPENSE -> TransactionKind.EXPENSE
-                    EntryMode.INCOME -> TransactionKind.INCOME
-                    EntryMode.TRANSFER -> it.kind
+            is QuickEntryEvent.EntryModeChanged -> {
+                _state.update {
+                    val newKind = when (event.mode) {
+                        EntryMode.EXPENSE -> TransactionKind.EXPENSE
+                        EntryMode.INCOME -> TransactionKind.INCOME
+                        EntryMode.TRANSFER -> it.kind
+                        EntryMode.CREDIT_PURCHASE -> TransactionKind.EXPENSE
+                    }
+                    val newAccountId = if (event.mode == EntryMode.CREDIT_PURCHASE) {
+                        it.accounts.firstOrNull { account -> account.type == AccountType.CREDIT_CARD }?.id
+                    } else {
+                        it.accountId
+                    }
+                    it.copy(
+                        mode = event.mode,
+                        kind = newKind,
+                        accountId = newAccountId,
+                        classification = null,
+                        categoryId = null,
+                        isCreatingCategory = false,
+                        transferError = null,
+                        creditLimitError = null,
+                        creditPeriod = if (event.mode == EntryMode.CREDIT_PURCHASE) it.creditPeriod else null,
+                    )
                 }
-                it.copy(
-                    mode = event.mode,
-                    kind = newKind,
-                    classification = null,
-                    categoryId = null,
-                    isCreatingCategory = false,
-                    transferError = null,
-                )
+                refreshCreditPeriodIfNeeded()
             }
 
             is QuickEntryEvent.AmountChanged -> _state.update {
-                it.copy(amountInput = sanitizeAmountInput(event.raw), amountError = null)
+                it.copy(amountInput = sanitizeAmountInput(event.raw), amountError = null, creditLimitError = null)
             }
 
             is QuickEntryEvent.ClassificationChanged -> _state.update {
                 it.copy(classification = event.classification)
             }
 
-            is QuickEntryEvent.DateChanged -> _state.update { it.copy(occurredAt = event.date) }
+            is QuickEntryEvent.DateChanged -> {
+                _state.update { it.copy(occurredAt = event.date) }
+                refreshCreditPeriodIfNeeded()
+            }
+
+            is QuickEntryEvent.CreditAccountSelected -> {
+                _state.update { it.copy(accountId = event.accountId, creditLimitError = null) }
+                refreshCreditPeriodIfNeeded()
+            }
 
             is QuickEntryEvent.NoteChanged -> _state.update { it.copy(note = event.text) }
 
@@ -217,7 +250,47 @@ class QuickEntryViewModel @Inject constructor(
 
         when (current.mode) {
             EntryMode.TRANSFER -> saveTransfer(current)
+            EntryMode.CREDIT_PURCHASE -> saveCreditPurchase(current)
             EntryMode.EXPENSE, EntryMode.INCOME -> saveIncomeOrExpense(current)
+        }
+    }
+
+    private fun refreshCreditPeriodIfNeeded() {
+        val current = _state.value
+        if (current.mode != EntryMode.CREDIT_PURCHASE) return
+        val accountId = current.accountId ?: return
+
+        viewModelScope.launch {
+            val period = getOrCreatePeriodForDate(accountId, current.occurredAt)
+            _state.update { it.copy(creditPeriod = period) }
+        }
+    }
+
+    private fun saveCreditPurchase(current: QuickEntryUiState) {
+        val accountId = current.accountId ?: return
+        val ownerId = userId ?: return
+
+        _state.update { it.copy(isSaving = true, creditLimitError = null) }
+
+        viewModelScope.launch {
+            try {
+                saveCreditPurchaseUseCase(
+                    id = editingId ?: UUID.randomUUID().toString(),
+                    accountId = accountId,
+                    classification = current.classification,
+                    amountCents = current.amountCents,
+                    occurredAt = current.occurredAt,
+                    note = current.note.ifBlank { null },
+                    categoryId = current.categoryId,
+                    userId = ownerId,
+                    today = today(),
+                )
+                _state.update { it.copy(isSaving = false, saved = true) }
+            } catch (e: IllegalArgumentException) {
+                _state.update {
+                    it.copy(isSaving = false, creditLimitError = e.message ?: "No se pudo registrar la compra.")
+                }
+            }
         }
     }
 

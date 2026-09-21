@@ -4,6 +4,29 @@ Registro de avance funcional de Equilibrio, por sesión de trabajo. Complementa
 `PLAN_DESARROLLO.md` (que describe el diseño objetivo) con lo que ya está
 construido.
 
+## 2026-09-20
+
+**Metas de ahorro (RF08)**
+- Nueva tabla `goals` y columna `transactions.goal_id` (Room, migración v7→v8).
+  Un abono es un gasto con `goal_id`: sale de la cuenta, aparece en Inicio como
+  "Ahorro" y se excluye del indicador y de los reportes. El avance de la meta
+  se deriva con `SUM`, nunca se persiste.
+- `:feature-goals`: meta destacada con anillo y abono rápido, otras metas,
+  metas logradas, racha de semanas consecutivas con abono, editor con plazo
+  opcional. La meta se completa sola al alcanzar el objetivo.
+
+**Reportes (RF06)**
+- `ReportDao` agrega en SQLite (totales por clasificación, tendencia mensual,
+  gasto por categoría). Sin tablas nuevas.
+- `:feature-reports`: resumen con variación vs mes anterior, gráfica de 6
+  meses, matriz ingreso × gasto con lectura en lenguaje simple
+  (`CrossMatrixCalculator`), top categorías. Navegación por mes.
+
+**core-ui**
+- `EqProgressRing`, `EqProgressBar`, `EqStatTile`, `EqBarChart`,
+  `EqMatrixCell`, `EqChip`; `EqTopBar` acepta `subtitle`; helpers de monto
+  compartidos (`AmountInput.kt`); `DomainTone.color/deepColor/softColor`.
+
 ## 2026-09-19
 
 **Categorías — creación con color**

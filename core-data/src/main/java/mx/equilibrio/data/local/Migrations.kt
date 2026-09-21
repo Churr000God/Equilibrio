@@ -140,3 +140,34 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
         db.execSQL("ALTER TABLE transactions ADD COLUMN status TEXT NOT NULL DEFAULT 'COMPLETED'")
     }
 }
+
+/** RF08 — tabla `goals` y `transactions.goal_id` (abono espejo de una meta). */
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `goals` (
+                `id` TEXT NOT NULL,
+                `user_id` TEXT NOT NULL,
+                `name` TEXT NOT NULL,
+                `target_cents` INTEGER NOT NULL,
+                `deadline` INTEGER,
+                `status` TEXT NOT NULL,
+                `created_at` INTEGER NOT NULL,
+                `updated_at` INTEGER NOT NULL,
+                `sync_state` TEXT NOT NULL,
+                `is_deleted` INTEGER NOT NULL,
+                PRIMARY KEY(`id`),
+                FOREIGN KEY(`user_id`) REFERENCES `users`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION
+            )
+            """.trimIndent(),
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_goals_user_id` ON `goals` (`user_id`)")
+        db.execSQL("ALTER TABLE transactions ADD COLUMN goal_id TEXT")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_goal_id` ON `transactions` (`goal_id`)")
+    }
+}
+
+val ALL_MIGRATIONS = arrayOf(
+    MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8,
+)

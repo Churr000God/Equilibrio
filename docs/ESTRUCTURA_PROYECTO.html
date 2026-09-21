@@ -234,7 +234,7 @@
     <div class="tree">
 <span class="comment">Presentación (pantallas) ──▶ Dominio (reglas de negocio) ──▶ Datos (Room)</span>
 
-<span class="dir">:feature-home</span>    <span class="dir">:feature-entry</span>    <span class="dir">:feature-accounts</span>    <span class="dir">:feature-categories</span>    ← pantallas Compose
+<span class="dir">:feature-home</span>    <span class="dir">:feature-entry</span>    <span class="dir">:feature-accounts</span>    <span class="dir">:feature-categories</span>    <span class="dir">:feature-goals</span>    <span class="dir">:feature-reports</span>    ← pantallas Compose
       │                │                │
       └───────┬────────┴────────┬───────┘
               ▼
@@ -394,7 +394,7 @@
     <div class="table-wrap"><table>
       <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
       <tbody>
-        <tr><td>settings.gradle.kts</td><td>Lista los 8 módulos del proyecto (app, core-ui, core-domain, core-data, feature-home, feature-entry, feature-accounts, feature-categories) y los repositorios de dependencias.</td></tr>
+        <tr><td>settings.gradle.kts</td><td>Lista los 10 módulos del proyecto (app, core-ui, core-domain, core-data, feature-home, feature-entry, feature-accounts, feature-categories, feature-goals, feature-reports) y los repositorios de dependencias.</td></tr>
         <tr><td>build.gradle.kts</td><td>Declara los plugins de Gradle disponibles (Android, Kotlin, Hilt, KSP…) sin aplicarlos todavía — cada módulo elige cuáles usar.</td></tr>
         <tr><td>gradle/libs.versions.toml</td><td>El catálogo de versiones: <strong>todas</strong> las versiones de librerías y plugins están aquí, en un solo lugar.</td></tr>
         <tr><td>gradle.properties</td><td>Configuración de Gradle/AGP. Incluye <code>android.builtInKotlin=false</code> y <code>android.newDsl=false</code> — AGP 9 cambió su forma de compilar Kotlin por defecto; esas dos líneas mantienen el estilo clásico (<code>org.jetbrains.kotlin.android</code> + bloque <code>android {}</code>) que usa este proyecto.</td></tr>

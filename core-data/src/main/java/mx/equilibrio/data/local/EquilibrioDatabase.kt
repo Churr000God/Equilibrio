@@ -5,12 +5,15 @@ import androidx.room.RoomDatabase
 import mx.equilibrio.data.local.dao.AccountDao
 import mx.equilibrio.data.local.dao.AlertDao
 import mx.equilibrio.data.local.dao.CategoryDao
+import mx.equilibrio.data.local.dao.GoalDao
+import mx.equilibrio.data.local.dao.ReportDao
 import mx.equilibrio.data.local.dao.TransactionDao
 import mx.equilibrio.data.local.dao.TransferDao
 import mx.equilibrio.data.local.dao.UserDao
 import mx.equilibrio.data.local.entity.AccountEntity
 import mx.equilibrio.data.local.entity.AlertEntity
 import mx.equilibrio.data.local.entity.CategoryEntity
+import mx.equilibrio.data.local.entity.GoalEntity
 import mx.equilibrio.data.local.entity.TransactionEntity
 import mx.equilibrio.data.local.entity.TransferEntity
 import mx.equilibrio.data.local.entity.UserEntity
@@ -23,8 +26,9 @@ import mx.equilibrio.data.local.entity.UserEntity
         CategoryEntity::class,
         AlertEntity::class,
         TransferEntity::class,
+        GoalEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
 )
 abstract class EquilibrioDatabase : RoomDatabase() {
@@ -34,6 +38,8 @@ abstract class EquilibrioDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
     abstract fun alertDao(): AlertDao
     abstract fun transferDao(): TransferDao
+    abstract fun goalDao(): GoalDao
+    abstract fun reportDao(): ReportDao
 
     companion object {
         const val DATABASE_NAME = "equilibrio.db"

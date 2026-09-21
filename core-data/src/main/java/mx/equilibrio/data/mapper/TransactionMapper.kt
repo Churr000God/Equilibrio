@@ -26,6 +26,7 @@ fun TransactionEntity.toDomain(): Transaction = Transaction(
     note = note,
     categoryId = categoryId,
     status = TransactionStatus.valueOf(status),
+    goalId = goalId,
 )
 
 fun Transaction.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean = false): TransactionEntity = TransactionEntity(
@@ -42,4 +43,5 @@ fun Transaction.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean 
     syncState = syncState,
     isDeleted = isDeleted,
     status = status.name,
+    goalId = goalId,
 )

@@ -104,7 +104,7 @@ fun HomeScreen(
                 items(state.transactions, key = { it.id }) { transaction ->
                     TransactionRow(
                         transaction = transaction,
-                        onClick = { onTransactionClicked(transaction.id) },
+                        onClick = { if (!transaction.isSavings) onTransactionClicked(transaction.id) },
                         onDeleteRequested = { viewModel.onEvent(HomeEvent.DeleteRequested(transaction)) },
                     )
                 }

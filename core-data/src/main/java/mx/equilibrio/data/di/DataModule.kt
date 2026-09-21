@@ -17,9 +17,11 @@ import mx.equilibrio.data.local.MIGRATION_5_6
 import mx.equilibrio.data.local.MIGRATION_6_7
 import mx.equilibrio.data.local.MIGRATION_7_8
 import mx.equilibrio.data.local.MIGRATION_8_9
+import mx.equilibrio.data.local.MIGRATION_9_10
 import mx.equilibrio.data.local.dao.AccountDao
 import mx.equilibrio.data.local.dao.AlertDao
 import mx.equilibrio.data.local.dao.CategoryDao
+import mx.equilibrio.data.local.dao.PeriodDao
 import mx.equilibrio.data.local.dao.TransactionDao
 import mx.equilibrio.data.local.dao.TransferDao
 import mx.equilibrio.data.local.dao.UserDao
@@ -54,6 +56,7 @@ object DatabaseModule {
                 MIGRATION_6_7,
                 MIGRATION_7_8,
                 MIGRATION_8_9,
+                MIGRATION_9_10,
             )
             .build()
 
@@ -74,6 +77,9 @@ object DatabaseModule {
 
     @Provides
     fun provideTransferDao(database: EquilibrioDatabase): TransferDao = database.transferDao()
+
+    @Provides
+    fun providePeriodDao(database: EquilibrioDatabase): PeriodDao = database.periodDao()
 }
 
 @Module

@@ -168,3 +168,33 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
         db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_users_email` ON `users` (`email`)")
     }
 }
+
+/** Periodos de facturación de tarjeta de crédito: tabla `periods` + `transactions.period_id`. */
+val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `periods` (
+                `id` TEXT NOT NULL,
+                `account_id` TEXT NOT NULL,
+                `start_at` INTEGER NOT NULL,
+                `end_at` INTEGER NOT NULL,
+                `pay_at` INTEGER NOT NULL,
+                `state` TEXT NOT NULL DEFAULT 'OPEN',
+                `carried_balance_cents` INTEGER NOT NULL DEFAULT 0,
+                `amount_paid_cents` INTEGER NOT NULL DEFAULT 0,
+                `updated_at` INTEGER NOT NULL,
+                `sync_state` TEXT NOT NULL,
+                `is_deleted` INTEGER NOT NULL DEFAULT 0,
+                `created_at` INTEGER NOT NULL,
+                PRIMARY KEY(`id`),
+                FOREIGN KEY(`account_id`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION
+            )
+            """.trimIndent(),
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_periods_account_id` ON `periods` (`account_id`)")
+
+        db.execSQL("ALTER TABLE transactions ADD COLUMN period_id TEXT DEFAULT NULL")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_period_id` ON `transactions` (`period_id`)")
+    }
+}

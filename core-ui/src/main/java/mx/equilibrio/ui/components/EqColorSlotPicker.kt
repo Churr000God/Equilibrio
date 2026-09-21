@@ -2,11 +2,11 @@ package mx.equilibrio.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
@@ -15,6 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mx.equilibrio.ui.theme.EquilibrioTheme
@@ -33,6 +36,7 @@ fun EqColorSlotPicker(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
     label: String = "Color",
+    colorNames: List<String>? = null,
 ) {
     val theme = EquilibrioTheme.colors
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
@@ -40,10 +44,12 @@ fun EqColorSlotPicker(
         Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
             colors.forEachIndexed { slot, color ->
                 val selected = slot == selectedSlot
+                val description = colorNames?.getOrNull(slot) ?: "Color ${slot + 1}"
                 Row(
                     modifier = Modifier
                         .size(40.dp)
-                        .clickable { onSelect(slot) }
+                        .selectable(selected = selected, onClick = { onSelect(slot) }, role = Role.RadioButton)
+                        .semantics { contentDescription = description }
                         .background(color, ShapePill)
                         .border(if (selected) 2.dp else 0.dp, theme.ink, ShapePill),
                     horizontalArrangement = Arrangement.Center,

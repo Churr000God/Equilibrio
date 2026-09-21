@@ -123,18 +123,59 @@ class EquilibrioDatabaseMigrationTest {
     }
 
     @Test
-    fun `cadena completa 6 a 9 corre sin romper el schema exportado`() {
+    fun `9 a 10 crea periods y agrega period_id nullable a transactions sin perder filas`() {
+        var db = helper.createDatabase(TEST_DB, 9)
+        insertUser(db, "u1", "u1@equilibrio.mx", 0)
+        db.execSQL(
+            """
+            INSERT INTO accounts (id, user_id, name, type, balance_cents, credit_limit_cents, statement_day, due_day, color_slot, last_digits, updated_at, sync_state, is_deleted)
+            VALUES ('cc1', 'u1', 'Tarjeta', 'CREDIT_CARD', 0, 500000, 20, 5, 0, NULL, 0, 'PENDING', 0)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            INSERT INTO transactions (id, user_id, account_id, kind, classification, amount_cents, occurred_at, note, category_id, updated_at, sync_state, is_deleted, status)
+            VALUES ('t1', 'u1', 'cc1', 'EXPENSE', NULL, 500, 0, NULL, NULL, 0, 'PENDING', 0, 'COMPLETED')
+            """.trimIndent(),
+        )
+        db.close()
+
+        db = helper.runMigrationsAndValidate(TEST_DB, 10, true, MIGRATION_9_10)
+
+        val txCursor = db.query("SELECT period_id FROM transactions WHERE id = 't1'")
+        assertEquals(1, txCursor.count)
+        txCursor.moveToFirst()
+        assertNull(txCursor.getString(0))
+        txCursor.close()
+
+        db.execSQL(
+            """
+            INSERT INTO periods (id, account_id, start_at, end_at, pay_at, state, carried_balance_cents, amount_paid_cents, updated_at, sync_state, is_deleted, created_at)
+            VALUES ('p1', 'cc1', 0, 100, 105, 'OPEN', 0, 0, 0, 'PENDING', 0, 0)
+            """.trimIndent(),
+        )
+        db.execSQL("UPDATE transactions SET period_id = 'p1' WHERE id = 't1'")
+        val linkedCursor = db.query("SELECT period_id FROM transactions WHERE id = 't1'")
+        linkedCursor.moveToFirst()
+        assertEquals("p1", linkedCursor.getString(0))
+        linkedCursor.close()
+        db.close()
+    }
+
+    @Test
+    fun `cadena completa 6 a 10 corre sin romper el schema exportado`() {
         var db = helper.createDatabase(TEST_DB, 6)
         insertUser(db, "u1", "u1@equilibrio.mx", 0)
         db.close()
 
         db = helper.runMigrationsAndValidate(
             TEST_DB,
-            9,
+            10,
             true,
             MIGRATION_6_7,
             MIGRATION_7_8,
             MIGRATION_8_9,
+            MIGRATION_9_10,
         )
         db.close()
     }

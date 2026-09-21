@@ -2,11 +2,15 @@ package mx.equilibrio.domain.usecase
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import mx.equilibrio.domain.model.Account
+import mx.equilibrio.domain.model.Period
+import mx.equilibrio.domain.model.PeriodState
 import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.Transfer
 import mx.equilibrio.domain.model.User
 import mx.equilibrio.domain.repository.AccountRepository
+import mx.equilibrio.domain.repository.PeriodRepository
 import mx.equilibrio.domain.repository.TransactionRepository
 import mx.equilibrio.domain.repository.TransferRepository
 import mx.equilibrio.domain.repository.UserRepository
@@ -80,17 +84,57 @@ class FakeTransferRepository(
     override suspend fun findByTransactionId(transactionId: String): Transfer? = null
 }
 
-/** Fake de transacciones: registra las confirmaciones pedidas por id. */
+/**
+ * Fake de transacciones respaldado por un mapa mutable: `observeAll` se recalcula
+ * en cada colecta (via `flow { }`) para que un `upsert` seguido de `.first()` en
+ * el mismo test vea el estado actualizado, sin necesidad de un StateFlow manual.
+ */
 class FakeTransactionRepository : TransactionRepository {
     val confirmedIds = mutableListOf<String>()
+    private val transactionsById = mutableMapOf<String, Transaction>()
 
-    override fun observeAll(): Flow<List<Transaction>> = MutableStateFlow(emptyList())
+    fun seed(vararg transactions: Transaction) {
+        transactions.forEach { transactionsById[it.id] = it }
+    }
+
+    override fun observeAll(): Flow<List<Transaction>> = flow { emit(transactionsById.values.toList()) }
     override fun observeBalanceCents(): Flow<Long> = MutableStateFlow(0L)
-    override suspend fun getById(id: String): Transaction? = null
-    override suspend fun upsert(transaction: Transaction) = throw NotImplementedError("no usado en estos tests")
+    override suspend fun getById(id: String): Transaction? = transactionsById[id]
+    override suspend fun upsert(transaction: Transaction) {
+        transactionsById[transaction.id] = transaction
+    }
     override suspend fun delete(id: String) = throw NotImplementedError("no usado en estos tests")
 
     override suspend fun confirm(id: String) {
         confirmedIds += id
+    }
+}
+
+/**
+ * Fake de periodos respaldado por un mapa mutable, mismo patrón que
+ * [FakeTransactionRepository]: `observeByAccount` se recalcula en cada colecta.
+ */
+class FakePeriodRepository : PeriodRepository {
+    private val periodsById = mutableMapOf<String, Period>()
+
+    fun seed(vararg periods: Period) {
+        periods.forEach { periodsById[it.id] = it }
+    }
+
+    fun all(): List<Period> = periodsById.values.toList()
+
+    override fun observeByAccount(accountId: String): Flow<List<Period>> = flow {
+        emit(periodsById.values.filter { it.accountId == accountId }.sortedBy { it.startAt })
+    }
+
+    override suspend fun getActiveByAccount(accountId: String): List<Period> =
+        periodsById.values
+            .filter { it.accountId == accountId && it.state != PeriodState.CLOSED }
+            .sortedBy { it.startAt }
+
+    override suspend fun getById(id: String): Period? = periodsById[id]
+
+    override suspend fun upsert(period: Period) {
+        periodsById[period.id] = period
     }
 }

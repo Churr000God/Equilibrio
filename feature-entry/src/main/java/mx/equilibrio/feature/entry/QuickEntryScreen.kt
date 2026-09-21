@@ -182,7 +182,8 @@ fun QuickEntryScreen(
                     )
 
                     EntryMode.CREDIT_PURCHASE -> {
-                        CreditCardAccountSection(
+                        AccountPickerSection(
+                            label = "Tarjeta",
                             accounts = state.accounts.filter { it.type == AccountType.CREDIT_CARD },
                             selectedId = state.accountId,
                             onSelect = { viewModel.onEvent(QuickEntryEvent.CreditAccountSelected(it)) },
@@ -219,6 +220,13 @@ fun QuickEntryScreen(
                     }
 
                     EntryMode.EXPENSE, EntryMode.INCOME -> {
+                        AccountPickerSection(
+                            label = "Cuenta",
+                            accounts = state.accounts.filter { it.type != AccountType.CREDIT_CARD },
+                            selectedId = state.accountId,
+                            onSelect = { viewModel.onEvent(QuickEntryEvent.AccountSelected(it)) },
+                        )
+
                         ClassificationSection(
                             kind = state.kind,
                             selected = state.classification,
@@ -462,14 +470,15 @@ private fun TransferAccountsSection(
 }
 
 @Composable
-private fun CreditCardAccountSection(
+private fun AccountPickerSection(
+    label: String,
     accounts: List<Account>,
     selectedId: String?,
     onSelect: (String) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
         Text(
-            text = "Tarjeta",
+            text = label,
             style = EquilibrioTheme.typography.bodySmall,
             color = EquilibrioTheme.colors.inkMuted,
         )

@@ -10,6 +10,7 @@ sealed interface QuickEntryEvent {
     data class DateChanged(val date: LocalDate) : QuickEntryEvent
     data class NoteChanged(val text: String) : QuickEntryEvent
     data class CategorySelected(val categoryId: String?) : QuickEntryEvent
+    data class AccountSelected(val accountId: String) : QuickEntryEvent
     data class CreateCategoryTabToggled(val show: Boolean) : QuickEntryEvent
     data class NewCategoryNameChanged(val text: String) : QuickEntryEvent
     data class NewCategoryColorSlotChanged(val slot: Int) : QuickEntryEvent

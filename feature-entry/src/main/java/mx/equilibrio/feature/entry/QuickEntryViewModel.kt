@@ -127,10 +127,14 @@ class QuickEntryViewModel @Inject constructor(
                         EntryMode.TRANSFER -> it.kind
                         EntryMode.CREDIT_PURCHASE -> TransactionKind.EXPENSE
                     }
-                    val newAccountId = if (event.mode == EntryMode.CREDIT_PURCHASE) {
-                        it.accounts.firstOrNull { account -> account.type == AccountType.CREDIT_CARD }?.id
-                    } else {
-                        it.accountId
+                    val currentIsCreditCard = it.accounts.firstOrNull { account -> account.id == it.accountId }
+                        ?.type == AccountType.CREDIT_CARD
+                    val newAccountId = when {
+                        event.mode == EntryMode.CREDIT_PURCHASE ->
+                            it.accounts.firstOrNull { account -> account.type == AccountType.CREDIT_CARD }?.id
+                        (event.mode == EntryMode.EXPENSE || event.mode == EntryMode.INCOME) && currentIsCreditCard ->
+                            it.accounts.firstOrNull { account -> account.type != AccountType.CREDIT_CARD }?.id
+                        else -> it.accountId
                     }
                     it.copy(
                         mode = event.mode,
@@ -168,6 +172,8 @@ class QuickEntryViewModel @Inject constructor(
             is QuickEntryEvent.NoteChanged -> _state.update { it.copy(note = event.text) }
 
             is QuickEntryEvent.CategorySelected -> _state.update { it.copy(categoryId = event.categoryId) }
+
+            is QuickEntryEvent.AccountSelected -> _state.update { it.copy(accountId = event.accountId) }
 
             is QuickEntryEvent.CreateCategoryTabToggled -> _state.update {
                 it.copy(

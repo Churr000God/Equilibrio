@@ -14,8 +14,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import mx.equilibrio.app.auth.LoginScreen
 import mx.equilibrio.app.auth.ProfileHud
 import mx.equilibrio.app.auth.ProfileScreen
+import mx.equilibrio.app.goals.GoalsPlaceholderScreen
 import mx.equilibrio.feature.accounts.AccountsScreen
 import mx.equilibrio.feature.accounts.AddAccountScreen
 import mx.equilibrio.feature.categories.AddCategoryScreen
@@ -27,6 +29,7 @@ import mx.equilibrio.ui.components.EqEmptyState
 import mx.equilibrio.ui.components.EqNavDestination
 import mx.equilibrio.ui.theme.EquilibrioTheme
 
+private const val ROUTE_LOGIN = "login"
 private const val ROUTE_HOME = "home"
 private const val ROUTE_ACCOUNTS = "accounts"
 private const val ROUTE_ADD_ACCOUNT = "add_account"
@@ -87,6 +90,12 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
             startDestination = ROUTE_HOME,
             modifier = Modifier.padding(padding),
         ) {
+            composable(ROUTE_LOGIN) {
+                LoginScreen(
+                    onAuthenticated = { navController.popBackStack() },
+                    onBack = { navController.popBackStack() },
+                )
+            }
             composable(ROUTE_HOME) {
                 HomeScreen(
                     onAddClicked = { navController.navigate(quickEntryRoute()) },
@@ -113,7 +122,10 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                 )
             }
             composable(ROUTE_PROFILE) {
-                ProfileScreen(onBack = { navController.popBackStack() })
+                ProfileScreen(
+                    onBack = { navController.popBackStack() },
+                    onLoginWithPassword = { navController.navigate(ROUTE_LOGIN) },
+                )
             }
             composable(ROUTE_ADD_CATEGORY) {
                 AddCategoryScreen(
@@ -122,8 +134,7 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                 )
             }
             composable(ROUTE_GOALS) {
-                // TODO: insertar AlertBanner aquí — coordinar con Persona 2
-                EqEmptyState(title = "Próximamente", body = "Las metas llegarán en una próxima versión.")
+                GoalsPlaceholderScreen()
             }
             composable(ROUTE_REPORTS) {
                 EqEmptyState(title = "Próximamente", body = "Los reportes llegarán en una próxima versión.")

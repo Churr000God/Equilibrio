@@ -22,4 +22,5 @@ data class UserEntity(
     @ColumnInfo(name = "family_name") val familyName: String? = null,
     @ColumnInfo(name = "photo_url") val photoUrl: String? = null,
     val plan: String = "FREE",
+    @ColumnInfo(name = "password_hash") val passwordHash: String? = null,
 )

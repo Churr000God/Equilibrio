@@ -9,6 +9,7 @@ data class User(
     val familyName: String?,
     val photoUrl: String?,
     val plan: PlanTier,
+    val hasPassword: Boolean = false,
 ) {
-    val isSignedIn: Boolean get() = googleId != null
+    val isSignedIn: Boolean get() = googleId != null || hasPassword
 }

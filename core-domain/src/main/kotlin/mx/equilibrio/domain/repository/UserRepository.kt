@@ -30,4 +30,17 @@ interface UserRepository {
         familyName: String?,
         photoUrl: String?,
     ): User
+
+    /**
+     * RF01 — registro con email/contraseña. Reclama el usuario local anónimo actual
+     * (igual que [signInWithGoogle]), le asigna el correo y el hash de la contraseña,
+     * y deja la sesión iniciada. Falla si el correo ya está en uso.
+     */
+    suspend fun registerWithPassword(displayName: String?, email: String, password: String): Result<User>
+
+    /**
+     * RF01 — inicio de sesión con email/contraseña. No revela si el correo existe
+     * cuando la combinación es incorrecta (mismo mensaje de error en ambos casos).
+     */
+    suspend fun signInWithPassword(email: String, password: String): Result<User>
 }

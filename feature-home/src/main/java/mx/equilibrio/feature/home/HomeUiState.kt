@@ -50,7 +50,7 @@ private fun Alert.toUi() = AlertUi(
     },
 )
 
-fun List<Alert>.toUi(): List<AlertUi> = map { it.toUi() }
+fun List<Alert>.toUi(): List<AlertUi> = filter { it.type == AlertType.BALANCE_DEVIATION }.map { it.toUi() }
 
 data class HomeUiState(
     val isLoading: Boolean = true,

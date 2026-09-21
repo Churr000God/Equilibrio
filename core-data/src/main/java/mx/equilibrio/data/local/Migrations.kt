@@ -140,3 +140,10 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
         db.execSQL("ALTER TABLE transactions ADD COLUMN status TEXT NOT NULL DEFAULT 'COMPLETED'")
     }
 }
+
+/** RF01 — login con email/contraseña: hash Argon2id en `users.password_hash`. */
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE users ADD COLUMN password_hash TEXT DEFAULT NULL")
+    }
+}

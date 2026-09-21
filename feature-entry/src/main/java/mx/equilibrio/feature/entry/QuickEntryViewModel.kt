@@ -19,6 +19,7 @@ import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.TransactionStatus
 import mx.equilibrio.domain.model.deriveTransactionStatus
+import mx.equilibrio.domain.usecase.CheckBalanceDeviationAlertUseCase
 import mx.equilibrio.domain.usecase.ConfirmTransaction
 import mx.equilibrio.domain.usecase.CreateTransfer
 import mx.equilibrio.domain.usecase.GetCategories
@@ -41,6 +42,7 @@ class QuickEntryViewModel @Inject constructor(
     private val saveCategory: SaveCategory,
     private val createTransfer: CreateTransfer,
     private val confirmTransaction: ConfirmTransaction,
+    private val checkBalanceDeviation: CheckBalanceDeviationAlertUseCase,
 ) : ViewModel() {
 
     private val editingId: String? = savedStateHandle["transactionId"]
@@ -241,6 +243,7 @@ class QuickEntryViewModel @Inject constructor(
                     status = deriveTransactionStatus(current.occurredAt, today()),
                 ),
             )
+            checkBalanceDeviation()
             _state.update { it.copy(isSaving = false, saved = true) }
         }
     }

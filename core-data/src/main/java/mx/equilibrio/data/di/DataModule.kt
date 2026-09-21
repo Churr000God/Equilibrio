@@ -15,6 +15,7 @@ import mx.equilibrio.data.local.MIGRATION_3_4
 import mx.equilibrio.data.local.MIGRATION_4_5
 import mx.equilibrio.data.local.MIGRATION_5_6
 import mx.equilibrio.data.local.MIGRATION_6_7
+import mx.equilibrio.data.local.MIGRATION_7_8
 import mx.equilibrio.data.local.dao.AccountDao
 import mx.equilibrio.data.local.dao.AlertDao
 import mx.equilibrio.data.local.dao.CategoryDao
@@ -43,7 +44,15 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): EquilibrioDatabase =
         Room.databaseBuilder(context, EquilibrioDatabase::class.java, EquilibrioDatabase.DATABASE_NAME)
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+            .addMigrations(
+                MIGRATION_1_2,
+                MIGRATION_2_3,
+                MIGRATION_3_4,
+                MIGRATION_4_5,
+                MIGRATION_5_6,
+                MIGRATION_6_7,
+                MIGRATION_7_8,
+            )
             .build()
 
     @Provides

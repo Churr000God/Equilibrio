@@ -4,6 +4,33 @@ Registro de avance funcional de Equilibrio, por sesión de trabajo. Complementa
 `PLAN_DESARROLLO.md` (que describe el diseño objetivo) con lo que ya está
 construido.
 
+## 2026-09-21
+
+**Login con correo/contraseña (RF01) — merge de rama `Login`**
+- `LoginScreen`/`LoginViewModel`/`LoginUiState` (nuevo, `:app`): tabs "Iniciar
+  sesión"/"Registrarse", validación de email/contraseña, accesible desde
+  Perfil (no es pantalla de arranque, no bloquea el uso de la app). Reutiliza
+  `GoogleAuthClient` existente para el botón de Google.
+- `PasswordHasher` (nuevo, `:core-data`): hash/verificación con Argon2id
+  (`argon2kt`). `RegisterWithPasswordUseCase`/`SignInWithPasswordUseCase`
+  (nuevo, `:core-domain`).
+- Nueva columna `users.password_hash` (migración Room v7→v8).
+- Alertas (RF09): banner `GOAL_AT_RISK` conectado en Cuentas y Metas
+  (`GoalsPlaceholderScreen`/`ViewModel`, nuevo) — el esquema/DAO/casos de uso
+  ya existían de una sesión anterior.
+- La rama `Login` se había ramificado antes de que main incorporara
+  transferencias/estado de transacción (sesión 2026-09-19) y reconstruyó esa
+  misma feature en paralelo; el merge resolvió tomando la migración 7→8
+  (password_hash) y las adiciones propias de Login sobre lo ya existente en
+  main, sin duplicar transfers/status.
+
+**Pendiente (seguimiento del merge, no bloqueante)**
+- Índice UNIQUE en `users.email` (riesgo de registro duplicado por carrera).
+- Cobertura de tests: PasswordHasher, casos de uso de auth, transferencias, y
+  migraciones Room.
+- Timing side-channel y rate-limiting en login (hallazgos de seguridad).
+- Accesibilidad de `EqColorSlotPicker` y loading state en `AccountsScreen`.
+
 ## 2026-09-19
 
 **Categorías — creación con color**

@@ -126,7 +126,7 @@ Un `Color` crudo nunca se pasa a un componente de la capa de UI: los componentes
 
 > **Decisión clave:** el *esquema de datos* de Fase 1 ya contempla las tres fases. Solo la *superficie de UI* y los *casos de uso* crecen por fase. Esto evita migraciones destructivas de Room.
 
-### 2.5 Estado de avance de Fase 2 (actualizado 2026-09-19)
+### 2.5 Estado de avance de Fase 2 (actualizado 2026-09-21)
 
 | RF04 — Cuentas y tarjetas | Estado |
 |---|---|
@@ -135,10 +135,10 @@ Un `Color` crudo nunca se pasa a un componente de la capa de UI: los componentes
 | Transferencias entre cuentas (efectivo/débito, nunca crédito) | Hecho |
 | Movimientos programados a futuro (estado COMPLETED/SCHEDULED) | Hecho |
 | Estados/transacciones propias de tarjeta de crédito | Pendiente |
-| RF01 — Autenticación local | En progreso (login con Google, perfil) |
+| RF01 — Autenticación local | Hecho (Google Sign-In + login/registro con correo y contraseña, Argon2id; opcional, no bloquea el uso de la app) |
 | RF08 — Metas de ahorro | Pendiente |
 | RF06 — Reportes | Pendiente |
-| RF09 — Alertas del producto | Modelo de datos hecho, UI pendiente |
+| RF09 — Alertas del producto | Hecho (banner conectado en Cuentas y Metas) |
 | RF10 — Límites del plan gratuito | Modelo de datos hecho, UI pendiente |
 
 Detalle sesión a sesión en `CHANGELOG.md`.

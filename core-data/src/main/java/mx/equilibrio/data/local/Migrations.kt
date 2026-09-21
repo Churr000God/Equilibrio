@@ -194,7 +194,10 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
         )
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_periods_account_id` ON `periods` (`account_id`)")
 
-        db.execSQL("ALTER TABLE transactions ADD COLUMN period_id TEXT DEFAULT NULL")
+        db.execSQL(
+            "ALTER TABLE transactions ADD COLUMN period_id TEXT " +
+                "REFERENCES `periods`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION DEFAULT NULL",
+        )
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_period_id` ON `transactions` (`period_id`)")
     }
 }

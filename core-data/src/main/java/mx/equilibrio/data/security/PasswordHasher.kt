@@ -35,10 +35,26 @@ class PasswordHasher @Inject constructor() {
         false
     }
 
+    /**
+     * Igual que [verify], pero si no hay hash real (cuenta o password inexistente) corre el
+     * verify contra un hash señuelo de costo idéntico para que el tiempo de respuesta no delate
+     * si el correo existe (mitiga enumeración por canal lateral de tiempo).
+     */
+    fun verifyOrDummy(password: String, hash: String?): Boolean {
+        if (hash == null) {
+            verify(password, dummyHash)
+            return false
+        }
+        return verify(password, hash)
+    }
+
+    private val dummyHash: String by lazy { hash(DUMMY_PASSWORD) }
+
     private companion object {
         const val SALT_LENGTH_BYTES = 16
         const val T_COST_ITERATIONS = 3
         const val M_COST_KIBIBYTE = 65536
         const val PARALLELISM = 2
+        const val DUMMY_PASSWORD = "equilibrio-timing-mitigation-constant"
     }
 }

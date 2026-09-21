@@ -10,7 +10,11 @@ import mx.equilibrio.data.local.entity.UserEntity
 import mx.equilibrio.data.mapper.toDomain
 import mx.equilibrio.data.prefs.LocalSession
 import mx.equilibrio.data.security.PasswordHasher
+import mx.equilibrio.domain.model.PASSWORD_MAX_LENGTH
+import mx.equilibrio.domain.model.PASSWORD_MIN_LENGTH
 import mx.equilibrio.domain.model.User
+import mx.equilibrio.domain.model.isValidEmailFormat
+import mx.equilibrio.domain.model.isValidPasswordLength
 import mx.equilibrio.domain.repository.UserRepository
 import javax.inject.Inject
 
@@ -94,6 +98,21 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun registerWithPassword(displayName: String?, email: String, password: String): Result<User> {
         val normalizedEmail = email.trim().lowercase()
+
+        if (displayName.isNullOrBlank()) {
+            return Result.failure(IllegalArgumentException("El nombre no puede estar vacío."))
+        }
+        if (!isValidEmailFormat(normalizedEmail)) {
+            return Result.failure(IllegalArgumentException("Ingresa un correo válido."))
+        }
+        if (!isValidPasswordLength(password)) {
+            return Result.failure(
+                IllegalArgumentException(
+                    "La contraseña debe tener entre $PASSWORD_MIN_LENGTH y $PASSWORD_MAX_LENGTH caracteres.",
+                ),
+            )
+        }
+
         if (dao.getByEmail(normalizedEmail) != null) {
             return Result.failure(IllegalStateException("Ya existe una cuenta con ese correo."))
         }
@@ -127,12 +146,25 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun signInWithPassword(email: String, password: String): Result<User> {
         val invalidCredentials = IllegalArgumentException("Correo o contraseña incorrectos.")
-        return try {
-            val entity = dao.getByEmail(email.trim().lowercase()) ?: return Result.failure(invalidCredentials)
-            val hash = entity.passwordHash ?: return Result.failure(invalidCredentials)
-            if (!passwordHasher.verify(password, hash)) return Result.failure(invalidCredentials)
+        val normalizedEmail = email.trim().lowercase()
 
-            session.setCurrentUserId(entity.id)
+        // Formato inválido o largo fuera de rango nunca puede matchear una cuenta real
+        // (el registro ya exige formato/longitud), así que cortar acá no delata nada
+        // por canal lateral de tiempo: es uniforme para toda entrada de esa forma, no
+        // depende de si el correo enviado corresponde a una cuenta existente.
+        if (!isValidEmailFormat(normalizedEmail) || password.length > PASSWORD_MAX_LENGTH) {
+            return Result.failure(invalidCredentials)
+        }
+
+        return try {
+            val entity = dao.getByEmail(normalizedEmail)
+            // Siempre corre un verify (real o señuelo) antes de responder, para que el tiempo
+            // no delate si el correo existe (mitiga enumeración por canal lateral de tiempo).
+            if (!passwordHasher.verifyOrDummy(password, entity?.passwordHash)) {
+                return Result.failure(invalidCredentials)
+            }
+
+            session.setCurrentUserId(entity!!.id)
             Result.success(entity.toDomain())
         } catch (e: Exception) {
             Result.failure(e)

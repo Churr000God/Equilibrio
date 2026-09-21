@@ -9,7 +9,7 @@ import mx.equilibrio.domain.model.deriveTransactionStatus
 import mx.equilibrio.domain.repository.TransferRepository
 import javax.inject.Inject
 
-private val TRANSFERABLE_TYPES = setOf(AccountType.CASH, AccountType.BANK)
+internal val TRANSFERABLE_TYPES = setOf(AccountType.CASH, AccountType.BANK)
 
 class CreateTransfer @Inject constructor(
     private val getAccount: GetAccount,

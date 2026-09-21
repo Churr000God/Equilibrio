@@ -28,12 +28,14 @@ import mx.equilibrio.data.local.dao.UserDao
 import mx.equilibrio.data.repository.AccountRepositoryImpl
 import mx.equilibrio.data.repository.AlertRepositoryImpl
 import mx.equilibrio.data.repository.CategoryRepositoryImpl
+import mx.equilibrio.data.repository.PeriodRepositoryImpl
 import mx.equilibrio.data.repository.TransactionRepositoryImpl
 import mx.equilibrio.data.repository.TransferRepositoryImpl
 import mx.equilibrio.data.repository.UserRepositoryImpl
 import mx.equilibrio.domain.repository.AccountRepository
 import mx.equilibrio.domain.repository.AlertRepository
 import mx.equilibrio.domain.repository.CategoryRepository
+import mx.equilibrio.domain.repository.PeriodRepository
 import mx.equilibrio.domain.repository.TransactionRepository
 import mx.equilibrio.domain.repository.TransferRepository
 import mx.equilibrio.domain.repository.UserRepository
@@ -103,4 +105,7 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindTransferRepository(impl: TransferRepositoryImpl): TransferRepository
+
+    @Binds
+    abstract fun bindPeriodRepository(impl: PeriodRepositoryImpl): PeriodRepository
 }

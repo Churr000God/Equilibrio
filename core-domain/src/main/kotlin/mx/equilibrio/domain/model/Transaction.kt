@@ -17,6 +17,7 @@ data class Transaction(
     val note: String? = null,
     val categoryId: String? = null,
     val status: TransactionStatus = TransactionStatus.COMPLETED,
+    val periodId: String? = null,
 ) {
     init {
         require(amountCents > 0) { "amountCents debe ser positivo, fue $amountCents" }

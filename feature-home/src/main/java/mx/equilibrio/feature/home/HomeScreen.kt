@@ -21,7 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -32,6 +31,7 @@ import mx.equilibrio.ui.components.EqCard
 import mx.equilibrio.ui.components.EqDestructiveDialog
 import mx.equilibrio.ui.components.EqEmptyState
 import mx.equilibrio.ui.components.EqFab
+import mx.equilibrio.ui.components.EqSkeleton
 import mx.equilibrio.ui.components.EqTopBar
 import mx.equilibrio.ui.components.formatCents
 import mx.equilibrio.ui.theme.DomainTone
@@ -71,7 +71,7 @@ fun HomeScreen(
         floatingActionButton = { EqFab(onClick = onAddClicked) },
     ) { padding ->
         when {
-            state.isLoading -> HomeSkeleton(padding)
+            state.isLoading -> EqSkeleton(modifier = Modifier.padding(padding))
             state.isEmpty -> Box(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center,
@@ -166,26 +166,6 @@ private fun TransactionRow(
             showSign = true,
             isNegative = transaction.isExpense,
         )
-    }
-}
-
-@Composable
-private fun HomeSkeleton(padding: PaddingValues) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)
-            .padding(Spacing.base),
-        verticalArrangement = Arrangement.spacedBy(Spacing.base),
-    ) {
-        repeat(4) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(72.dp)
-                    .background(EquilibrioTheme.colors.border.copy(alpha = 0.4f), ShapeMedium),
-            )
-        }
     }
 }
 

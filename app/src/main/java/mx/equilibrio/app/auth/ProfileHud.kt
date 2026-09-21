@@ -9,10 +9,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mx.equilibrio.ui.components.EqAvatar
+import mx.equilibrio.ui.theme.TouchTarget
 
 /**
  * Componente circular de perfil del HUD (RF01), esquina superior derecha del
@@ -29,7 +29,7 @@ fun ProfileHud(
 
     Box(
         modifier = modifier
-            .size(40.dp)
+            .size(TouchTarget.minSize)
             .clip(CircleShape)
             .clickable(onClick = onOpenProfile),
         contentAlignment = Alignment.Center,

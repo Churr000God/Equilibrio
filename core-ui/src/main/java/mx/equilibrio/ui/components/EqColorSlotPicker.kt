@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import mx.equilibrio.ui.theme.EquilibrioTheme
 import mx.equilibrio.ui.theme.ShapePill
 import mx.equilibrio.ui.theme.Spacing
+import mx.equilibrio.ui.theme.TouchTarget
 
 /**
  * Selector genérico de un color entre una lista fija de swatches (p. ej. el
@@ -47,7 +48,7 @@ fun EqColorSlotPicker(
                 val description = colorNames?.getOrNull(slot) ?: "Color ${slot + 1}"
                 Row(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(TouchTarget.minSize)
                         .selectable(selected = selected, onClick = { onSelect(slot) }, role = Role.RadioButton)
                         .semantics { contentDescription = description }
                         .background(color, ShapePill)

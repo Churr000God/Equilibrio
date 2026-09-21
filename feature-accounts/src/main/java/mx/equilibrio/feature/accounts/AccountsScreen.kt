@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,6 +19,7 @@ import mx.equilibrio.domain.model.AccountType
 import mx.equilibrio.ui.components.EqAlertBanner
 import mx.equilibrio.ui.components.EqEmptyState
 import mx.equilibrio.ui.components.EqFab
+import mx.equilibrio.ui.components.EqSkeleton
 import mx.equilibrio.ui.components.EqTopBar
 import mx.equilibrio.ui.theme.EquilibrioTheme
 import mx.equilibrio.ui.theme.Spacing
@@ -50,12 +50,7 @@ fun AccountsScreen(
             }
 
             when {
-                state.isLoading -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator(color = EquilibrioTheme.colors.info)
-                }
+                state.isLoading -> EqSkeleton(rows = 1, rowHeight = AccountCardHeight)
 
                 state.isEmpty -> Box(
                     modifier = Modifier.fillMaxSize(),

@@ -12,10 +12,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mx.equilibrio.ui.components.EqEmptyState
 import mx.equilibrio.ui.components.EqFab
+import mx.equilibrio.ui.components.EqSkeleton
 import mx.equilibrio.ui.components.EqTopBar
 import mx.equilibrio.ui.theme.EquilibrioTheme
 
@@ -35,6 +37,8 @@ fun CategoriesScreen(
         floatingActionButton = { EqFab(onClick = onAddCategoryClicked) },
     ) { padding ->
         when {
+            state.isLoading -> EqSkeleton(modifier = Modifier.padding(top = padding.calculateTopPadding()), rowHeight = 56.dp)
+
             state.isEmpty -> Box(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center,

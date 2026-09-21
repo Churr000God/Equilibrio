@@ -48,6 +48,16 @@ internal fun accountGradient(type: AccountType, colorSlot: Int, colors: Equilibr
     return Brush.linearGradient(listOf(from, to))
 }
 
+/** Color sólido representativo de un slot, para el picker (el gradiente completo vive solo en [AccountCard]). */
+internal fun accountSlotColor(type: AccountType, colorSlot: Int, colors: EquilibrioColors): Color {
+    val (deep, base, mid) = accountPalette(type, colors)
+    return when (((colorSlot % 3) + 3) % 3) {
+        0 -> base
+        1 -> deep
+        else -> mid
+    }
+}
+
 /** Tarjeta de cuenta tipo billetera: gradiente por tipo/colorSlot, dígitos enmascarados, disponible y vencimiento. */
 @Composable
 fun AccountCard(account: AccountUi, modifier: Modifier = Modifier) {

@@ -1,6 +1,7 @@
 package mx.equilibrio.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import mx.equilibrio.ui.theme.EquilibrioTheme
 import mx.equilibrio.ui.theme.FeedbackTone
 import mx.equilibrio.ui.theme.ShapeMedium
@@ -44,6 +46,13 @@ fun EqAlertBanner(
         modifier = modifier
             .fillMaxWidth()
             .background(background, ShapeMedium)
+            .then(
+                if (EquilibrioTheme.accessibilityMode) {
+                    Modifier.border(2.dp, foreground, ShapeMedium)
+                } else {
+                    Modifier
+                },
+            )
             .padding(start = Spacing.base, end = Spacing.sm, top = Spacing.sm, bottom = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.sm),

@@ -14,12 +14,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.HelpOutline
+import androidx.compose.material.icons.rounded.Repeat
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.TrendingUp
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -147,7 +154,7 @@ private fun TransactionRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
-        EqBadge(text = transaction.label, tone = transaction.tone)
+        EqBadge(text = transaction.label, tone = transaction.tone, icon = domainToneIcon(transaction.tone))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = transaction.note?.takeIf { it.isNotBlank() } ?: transaction.label,
@@ -167,6 +174,15 @@ private fun TransactionRow(
             isNegative = transaction.isExpense,
         )
     }
+}
+
+/** Refuerzo con ícono para el modo accesibilidad (EqBadge solo lo pinta si está activo). */
+private fun domainToneIcon(tone: DomainTone): ImageVector = when (tone) {
+    DomainTone.INCOME_FIXED -> Icons.Rounded.Repeat
+    DomainTone.INCOME_VARIABLE -> Icons.Rounded.TrendingUp
+    DomainTone.ESSENTIAL -> Icons.Rounded.CheckCircle
+    DomainTone.RECREATIONAL -> Icons.Rounded.Star
+    DomainTone.NEUTRAL -> Icons.Rounded.HelpOutline
 }
 
 @Preview(showBackground = true)

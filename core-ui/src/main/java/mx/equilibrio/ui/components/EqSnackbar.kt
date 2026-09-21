@@ -3,7 +3,9 @@ package mx.equilibrio.ui.components
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarData
 import androidx.compose.material3.Text
@@ -27,7 +29,18 @@ fun EqSnackbar(
     tone: FeedbackTone = FeedbackTone.SUCCESS,
 ) {
     val colors = EquilibrioTheme.colors
-    val icon = if (tone == FeedbackTone.SUCCESS) Icons.Rounded.CheckCircle else Icons.Rounded.Info
+    val icon = if (EquilibrioTheme.accessibilityMode) {
+        when (tone) {
+            FeedbackTone.SUCCESS -> Icons.Rounded.CheckCircle
+            FeedbackTone.ERROR -> Icons.Rounded.Error
+            FeedbackTone.WARNING -> Icons.Rounded.Warning
+            FeedbackTone.INFO -> Icons.Rounded.Info
+        }
+    } else if (tone == FeedbackTone.SUCCESS) {
+        Icons.Rounded.CheckCircle
+    } else {
+        Icons.Rounded.Info
+    }
 
     Snackbar(
         modifier = modifier.padding(Spacing.base),

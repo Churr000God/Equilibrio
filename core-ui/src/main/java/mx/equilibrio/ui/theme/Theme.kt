@@ -102,12 +102,19 @@ val LocalEquilibrioColors: ProvidableCompositionLocal<EquilibrioColors> =
 val LocalEquilibrioTypography: ProvidableCompositionLocal<EquilibrioTypography> =
     staticCompositionLocalOf { EquilibrioTypographyDefaults }
 
+/** Refuerza con ícono, además de color, los componentes que dependen de purple-vs-green (ver docs/identidad). */
+val LocalAccessibilityMode: ProvidableCompositionLocal<Boolean> =
+    staticCompositionLocalOf { false }
+
 object EquilibrioTheme {
     val colors: EquilibrioColors
         @Composable get() = LocalEquilibrioColors.current
 
     val typography: EquilibrioTypography
         @Composable get() = LocalEquilibrioTypography.current
+
+    val accessibilityMode: Boolean
+        @Composable get() = LocalAccessibilityMode.current
 }
 
 /**
@@ -162,12 +169,14 @@ private fun EquilibrioColors.toMaterialColorScheme(dark: Boolean) = if (dark) {
 @Composable
 fun EquilibrioTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    accessibilityMode: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val colors = if (darkTheme) DarkEquilibrioColors else LightEquilibrioColors
     CompositionLocalProvider(
         LocalEquilibrioColors provides colors,
         LocalEquilibrioTypography provides EquilibrioTypographyDefaults,
+        LocalAccessibilityMode provides accessibilityMode,
     ) {
         MaterialTheme(
             colorScheme = colors.toMaterialColorScheme(darkTheme),

@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mx.equilibrio.domain.usecase.ObserveAccessibilityModeUseCase
 import mx.equilibrio.domain.usecase.ObserveCurrentUser
+import mx.equilibrio.domain.usecase.SetAccessibilityModeUseCase
 import mx.equilibrio.domain.usecase.SignInWithGoogleUseCase
 import mx.equilibrio.domain.usecase.SignOutUseCase
 import mx.equilibrio.domain.usecase.UpdateProfileUseCase
@@ -31,11 +33,14 @@ data class ProfileUiState(
     val saved: Boolean = false,
     val isSigningIn: Boolean = false,
     val signInError: String? = null,
+    val accessibilityMode: Boolean = false,
 )
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     observeCurrentUser: ObserveCurrentUser,
+    observeAccessibilityModeUseCase: ObserveAccessibilityModeUseCase,
+    private val setAccessibilityModeUseCase: SetAccessibilityModeUseCase,
     private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
     private val signOutUseCase: SignOutUseCase,
     private val updateProfileUseCase: UpdateProfileUseCase,
@@ -61,6 +66,16 @@ class ProfileViewModel @Inject constructor(
                 }
             }
         }
+
+        viewModelScope.launch {
+            observeAccessibilityModeUseCase().collect { enabled ->
+                _state.update { it.copy(accessibilityMode = enabled) }
+            }
+        }
+    }
+
+    fun onAccessibilityModeToggled(enabled: Boolean) {
+        viewModelScope.launch { setAccessibilityModeUseCase(enabled) }
     }
 
     fun onDisplayNameChanged(value: String) = _state.update { it.copy(displayNameInput = value, saved = false) }

@@ -5,11 +5,14 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -111,6 +114,44 @@ fun ProfileScreen(
                 loading = state.isSaving,
                 modifier = Modifier.padding(top = Spacing.sm),
             )
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = Spacing.md),
+                color = colors.border,
+            )
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+            ) {
+                Text(
+                    text = "Accesibilidad",
+                    style = EquilibrioTheme.typography.bodyStrong,
+                    color = colors.ink,
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Modo Daltonismo",
+                            style = EquilibrioTheme.typography.body,
+                            color = colors.ink,
+                        )
+                        Text(
+                            text = "Añade íconos y refuerzos visuales a los estados y categorías.",
+                            style = EquilibrioTheme.typography.caption,
+                            color = colors.inkMuted,
+                        )
+                    }
+                    Switch(
+                        checked = state.accessibilityMode,
+                        onCheckedChange = viewModel::onAccessibilityModeToggled,
+                    )
+                }
+            }
 
             Column(
                 modifier = Modifier

@@ -5,7 +5,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Error
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,13 +34,23 @@ fun EqInlineValidation(
         FeedbackTone.INFO -> colors.info
         FeedbackTone.SUCCESS -> colors.green
     }
+    val icon = if (EquilibrioTheme.accessibilityMode) {
+        when (tone) {
+            FeedbackTone.ERROR -> Icons.Rounded.Error
+            FeedbackTone.WARNING -> Icons.Rounded.Warning
+            FeedbackTone.INFO -> Icons.Rounded.Info
+            FeedbackTone.SUCCESS -> Icons.Rounded.CheckCircle
+        }
+    } else {
+        Icons.Rounded.Info
+    }
 
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.Rounded.Info, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
         Text(text = message, style = EquilibrioTheme.typography.caption, color = color)
     }
 }

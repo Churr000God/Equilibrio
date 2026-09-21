@@ -3,12 +3,18 @@ package mx.equilibrio.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import mx.equilibrio.ui.theme.DomainTone
 import mx.equilibrio.ui.theme.EquilibrioColors
 import mx.equilibrio.ui.theme.EquilibrioTheme
@@ -30,18 +36,23 @@ fun EqBadge(
     tone: DomainTone,
     modifier: Modifier = Modifier,
     solid: Boolean = false,
+    icon: ImageVector? = null,
 ) {
     val colors = EquilibrioTheme.colors
     val (background, foreground) = badgeColors(tone, solid, colors)
 
-    Text(
-        text = text,
-        style = EquilibrioTheme.typography.label,
-        color = foreground,
+    Row(
         modifier = modifier
             .background(background, ShapePill)
             .padding(horizontal = Spacing.md, vertical = Spacing.xs),
-    )
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null && EquilibrioTheme.accessibilityMode) {
+            Icon(icon, contentDescription = null, tint = foreground, modifier = Modifier.size(12.dp))
+        }
+        Text(text = text, style = EquilibrioTheme.typography.label, color = foreground)
+    }
 }
 
 private fun badgeColors(tone: DomainTone, solid: Boolean, colors: EquilibrioColors): Pair<Color, Color> {

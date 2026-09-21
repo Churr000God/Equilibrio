@@ -18,24 +18,31 @@ import mx.equilibrio.data.local.MIGRATION_6_7
 import mx.equilibrio.data.local.MIGRATION_7_8
 import mx.equilibrio.data.local.MIGRATION_8_9
 import mx.equilibrio.data.local.MIGRATION_9_10
+import mx.equilibrio.data.local.MIGRATION_10_11
 import mx.equilibrio.data.local.dao.AccountDao
 import mx.equilibrio.data.local.dao.AlertDao
 import mx.equilibrio.data.local.dao.CategoryDao
+import mx.equilibrio.data.local.dao.GoalDao
 import mx.equilibrio.data.local.dao.PeriodDao
+import mx.equilibrio.data.local.dao.ReportDao
 import mx.equilibrio.data.local.dao.TransactionDao
 import mx.equilibrio.data.local.dao.TransferDao
 import mx.equilibrio.data.local.dao.UserDao
 import mx.equilibrio.data.repository.AccountRepositoryImpl
 import mx.equilibrio.data.repository.AlertRepositoryImpl
 import mx.equilibrio.data.repository.CategoryRepositoryImpl
+import mx.equilibrio.data.repository.GoalRepositoryImpl
 import mx.equilibrio.data.repository.PeriodRepositoryImpl
+import mx.equilibrio.data.repository.ReportRepositoryImpl
 import mx.equilibrio.data.repository.TransactionRepositoryImpl
 import mx.equilibrio.data.repository.TransferRepositoryImpl
 import mx.equilibrio.data.repository.UserRepositoryImpl
 import mx.equilibrio.domain.repository.AccountRepository
 import mx.equilibrio.domain.repository.AlertRepository
 import mx.equilibrio.domain.repository.CategoryRepository
+import mx.equilibrio.domain.repository.GoalRepository
 import mx.equilibrio.domain.repository.PeriodRepository
+import mx.equilibrio.domain.repository.ReportRepository
 import mx.equilibrio.domain.repository.TransactionRepository
 import mx.equilibrio.domain.repository.TransferRepository
 import mx.equilibrio.domain.repository.UserRepository
@@ -59,6 +66,7 @@ object DatabaseModule {
                 MIGRATION_7_8,
                 MIGRATION_8_9,
                 MIGRATION_9_10,
+                MIGRATION_10_11,
             )
             .build()
 
@@ -82,6 +90,12 @@ object DatabaseModule {
 
     @Provides
     fun providePeriodDao(database: EquilibrioDatabase): PeriodDao = database.periodDao()
+
+    @Provides
+    fun provideGoalDao(database: EquilibrioDatabase): GoalDao = database.goalDao()
+
+    @Provides
+    fun provideReportDao(database: EquilibrioDatabase): ReportDao = database.reportDao()
 }
 
 @Module
@@ -108,4 +122,10 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindPeriodRepository(impl: PeriodRepositoryImpl): PeriodRepository
+
+    @Binds
+    abstract fun bindGoalRepository(impl: GoalRepositoryImpl): GoalRepository
+
+    @Binds
+    abstract fun bindReportRepository(impl: ReportRepositoryImpl): ReportRepository
 }

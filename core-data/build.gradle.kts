@@ -25,9 +25,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // Esquemas exportados disponibles para MigrationTestHelper (unit vía Robolectric y androidTest).
     sourceSets {
         getByName("test") {
             assets.srcDirs("$projectDir/schemas")
+        }
+        getByName("androidTest") {
+            assets.srcDir("$projectDir/schemas")
         }
     }
 

@@ -4,6 +4,32 @@ Registro de avance funcional de Equilibrio, por sesión de trabajo. Complementa
 `PLAN_DESARROLLO.md` (que describe el diseño objetivo) con lo que ya está
 construido.
 
+## 2026-09-21 (tarde) — Metas y Reportes (PR #3, `feature/metas-reportes`)
+
+**Metas de ahorro (RF08)**
+- Nueva tabla `goals` y columna `transactions.goal_id` (migración Room,
+  renumerada a v10→v11 al integrar — la rama se había ramificado antes de
+  Login/tarjetas de crédito y traía su propia v7→v8, ya ocupada en main por
+  `password_hash`). Un abono es un gasto con `goal_id`: sale de la cuenta,
+  aparece en Inicio como "Ahorro" y se excluye del indicador y de los
+  reportes. El avance de la meta se deriva con `SUM`, nunca se persiste.
+- `:feature-goals`: meta destacada con anillo y abono rápido, otras metas,
+  metas logradas, racha de semanas consecutivas con abono, editor con plazo
+  opcional. La meta se completa sola al alcanzar el objetivo. Reemplaza el
+  `GoalsPlaceholderScreen` que traía el banner de alertas RF09 de Login.
+
+**Reportes (RF06)**
+- `ReportDao` agrega en SQLite (totales por clasificación, tendencia mensual,
+  gasto por categoría). Sin tablas nuevas.
+- `:feature-reports`: resumen con variación vs mes anterior, gráfica de 6
+  meses, matriz ingreso × gasto con lectura en lenguaje simple
+  (`CrossMatrixCalculator`), top categorías. Navegación por mes.
+
+**core-ui**
+- `EqProgressRing`, `EqProgressBar`, `EqStatTile`, `EqBarChart`,
+  `EqMatrixCell`, `EqChip`; `EqTopBar` acepta `subtitle`; helpers de monto
+  compartidos (`AmountInput.kt`); `DomainTone.color/deepColor/softColor`.
+
 ## 2026-09-21
 
 **Login con correo/contraseña (RF01) — merge de rama `Login`**

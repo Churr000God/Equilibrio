@@ -48,6 +48,7 @@ class HomeViewModel @Inject constructor(
                     amountCents = it.amountCents,
                     occurredAt = it.occurredAt,
                     note = it.note,
+                    goalId = it.goalId,
                 )
             },
             pendingDeletion = pending,

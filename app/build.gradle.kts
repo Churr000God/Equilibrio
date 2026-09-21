@@ -51,6 +51,8 @@ dependencies {
     implementation(project(":feature-entry"))
     implementation(project(":feature-accounts"))
     implementation(project(":feature-categories"))
+    implementation(project(":feature-goals"))
+    implementation(project(":feature-reports"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)

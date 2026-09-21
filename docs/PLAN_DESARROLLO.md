@@ -185,7 +185,8 @@ Clean Architecture en tres capas (cumple **RNF06 — Mantenibilidad: arquitectur
 | `:feature-entry` | Pantalla Registro rápido | `:core-domain`, `:core-ui` |
 | `:feature-accounts` | Pantalla Cuentas (carrusel de tarjetas + alta de cuenta) — adelantada de Fase 2, implementada ya | `:core-domain`, `:core-ui` |
 | `:feature-categories` | Pantalla Categorías (listado + alta) — adelantada de Fase 2, implementada ya | `:core-domain`, `:core-ui` |
-| *(Fase 2)* `:feature-goals`, `:feature-reports` | | igual patrón |
+| `:feature-goals` | Pantalla Metas + editor + hoja de abono (RF08) | `:core-domain`, `:core-ui` |
+| `:feature-reports` | Pantalla Reportes (RF06) | `:core-domain`, `:core-ui` |
 
 **Regla de dependencia:** `:core-domain` no depende de nada. `:feature-*` nunca importa `:core-data`. Se verifica con una tarea Gradle de comprobación de dependencias en CI.
 

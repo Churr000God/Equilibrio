@@ -1,6 +1,7 @@
 package mx.equilibrio.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,7 @@ fun EqTopBar(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
+    subtitle: String? = null,
 ) {
     Row(
         modifier = modifier
@@ -39,12 +41,20 @@ fun EqTopBar(
                 Icon(Icons.Rounded.ArrowBack, contentDescription = "Cerrar", tint = EquilibrioTheme.colors.ink)
             }
         }
-        Text(
-            text = title,
-            style = EquilibrioTheme.typography.h1,
-            color = EquilibrioTheme.colors.ink,
-            modifier = Modifier.weight(1f),
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = EquilibrioTheme.typography.h1,
+                color = EquilibrioTheme.colors.ink,
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = EquilibrioTheme.typography.bodySmall,
+                    color = EquilibrioTheme.colors.inkMuted,
+                )
+            }
+        }
         trailing?.invoke()
     }
 }

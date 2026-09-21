@@ -2,8 +2,6 @@ package mx.equilibrio.app.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -19,15 +17,16 @@ import androidx.navigation.navArgument
 import mx.equilibrio.app.auth.LoginScreen
 import mx.equilibrio.app.auth.ProfileHud
 import mx.equilibrio.app.auth.ProfileScreen
-import mx.equilibrio.app.goals.GoalsPlaceholderScreen
 import mx.equilibrio.feature.accounts.AccountsScreen
 import mx.equilibrio.feature.accounts.AddAccountScreen
 import mx.equilibrio.feature.categories.AddCategoryScreen
 import mx.equilibrio.feature.categories.CategoriesScreen
 import mx.equilibrio.feature.entry.QuickEntryScreen
+import mx.equilibrio.feature.goals.GoalEditorScreen
+import mx.equilibrio.feature.goals.GoalsScreen
 import mx.equilibrio.feature.home.HomeScreen
+import mx.equilibrio.feature.reports.ReportsScreen
 import mx.equilibrio.ui.components.EqBottomNav
-import mx.equilibrio.ui.components.EqEmptyState
 import mx.equilibrio.ui.components.EqNavDestination
 import mx.equilibrio.ui.theme.EquilibrioTheme
 
@@ -45,6 +44,12 @@ private const val ROUTE_QUICK_ENTRY = "quick_entry?transactionId={$ARG_TRANSACTI
 
 private fun quickEntryRoute(transactionId: String? = null) =
     "quick_entry" + if (transactionId != null) "?transactionId=$transactionId" else ""
+
+private const val ARG_GOAL_ID = "goalId"
+private const val ROUTE_GOAL_EDITOR = "goal_editor?goalId={$ARG_GOAL_ID}"
+
+private fun goalEditorRoute(goalId: String? = null) =
+    "goal_editor" + if (goalId != null) "?goalId=$goalId" else ""
 
 private val ROUTE_TO_DESTINATION = mapOf(
     ROUTE_HOME to EqNavDestination.HOME,
@@ -136,15 +141,28 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                 )
             }
             composable(ROUTE_GOALS) {
-                GoalsPlaceholderScreen()
+                GoalsScreen(
+                    onAddClicked = { navController.navigate(goalEditorRoute()) },
+                    onGoalClicked = { id -> navController.navigate(goalEditorRoute(id)) },
+                )
+            }
+            composable(
+                route = ROUTE_GOAL_EDITOR,
+                arguments = listOf<NamedNavArgument>(
+                    navArgument(ARG_GOAL_ID) {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                ),
+            ) {
+                GoalEditorScreen(
+                    onSaved = { navController.popBackStack() },
+                    onCancel = { navController.popBackStack() },
+                )
             }
             composable(ROUTE_REPORTS) {
-                EqEmptyState(
-                    title = "Próximamente",
-                    body = "Los reportes llegarán en una próxima versión.",
-                    icon = Icons.Rounded.BarChart,
-                    iconTint = EquilibrioTheme.colors.green,
-                )
+                ReportsScreen()
             }
             composable(
                 route = ROUTE_QUICK_ENTRY,

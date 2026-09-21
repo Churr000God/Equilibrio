@@ -201,3 +201,37 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_period_id` ON `transactions` (`period_id`)")
     }
 }
+
+/**
+ * RF08 — tabla `goals` y `transactions.goal_id` (abono espejo de una meta). Portada del PR
+ * `feature/metas-reportes` (Persona 2): esa rama se ramificó antes de Login/tarjetas de
+ * crédito y traía esto como `MIGRATION_7_8`, ya ocupado en main por `password_hash` —
+ * renumerada a 10→11 al integrar.
+ */
+val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `goals` (
+                `id` TEXT NOT NULL,
+                `user_id` TEXT NOT NULL,
+                `name` TEXT NOT NULL,
+                `target_cents` INTEGER NOT NULL,
+                `deadline` INTEGER,
+                `status` TEXT NOT NULL,
+                `created_at` INTEGER NOT NULL,
+                `updated_at` INTEGER NOT NULL,
+                `sync_state` TEXT NOT NULL,
+                `is_deleted` INTEGER NOT NULL,
+                PRIMARY KEY(`id`),
+                FOREIGN KEY(`user_id`) REFERENCES `users`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION
+            )
+            """.trimIndent(),
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_goals_user_id` ON `goals` (`user_id`)")
+        // Sin REFERENCES a propósito: una meta borrada no debe arrastrar ni bloquear
+        // el borrado de sus abonos espejo (el dinero ya salió de la cuenta).
+        db.execSQL("ALTER TABLE transactions ADD COLUMN goal_id TEXT DEFAULT NULL")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_goal_id` ON `transactions` (`goal_id`)")
+    }
+}

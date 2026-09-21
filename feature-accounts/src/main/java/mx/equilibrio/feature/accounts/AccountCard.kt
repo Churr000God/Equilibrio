@@ -73,14 +73,14 @@ fun AccountCard(account: AccountUi, modifier: Modifier = Modifier) {
             Text(
                 text = account.name,
                 style = EquilibrioTheme.typography.h3,
-                color = Color.White,
+                color = colors.onGradient,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = account.maskedDigits,
                 style = EquilibrioTheme.typography.label,
-                color = Color.White.copy(alpha = 0.75f),
+                color = colors.onGradient.copy(alpha = 0.75f),
                 modifier = Modifier.padding(top = Spacing.xs),
             )
         }
@@ -94,12 +94,12 @@ fun AccountCard(account: AccountUi, modifier: Modifier = Modifier) {
                 Text(
                     text = "Disponible",
                     style = EquilibrioTheme.typography.caption,
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = colors.onGradient.copy(alpha = 0.7f),
                 )
                 Text(
                     text = formatCents(account.balanceCents),
                     style = tabularAmountStyle(fontSize = 28.sp),
-                    color = Color.White,
+                    color = colors.onGradient,
                 )
             }
             if (account.dueDay != null) {
@@ -107,12 +107,12 @@ fun AccountCard(account: AccountUi, modifier: Modifier = Modifier) {
                     Text(
                         text = "Vence",
                         style = EquilibrioTheme.typography.caption,
-                        color = Color.White.copy(alpha = 0.7f),
+                        color = colors.onGradient.copy(alpha = 0.7f),
                     )
                     Text(
                         text = "Día ${account.dueDay}",
                         style = EquilibrioTheme.typography.label,
-                        color = Color.White,
+                        color = colors.onGradient,
                     )
                 }
             }

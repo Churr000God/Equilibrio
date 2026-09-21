@@ -38,6 +38,8 @@ data class EquilibrioColors(
     val warningSoft: Color,
     val info: Color,
     val infoSoft: Color,
+    /** Texto/ícono sobre un gradiente de dominio oscuro (p. ej. [AccountCard]) — mismo blanco en claro y oscuro. */
+    val onGradient: Color,
 )
 
 val LightEquilibrioColors = EquilibrioColors(
@@ -64,6 +66,7 @@ val LightEquilibrioColors = EquilibrioColors(
     warningSoft = WarningSoft,
     info = Info,
     infoSoft = InfoSoft,
+    onGradient = Color.White,
 )
 
 val DarkEquilibrioColors = EquilibrioColors(
@@ -90,6 +93,7 @@ val DarkEquilibrioColors = EquilibrioColors(
     warningSoft = WarningSoftDark,
     info = InfoDark,
     infoSoft = InfoSoftDark,
+    onGradient = Color.White,
 )
 
 val LocalEquilibrioColors: ProvidableCompositionLocal<EquilibrioColors> =

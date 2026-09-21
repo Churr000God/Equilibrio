@@ -2,6 +2,8 @@ package mx.equilibrio.app.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -137,7 +139,12 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                 GoalsPlaceholderScreen()
             }
             composable(ROUTE_REPORTS) {
-                EqEmptyState(title = "Próximamente", body = "Los reportes llegarán en una próxima versión.")
+                EqEmptyState(
+                    title = "Próximamente",
+                    body = "Los reportes llegarán en una próxima versión.",
+                    icon = Icons.Rounded.BarChart,
+                    iconTint = EquilibrioTheme.colors.green,
+                )
             }
             composable(
                 route = ROUTE_QUICK_ENTRY,

@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -12,6 +14,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mx.equilibrio.ui.components.EqAlertBanner
 import mx.equilibrio.ui.components.EqEmptyState
+import mx.equilibrio.ui.theme.EquilibrioTheme
 import mx.equilibrio.ui.theme.Spacing
 
 /** RF09 — banner de GOAL_AT_RISK ya funcional aunque la pantalla de Metas (Persona 2) no exista aún. */
@@ -31,7 +34,12 @@ fun GoalsPlaceholderScreen(
             )
         }
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            EqEmptyState(title = "Próximamente", body = "Las metas llegarán en una próxima versión.")
+            EqEmptyState(
+                title = "Próximamente",
+                body = "Las metas llegarán en una próxima versión.",
+                icon = Icons.Rounded.Flag,
+                iconTint = EquilibrioTheme.colors.purple,
+            )
         }
     }
 }

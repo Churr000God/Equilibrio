@@ -11,6 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,6 +25,8 @@ fun EqEmptyState(
     title: String,
     body: String,
     modifier: Modifier = Modifier,
+    icon: ImageVector = Icons.Rounded.Inbox,
+    iconTint: Color = EquilibrioTheme.colors.inkFaint,
     action: (@Composable () -> Unit)? = null,
 ) {
     val colors = EquilibrioTheme.colors
@@ -33,9 +37,9 @@ fun EqEmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
-            Icons.Rounded.Inbox,
+            icon,
             contentDescription = null,
-            tint = colors.inkFaint,
+            tint = iconTint,
             modifier = Modifier.padding(bottom = Spacing.base).size(48.dp),
         )
         Text(

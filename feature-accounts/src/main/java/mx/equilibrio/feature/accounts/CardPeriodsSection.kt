@@ -1,29 +1,27 @@
 package mx.equilibrio.feature.accounts
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import mx.equilibrio.domain.model.PeriodState
 import mx.equilibrio.ui.components.EqButton
+import mx.equilibrio.ui.components.EqCard
 import mx.equilibrio.ui.components.EqDomainToggleOption
+import mx.equilibrio.ui.components.EqFormDialog
 import mx.equilibrio.ui.components.EqInlineValidation
+import mx.equilibrio.ui.components.EqKeyValueRowGroup
 import mx.equilibrio.ui.components.EqTextField
 import mx.equilibrio.ui.components.formatCents
 import mx.equilibrio.ui.theme.DomainTone
 import mx.equilibrio.ui.theme.EquilibrioTheme
-import mx.equilibrio.ui.theme.ShapeSmall
 import mx.equilibrio.ui.theme.Spacing
 
 private fun periodStateLabel(state: PeriodState): String = when (state) {
@@ -63,58 +61,44 @@ fun CardPeriodsSection(
 private fun PeriodRow(period: PeriodUi, onPayClicked: () -> Unit) {
     val colors = EquilibrioTheme.colors
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colors.surface, ShapeSmall)
-            .border(1.dp, colors.border, ShapeSmall)
-            .padding(Spacing.base),
-        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
+    EqCard(modifier = Modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = "${period.startAt} – ${period.endAt}",
+                    style = EquilibrioTheme.typography.bodyStrong,
+                    color = colors.ink,
+                )
+                Text(
+                    text = periodStateLabel(period.state),
+                    style = EquilibrioTheme.typography.bodySmall,
+                    color = colors.inkMuted,
+                )
+            }
             Text(
-                text = "${period.startAt} – ${period.endAt}",
-                style = EquilibrioTheme.typography.bodyStrong,
-                color = colors.ink,
-            )
-            Text(
-                text = periodStateLabel(period.state),
+                text = "Pago límite: ${period.payAt}",
                 style = EquilibrioTheme.typography.bodySmall,
                 color = colors.inkMuted,
             )
-        }
-        Text(
-            text = "Pago límite: ${period.payAt}",
-            style = EquilibrioTheme.typography.bodySmall,
-            color = colors.inkMuted,
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            SummaryColumn(label = "Gastado", value = formatCents(period.spentCents))
-            SummaryColumn(label = "Pagado", value = formatCents(period.amountPaidCents))
-            SummaryColumn(label = "Saldo", value = formatCents(period.balanceCents))
-        }
-        if (period.state != PeriodState.CLOSED) {
-            EqButton(
-                text = "Pagar",
-                onClick = onPayClicked,
-                fullWidth = false,
-                modifier = Modifier.padding(top = Spacing.xs),
+            EqKeyValueRowGroup(
+                items = listOf(
+                    "Gastado" to formatCents(period.spentCents),
+                    "Pagado" to formatCents(period.amountPaidCents),
+                    "Saldo" to formatCents(period.balanceCents),
+                ),
             )
+            if (period.state != PeriodState.CLOSED) {
+                EqButton(
+                    text = "Pagar",
+                    onClick = onPayClicked,
+                    fullWidth = false,
+                    modifier = Modifier.padding(top = Spacing.xs),
+                )
+            }
         }
-    }
-}
-
-@Composable
-private fun SummaryColumn(label: String, value: String) {
-    Column {
-        Text(text = label, style = EquilibrioTheme.typography.bodySmall, color = EquilibrioTheme.colors.inkMuted)
-        Text(text = value, style = EquilibrioTheme.typography.bodyStrong, color = EquilibrioTheme.colors.ink)
     }
 }
 
@@ -128,53 +112,41 @@ fun PayCreditDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val colors = EquilibrioTheme.colors
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Pagar tarjeta", style = EquilibrioTheme.typography.h2, color = colors.ink) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                Text(
-                    text = "Cuenta de origen",
-                    style = EquilibrioTheme.typography.bodySmall,
-                    color = colors.inkMuted,
-                )
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                ) {
-                    sourceAccounts.forEach { account ->
-                        EqDomainToggleOption(
-                            label = account.name,
-                            tone = DomainTone.NEUTRAL,
-                            selected = state.paySourceAccountId == account.id,
-                            onClick = { onSourceSelected(account.id) },
-                        )
-                    }
-                }
-
-                EqTextField(
-                    value = state.payAmountInput,
-                    onValueChange = onAmountChanged,
-                    label = "Monto a pagar",
-                    keyboardType = KeyboardType.Decimal,
-                )
-
-                state.payError?.let { EqInlineValidation(it) }
-            }
-        },
-        confirmButton = {
-            EqButton(
-                text = "Pagar",
-                onClick = onConfirm,
-                loading = state.isPaying,
-                fullWidth = false,
+    EqFormDialog(
+        title = "Pagar tarjeta",
+        onDismiss = onDismiss,
+        confirmLabel = "Pagar",
+        onConfirm = onConfirm,
+        confirmLoading = state.isPaying,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+            Text(
+                text = "Cuenta de origen",
+                style = EquilibrioTheme.typography.bodySmall,
+                color = EquilibrioTheme.colors.inkMuted,
             )
-        },
-        dismissButton = {
-            EqButton(text = "Cancelar", onClick = onDismiss, fullWidth = false)
-        },
-        containerColor = colors.surface,
-    )
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            ) {
+                sourceAccounts.forEach { account ->
+                    EqDomainToggleOption(
+                        label = account.name,
+                        tone = DomainTone.NEUTRAL,
+                        selected = state.paySourceAccountId == account.id,
+                        onClick = { onSourceSelected(account.id) },
+                    )
+                }
+            }
+
+            EqTextField(
+                value = state.payAmountInput,
+                onValueChange = onAmountChanged,
+                label = "Monto a pagar",
+                keyboardType = KeyboardType.Decimal,
+            )
+
+            state.payError?.let { EqInlineValidation(it) }
+        }
+    }
 }

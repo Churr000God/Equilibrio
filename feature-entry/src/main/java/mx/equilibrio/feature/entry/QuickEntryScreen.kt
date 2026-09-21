@@ -1,7 +1,5 @@
 package mx.equilibrio.feature.entry
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -50,10 +48,12 @@ import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.TransactionStatus
 import mx.equilibrio.ui.components.EqBadge
 import mx.equilibrio.ui.components.EqButton
+import mx.equilibrio.ui.components.EqCard
 import mx.equilibrio.ui.components.EqColorSlotPicker
 import mx.equilibrio.ui.components.EqDestructiveDialog
 import mx.equilibrio.ui.components.EqDomainToggleOption
 import mx.equilibrio.ui.components.EqInlineValidation
+import mx.equilibrio.ui.components.EqKeyValueRow
 import mx.equilibrio.ui.components.EqSegmentedControl
 import mx.equilibrio.ui.components.EqTextField
 import mx.equilibrio.ui.components.EqTopBar
@@ -509,32 +509,28 @@ private fun CreditPeriodInfo(period: Period?, availableCents: Long?) {
     if (period == null && availableCents == null) return
     val colors = EquilibrioTheme.colors
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colors.surface, ShapeSmall)
-            .border(1.dp, colors.border, ShapeSmall)
-            .padding(Spacing.base),
-        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
-    ) {
-        period?.let {
-            Text(
-                text = periodStateLabel(it.state),
-                style = EquilibrioTheme.typography.bodySmall,
-                color = colors.inkMuted,
-            )
-            Text(
-                text = "Corte: ${it.endAt} · Pago límite: ${it.payAt}",
-                style = EquilibrioTheme.typography.bodySmall,
-                color = colors.inkMuted,
-            )
-        }
-        availableCents?.let {
-            Text(
-                text = "Disponible: ${formatCents(it)}",
-                style = EquilibrioTheme.typography.bodyStrong,
-                color = if (it < 0) colors.error else colors.ink,
-            )
+    EqCard(modifier = Modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            period?.let {
+                Text(
+                    text = periodStateLabel(it.state),
+                    style = EquilibrioTheme.typography.bodySmall,
+                    color = colors.inkMuted,
+                )
+                Text(
+                    text = "Corte: ${it.endAt} · Pago límite: ${it.payAt}",
+                    style = EquilibrioTheme.typography.bodySmall,
+                    color = colors.inkMuted,
+                )
+            }
+            availableCents?.let {
+                EqKeyValueRow(
+                    label = "Disponible",
+                    value = formatCents(it),
+                    valueColor = if (it < 0) colors.error else colors.ink,
+                    modifier = Modifier.padding(top = if (period != null) Spacing.xs else 0.dp),
+                )
+            }
         }
     }
 }

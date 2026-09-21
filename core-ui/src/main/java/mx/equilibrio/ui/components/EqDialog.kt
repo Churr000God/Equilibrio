@@ -66,6 +66,47 @@ fun EqDestructiveDialog(
     )
 }
 
+/** Diálogo genérico con contenido custom (p. ej. un formulario corto), mismo shape/color que el resto del sistema. */
+@Composable
+fun EqFormDialog(
+    title: String,
+    onDismiss: () -> Unit,
+    confirmLabel: String,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier,
+    dismissLabel: String = "Cancelar",
+    confirmLoading: Boolean = false,
+    confirmEnabled: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    val colors = EquilibrioTheme.colors
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = modifier,
+        title = { Text(title, style = EquilibrioTheme.typography.h2, color = colors.ink) },
+        text = content,
+        confirmButton = {
+            EqButton(
+                text = confirmLabel,
+                onClick = onConfirm,
+                loading = confirmLoading,
+                enabled = confirmEnabled,
+                fullWidth = false,
+            )
+        },
+        dismissButton = {
+            EqButton(
+                text = dismissLabel,
+                onClick = onDismiss,
+                variant = EqButtonVariant.SECONDARY,
+                fullWidth = false,
+            )
+        },
+        containerColor = colors.surface,
+        shape = ShapeMedium,
+    )
+}
+
 /** Diálogo informativo, no destructivo (p. ej. límite del plan freemium en RF10). */
 @Composable
 fun EqInfoDialog(

@@ -170,4 +170,8 @@ class UserRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override fun observeAccessibilityMode(): Flow<Boolean> = session.observeAccessibilityMode()
+
+    override suspend fun setAccessibilityMode(enabled: Boolean) = session.setAccessibilityMode(enabled)
 }

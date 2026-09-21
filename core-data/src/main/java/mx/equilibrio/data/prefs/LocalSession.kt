@@ -1,6 +1,7 @@
 package mx.equilibrio.data.prefs
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -20,6 +21,7 @@ import javax.inject.Singleton
 
 private val Context.dataStore by preferencesDataStore(name = "equilibrio_session")
 private val KEY_USER_ID = stringPreferencesKey("user_id")
+private val KEY_ACCESSIBILITY_MODE = booleanPreferencesKey("accessibility_mode")
 
 /**
  * Sin login todavía: genera un userId local una sola vez y siembra la cuenta
@@ -57,6 +59,12 @@ class LocalSession @Inject constructor(
 
     /** Emite el id de sesión crudo (o `null` si aún no hay ninguno), sin auto-crear. */
     fun observeCurrentUserId(): Flow<String?> = context.dataStore.data.map { it[KEY_USER_ID] }
+
+    fun observeAccessibilityMode(): Flow<Boolean> = context.dataStore.data.map { it[KEY_ACCESSIBILITY_MODE] ?: false }
+
+    suspend fun setAccessibilityMode(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_ACCESSIBILITY_MODE] = enabled }
+    }
 
     /** Cierra sesión: la próxima llamada a [currentUserId] crea un usuario local nuevo. */
     suspend fun clear() {

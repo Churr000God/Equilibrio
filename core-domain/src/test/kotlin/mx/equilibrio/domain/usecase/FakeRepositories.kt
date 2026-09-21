@@ -56,6 +56,9 @@ class FakeUserRepository(
         lastSignInArgs = email to password
         return signInResult
     }
+
+    override fun observeAccessibilityMode(): Flow<Boolean> = MutableStateFlow(false)
+    override suspend fun setAccessibilityMode(enabled: Boolean) = Unit
 }
 
 /** Fake de cuentas: devuelve lo que se le precarga por id, sin persistencia real. */

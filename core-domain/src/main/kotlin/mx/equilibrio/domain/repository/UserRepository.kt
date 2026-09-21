@@ -43,4 +43,8 @@ interface UserRepository {
      * cuando la combinación es incorrecta (mismo mensaje de error en ambos casos).
      */
     suspend fun signInWithPassword(email: String, password: String): Result<User>
+
+    fun observeAccessibilityMode(): Flow<Boolean>
+
+    suspend fun setAccessibilityMode(enabled: Boolean)
 }

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import mx.equilibrio.domain.model.User
+import mx.equilibrio.domain.usecase.ObserveAccessibilityModeUseCase
 import mx.equilibrio.domain.usecase.ObserveCurrentUser
 import javax.inject.Inject
 
@@ -14,11 +15,18 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     observeCurrentUser: ObserveCurrentUser,
+    observeAccessibilityModeUseCase: ObserveAccessibilityModeUseCase,
 ) : ViewModel() {
 
     val user: StateFlow<User?> = observeCurrentUser().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = null,
+    )
+
+    val accessibilityMode: StateFlow<Boolean> = observeAccessibilityModeUseCase().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = false,
     )
 }

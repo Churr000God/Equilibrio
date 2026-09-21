@@ -24,7 +24,7 @@ import mx.equilibrio.data.local.entity.UserEntity
         AlertEntity::class,
         TransferEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
 )
 abstract class EquilibrioDatabase : RoomDatabase() {

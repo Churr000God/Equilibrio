@@ -16,6 +16,7 @@ import mx.equilibrio.data.local.MIGRATION_4_5
 import mx.equilibrio.data.local.MIGRATION_5_6
 import mx.equilibrio.data.local.MIGRATION_6_7
 import mx.equilibrio.data.local.MIGRATION_7_8
+import mx.equilibrio.data.local.MIGRATION_8_9
 import mx.equilibrio.data.local.dao.AccountDao
 import mx.equilibrio.data.local.dao.AlertDao
 import mx.equilibrio.data.local.dao.CategoryDao
@@ -52,6 +53,7 @@ object DatabaseModule {
                 MIGRATION_5_6,
                 MIGRATION_6_7,
                 MIGRATION_7_8,
+                MIGRATION_8_9,
             )
             .build()
 

@@ -147,3 +147,24 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
         db.execSQL("ALTER TABLE users ADD COLUMN password_hash TEXT DEFAULT NULL")
     }
 }
+
+/**
+ * RF01 — el registro por email debe fallar si el correo ya está en uso; sin UNIQUE en
+ * `users.email` un registro concurrente podía crear dos filas con el mismo correo.
+ * Antes de indexar: deja solo la fila más antigua por correo repetido (limpia posibles
+ * duplicados de antes de este fix) para que CREATE UNIQUE INDEX no falle. Un índice
+ * UNIQUE en SQLite no considera duplicados a los NULL (usuarios solo-Google sin email),
+ * así que no hace falta backfill para esas filas.
+ */
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            UPDATE users SET email = NULL
+            WHERE email IS NOT NULL
+              AND created_at > (SELECT MIN(u2.created_at) FROM users u2 WHERE u2.email = users.email)
+            """.trimIndent(),
+        )
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_users_email` ON `users` (`email`)")
+    }
+}

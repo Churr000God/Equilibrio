@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "users",
-    indices = [Index("google_id")],
+    indices = [Index("google_id"), Index(value = ["email"], unique = true)],
 )
 data class UserEntity(
     @PrimaryKey val id: String,

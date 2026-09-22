@@ -24,7 +24,9 @@ import mx.equilibrio.feature.categories.CategoriesScreen
 import mx.equilibrio.feature.entry.QuickEntryScreen
 import mx.equilibrio.feature.goals.GoalEditorScreen
 import mx.equilibrio.feature.goals.GoalsScreen
-import mx.equilibrio.feature.home.HomeScreen
+import mx.equilibrio.feature.home.HomeDashboardScreen
+import mx.equilibrio.feature.home.MovementsScreen
+import mx.equilibrio.domain.model.report.ReportSection
 import mx.equilibrio.feature.reports.ReportsScreen
 import mx.equilibrio.ui.components.EqBottomNav
 import mx.equilibrio.ui.components.EqNavDestination
@@ -32,12 +34,25 @@ import mx.equilibrio.ui.theme.EquilibrioTheme
 
 private const val ROUTE_LOGIN = "login"
 private const val ROUTE_HOME = "home"
-private const val ROUTE_ACCOUNTS = "accounts"
+private const val ROUTE_MOVEMENTS = "movements"
+private const val ARG_ACCOUNT_ID = "accountId"
+private const val ROUTE_ACCOUNTS_BASE = "accounts"
+private const val ROUTE_ACCOUNTS = "$ROUTE_ACCOUNTS_BASE?$ARG_ACCOUNT_ID={$ARG_ACCOUNT_ID}"
+
+private fun accountsRoute(accountId: String? = null) =
+    ROUTE_ACCOUNTS_BASE + if (accountId != null) "?$ARG_ACCOUNT_ID=$accountId" else ""
+
 private const val ROUTE_ADD_ACCOUNT = "add_account"
 private const val ROUTE_CATEGORIES = "categories"
 private const val ROUTE_ADD_CATEGORY = "add_category"
 private const val ROUTE_GOALS = "goals"
-private const val ROUTE_REPORTS = "reports"
+private const val ARG_REPORT_SECTION = "section"
+private const val ROUTE_REPORTS_BASE = "reports"
+private const val ROUTE_REPORTS = "$ROUTE_REPORTS_BASE?$ARG_REPORT_SECTION={$ARG_REPORT_SECTION}"
+
+private fun reportsRoute(section: ReportSection? = null) =
+    ROUTE_REPORTS_BASE + if (section != null) "?$ARG_REPORT_SECTION=${section.name}" else ""
+
 private const val ROUTE_PROFILE = "profile"
 private const val ARG_TRANSACTION_ID = "transactionId"
 private const val ROUTE_QUICK_ENTRY = "quick_entry?transactionId={$ARG_TRANSACTION_ID}"
@@ -53,6 +68,8 @@ private fun goalEditorRoute(goalId: String? = null) =
 
 private val ROUTE_TO_DESTINATION = mapOf(
     ROUTE_HOME to EqNavDestination.HOME,
+    // El Inicio anterior sigue bajo la pestaña Inicio.
+    ROUTE_MOVEMENTS to EqNavDestination.HOME,
     ROUTE_ACCOUNTS to EqNavDestination.ACCOUNTS,
     ROUTE_CATEGORIES to EqNavDestination.CATEGORIES,
     ROUTE_GOALS to EqNavDestination.GOALS,
@@ -61,11 +78,22 @@ private val ROUTE_TO_DESTINATION = mapOf(
 
 private val DESTINATION_TO_ROUTE = mapOf(
     EqNavDestination.HOME to ROUTE_HOME,
-    EqNavDestination.ACCOUNTS to ROUTE_ACCOUNTS,
+    EqNavDestination.ACCOUNTS to ROUTE_ACCOUNTS_BASE,
     EqNavDestination.CATEGORIES to ROUTE_CATEGORIES,
     EqNavDestination.GOALS to ROUTE_GOALS,
-    EqNavDestination.REPORTS to ROUTE_REPORTS,
+    EqNavDestination.REPORTS to ROUTE_REPORTS_BASE,
 )
+
+/**
+ * Desde Inicio a otra pestaña, con el mismo back stack que la barra inferior.
+ * Sin restoreState: si no, el estado guardado de la pestaña pisaría el argumento nuevo.
+ */
+private fun NavHostController.navigateToTabFromHome(route: String) {
+    navigate(route) {
+        popUpTo(ROUTE_HOME) { saveState = true }
+        launchSingleTop = true
+    }
+}
 
 @Composable
 fun EquilibrioNavHost(navController: NavHostController = rememberNavController()) {
@@ -81,6 +109,12 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                 EqBottomNav(
                     selected = currentDestination,
                     onSelect = { destination ->
+                        // Inicio es la raíz: se vuelve sacando lo que esté encima. Con navigate + restoreState
+                        // se restauraba "movements" (también bajo la pestaña Inicio) y el toque no hacía nada.
+                        if (destination == EqNavDestination.HOME) {
+                            navController.popBackStack(ROUTE_HOME, inclusive = false, saveState = true)
+                            return@EqBottomNav
+                        }
                         val route = DESTINATION_TO_ROUTE[destination] ?: return@EqBottomNav
                         navController.navigate(route) {
                             popUpTo(ROUTE_HOME) { saveState = true }
@@ -104,13 +138,35 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                 )
             }
             composable(ROUTE_HOME) {
-                HomeScreen(
+                HomeDashboardScreen(
+                    onAddClicked = { navController.navigate(quickEntryRoute()) },
+                    onCardsClicked = { navController.navigateToTabFromHome(accountsRoute()) },
+                    onCardClicked = { id -> navController.navigateToTabFromHome(accountsRoute(id)) },
+                    onAddCardClicked = { navController.navigate(ROUTE_ADD_ACCOUNT) },
+                    onBalanceClicked = { navController.navigateToTabFromHome(accountsRoute()) },
+                    onSeeMoreClicked = { navController.navigate(ROUTE_MOVEMENTS) },
+                    onReportsClicked = { navController.navigateToTabFromHome(reportsRoute()) },
+                    onReportClicked = { section -> navController.navigateToTabFromHome(reportsRoute(section)) },
+                    trailing = { ProfileHud(onOpenProfile = { navController.navigate(ROUTE_PROFILE) }) },
+                )
+            }
+            composable(ROUTE_MOVEMENTS) {
+                MovementsScreen(
                     onAddClicked = { navController.navigate(quickEntryRoute()) },
                     onTransactionClicked = { id -> navController.navigate(quickEntryRoute(id)) },
                     trailing = { ProfileHud(onOpenProfile = { navController.navigate(ROUTE_PROFILE) }) },
                 )
             }
-            composable(ROUTE_ACCOUNTS) {
+            composable(
+                route = ROUTE_ACCOUNTS,
+                arguments = listOf<NamedNavArgument>(
+                    navArgument(ARG_ACCOUNT_ID) {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                ),
+            ) {
                 AccountsScreen(
                     onAddAccountClicked = { navController.navigate(ROUTE_ADD_ACCOUNT) },
                     trailing = { ProfileHud(onOpenProfile = { navController.navigate(ROUTE_PROFILE) }) },
@@ -161,8 +217,19 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                     onCancel = { navController.popBackStack() },
                 )
             }
-            composable(ROUTE_REPORTS) {
-                ReportsScreen()
+            composable(
+                route = ROUTE_REPORTS,
+                arguments = listOf<NamedNavArgument>(
+                    navArgument(ARG_REPORT_SECTION) {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                ),
+            ) { entry ->
+                val section = entry.arguments?.getString(ARG_REPORT_SECTION)
+                    ?.let { name -> ReportSection.entries.firstOrNull { it.name == name } }
+                ReportsScreen(focusSection = section)
             }
             composable(
                 route = ROUTE_QUICK_ENTRY,

@@ -2,7 +2,7 @@ package mx.equilibrio.feature.accounts
 
 import mx.equilibrio.domain.model.AccountType
 
-/** Slots de color fijos (§accountGradient en AccountCard.kt) — no hay más que estos 3. */
+/** Slots de color fijos (§eqAccountGradient en EqAccountCard.kt) — no hay más que estos 3. */
 const val AccountColorSlotCount = 3
 
 data class AddAccountUiState(

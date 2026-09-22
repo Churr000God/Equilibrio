@@ -48,8 +48,9 @@ import mx.equilibrio.ui.theme.ShapeMedium
 import mx.equilibrio.ui.theme.Spacing
 import mx.equilibrio.ui.theme.TouchTarget
 
+/** Inicio anterior: saldo y todos los movimientos. Se abre desde "Ver más" en el Inicio. */
 @Composable
-fun HomeScreen(
+fun MovementsScreen(
     onAddClicked: () -> Unit,
     onTransactionClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -121,7 +122,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun BalanceHeaderCard(balanceCents: Long) {
+internal fun BalanceHeaderCard(balanceCents: Long) {
     EqCard(hero = true, modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Saldo disponible",
@@ -139,10 +140,10 @@ private fun BalanceHeaderCard(balanceCents: Long) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun TransactionRow(
+internal fun TransactionRow(
     transaction: TransactionUi,
     onClick: () -> Unit,
-    onDeleteRequested: () -> Unit,
+    onDeleteRequested: (() -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier
@@ -177,7 +178,7 @@ private fun TransactionRow(
 }
 
 /** Refuerzo con ícono para el modo accesibilidad (EqBadge solo lo pinta si está activo). */
-private fun domainToneIcon(tone: DomainTone): ImageVector = when (tone) {
+internal fun domainToneIcon(tone: DomainTone): ImageVector = when (tone) {
     DomainTone.INCOME_FIXED -> Icons.Rounded.Repeat
     DomainTone.INCOME_VARIABLE -> Icons.Rounded.TrendingUp
     DomainTone.ESSENTIAL -> Icons.Rounded.CheckCircle
@@ -187,7 +188,7 @@ private fun domainToneIcon(tone: DomainTone): ImageVector = when (tone) {
 
 @Preview(showBackground = true)
 @Composable
-private fun HomeScreenEmptyPreview() {
+private fun MovementsScreenEmptyPreview() {
     EquilibrioTheme {
         Column(modifier = Modifier.fillMaxSize()) {
             EqEmptyState(

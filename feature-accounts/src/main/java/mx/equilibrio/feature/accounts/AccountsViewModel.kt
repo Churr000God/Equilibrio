@@ -1,5 +1,6 @@
 package mx.equilibrio.feature.accounts
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,14 +17,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
-import mx.equilibrio.domain.model.Account
-import mx.equilibrio.domain.model.AccountType
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.usecase.GetPendingAlertsUseCase
 import mx.equilibrio.domain.usecase.MarkAlertAsReadUseCase
-import mx.equilibrio.domain.usecase.ObserveAccounts
-import mx.equilibrio.domain.usecase.ObserveAvailableBalances
-import mx.equilibrio.domain.usecase.ObserveCreditAvailable
+import mx.equilibrio.domain.usecase.AccountAvailable
+import mx.equilibrio.domain.usecase.ObserveAccountsAvailable
 import mx.equilibrio.domain.usecase.ObservePeriods
 import mx.equilibrio.domain.usecase.ObserveTransactions
 import mx.equilibrio.domain.usecase.PayCreditPeriod
@@ -34,9 +32,8 @@ private fun today() = Clock.System.todayIn(TimeZone.UTC)
 
 @HiltViewModel
 class AccountsViewModel @Inject constructor(
-    observeAccounts: ObserveAccounts,
-    observeAvailableBalances: ObserveAvailableBalances,
-    observeCreditAvailable: ObserveCreditAvailable,
+    savedStateHandle: SavedStateHandle,
+    observeAccountsAvailable: ObserveAccountsAvailable,
     getPendingAlerts: GetPendingAlertsUseCase,
     private val markAlertAsRead: MarkAlertAsReadUseCase,
     private val observePeriods: ObservePeriods,
@@ -45,16 +42,15 @@ class AccountsViewModel @Inject constructor(
     private val payCreditPeriod: PayCreditPeriod,
 ) : ViewModel() {
 
-    private val selectedAccountId = MutableStateFlow<String?>(null)
+    /** Arranca en la cuenta pedida por la ruta (p. ej. al tocar una tarjeta en Inicio). */
+    private val selectedAccountId = MutableStateFlow(savedStateHandle.get<String>(ARG_ACCOUNT_ID))
 
     val state: StateFlow<AccountsUiState> = combine(
-        observeAccounts(),
+        observeAccountsAvailable(),
         selectedAccountId,
-        observeAvailableBalances(),
         getPendingAlerts(),
-        observeCreditAvailable(),
-    ) { accounts, selectedId, availableBalances, alerts, creditAvailable ->
-        val uiAccounts = accounts.map { it.toUi(availableBalances, creditAvailable) }
+    ) { accounts, selectedId, alerts ->
+        val uiAccounts = accounts.map { it.toUi() }
         AccountsUiState(
             isLoading = false,
             accounts = uiAccounts,
@@ -169,19 +165,21 @@ class AccountsViewModel @Inject constructor(
         }
     }
 
-    private fun Account.toUi(availableBalances: Map<String, Long>, creditAvailable: Map<String, Long>) = AccountUi(
-        id = id,
-        name = name,
-        type = type,
-        balanceCents = when (type) {
-            AccountType.CASH, AccountType.BANK -> availableBalances[id] ?: balanceCents
-            AccountType.CREDIT_CARD -> creditAvailable[id] ?: balanceCents
-        },
-        colorSlot = colorSlot,
-        lastDigits = lastDigits,
-        creditLimitCents = creditLimitCents,
-        dueDay = dueDay,
+    private fun AccountAvailable.toUi() = AccountUi(
+        id = account.id,
+        name = account.name,
+        type = account.type,
+        balanceCents = availableCents,
+        colorSlot = account.colorSlot,
+        lastDigits = account.lastDigits,
+        creditLimitCents = account.creditLimitCents,
+        dueDay = account.dueDay,
     )
+
+    companion object {
+        /** Argumento opcional de navegación con la cuenta a preseleccionar. */
+        const val ARG_ACCOUNT_ID = "accountId"
+    }
 }
 
 private fun sanitizePayAmountInput(raw: String): String {

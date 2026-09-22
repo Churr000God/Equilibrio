@@ -1,10 +1,13 @@
 package mx.equilibrio.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import mx.equilibrio.ui.theme.Elevation
 import mx.equilibrio.ui.theme.EquilibrioTheme
@@ -19,6 +22,8 @@ fun EqCard(
     elevation: Elevation = Elevation.LEVEL_1,
     hero: Boolean = false,
     padding: androidx.compose.ui.unit.Dp = if (hero) Spacing.lg else Spacing.base,
+    /** Si se pasa, la tarjeta completa es tocable (ripple recortado a su forma, sin cortar la sombra). */
+    onClick: (() -> Unit)? = null,
     content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
 ) {
     val shape = if (hero) ShapeLarge else ShapeMedium
@@ -26,6 +31,7 @@ fun EqCard(
         modifier = modifier
             .eqShadow(elevation, shape)
             .background(EquilibrioTheme.colors.surface, shape)
+            .then(if (onClick != null) Modifier.clip(shape).clickable(role = Role.Button, onClick = onClick) else Modifier)
             .padding(padding),
         content = content,
     )

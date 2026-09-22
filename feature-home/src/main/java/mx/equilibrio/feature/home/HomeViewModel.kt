@@ -40,17 +40,7 @@ class HomeViewModel @Inject constructor(
         HomeUiState(
             isLoading = false,
             balanceCents = balance,
-            transactions = transactions.map {
-                TransactionUi(
-                    id = it.id,
-                    kind = it.kind,
-                    classification = it.classification,
-                    amountCents = it.amountCents,
-                    occurredAt = it.occurredAt,
-                    note = it.note,
-                    goalId = it.goalId,
-                )
-            },
+            transactions = transactions.map { it.toUi() },
             pendingDeletion = pending,
             pendingAlerts = alerts.toUi(),
             // RF01 — el saludo usa el nombre de usuario elegido en Perfil, no el nombre de Google.

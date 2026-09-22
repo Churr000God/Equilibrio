@@ -30,7 +30,7 @@ private fun categoryPalette(type: CategoryType, colors: EquilibrioColors): Tripl
         CategoryType.EXPENSE -> Triple(colors.purpleDeep, colors.purple, colors.purpleMid)
     }
 
-/** Color sólido del avatar. A diferencia de accountGradient, las categorías no llevan degradado. */
+/** Color sólido del avatar. A diferencia de eqAccountGradient, las categorías no llevan degradado. */
 internal fun categoryColor(type: CategoryType, colorSlot: Int, colors: EquilibrioColors): Color {
     val (deep, base, mid) = categoryPalette(type, colors)
     return when (((colorSlot % 3) + 3) % 3) {

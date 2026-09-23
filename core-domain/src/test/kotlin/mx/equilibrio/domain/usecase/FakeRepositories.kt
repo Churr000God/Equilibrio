@@ -3,10 +3,12 @@ package mx.equilibrio.domain.usecase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.datetime.LocalDate
 import mx.equilibrio.domain.model.Account
 import mx.equilibrio.domain.model.Period
 import mx.equilibrio.domain.model.PeriodState
 import mx.equilibrio.domain.model.Transaction
+import mx.equilibrio.domain.model.TransactionStatus
 import mx.equilibrio.domain.model.Transfer
 import mx.equilibrio.domain.model.User
 import mx.equilibrio.domain.repository.AccountRepository
@@ -108,8 +110,12 @@ class FakeTransactionRepository : TransactionRepository {
     }
     override suspend fun delete(id: String) = throw NotImplementedError("no usado en estos tests")
 
-    override suspend fun confirm(id: String) {
+    override suspend fun confirm(id: String, today: LocalDate) {
         confirmedIds += id
+        transactionsById[id]?.let { transaction ->
+            val occurredAt = if (transaction.occurredAt > today) today else transaction.occurredAt
+            transactionsById[id] = transaction.copy(status = TransactionStatus.COMPLETED, occurredAt = occurredAt)
+        }
     }
 }
 

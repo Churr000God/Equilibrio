@@ -5,11 +5,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.LocalDate
 import mx.equilibrio.data.local.EquilibrioDatabase
 import mx.equilibrio.data.local.dao.TransactionDao
 import mx.equilibrio.data.local.dao.TransferDao
 import mx.equilibrio.data.mapper.toDomain
 import mx.equilibrio.data.mapper.toEntity
+import mx.equilibrio.data.mapper.toEpochMillis
 import mx.equilibrio.data.prefs.LocalSession
 import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.repository.TransactionRepository
@@ -41,14 +43,15 @@ class TransactionRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun confirm(id: String) = db.withTransaction {
+    override suspend fun confirm(id: String, today: LocalDate) = db.withTransaction {
         val now = System.currentTimeMillis()
+        val todayMillis = today.toEpochMillis()
         val transfer = transferDao.findByTransactionId(id)
         if (transfer != null) {
-            dao.confirm(transfer.egresoId, now)
-            dao.confirm(transfer.ingresoId, now)
+            dao.confirm(transfer.egresoId, now, todayMillis)
+            dao.confirm(transfer.ingresoId, now, todayMillis)
         } else {
-            dao.confirm(id, now)
+            dao.confirm(id, now, todayMillis)
         }
     }
 

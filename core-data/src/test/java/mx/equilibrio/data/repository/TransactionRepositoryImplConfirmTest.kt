@@ -4,11 +4,13 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import mx.equilibrio.data.local.EquilibrioDatabase
 import mx.equilibrio.data.local.entity.AccountEntity
 import mx.equilibrio.data.local.entity.TransactionEntity
 import mx.equilibrio.data.local.entity.TransferEntity
 import mx.equilibrio.data.local.entity.UserEntity
+import mx.equilibrio.data.mapper.toEpochMillis
 import mx.equilibrio.data.prefs.LocalSession
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -25,6 +27,8 @@ import org.robolectric.annotation.Config
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [34])
 class TransactionRepositoryImplConfirmTest {
+
+    private val today = LocalDate(2026, 6, 10)
 
     private lateinit var db: EquilibrioDatabase
     private lateinit var repository: TransactionRepositoryImpl
@@ -103,7 +107,7 @@ class TransactionRepositoryImplConfirmTest {
     fun `confirmar el egreso confirma tambien el ingreso de la misma transferencia`() = runTest {
         val (expenseId, incomeId) = seedTransferPair()
 
-        repository.confirm(expenseId)
+        repository.confirm(expenseId, today)
 
         assertEquals("COMPLETED", db.transactionDao().getById(expenseId)?.status)
         assertEquals("COMPLETED", db.transactionDao().getById(incomeId)?.status)
@@ -113,7 +117,7 @@ class TransactionRepositoryImplConfirmTest {
     fun `confirmar el ingreso confirma tambien el egreso de la misma transferencia`() = runTest {
         val (expenseId, incomeId) = seedTransferPair()
 
-        repository.confirm(incomeId)
+        repository.confirm(incomeId, today)
 
         assertEquals("COMPLETED", db.transactionDao().getById(expenseId)?.status)
         assertEquals("COMPLETED", db.transactionDao().getById(incomeId)?.status)
@@ -138,8 +142,83 @@ class TransactionRepositoryImplConfirmTest {
             ),
         )
 
-        repository.confirm("solo")
+        repository.confirm("solo", today)
 
         assertEquals("COMPLETED", db.transactionDao().getById("solo")?.status)
+    }
+
+    @Test
+    fun `confirmar una transaccion programada con fecha futura la deja con fecha de hoy`() = runTest {
+        seedUserAndAccounts()
+        val futureDate = LocalDate(2026, 6, 20)
+        db.transactionDao().upsert(
+            TransactionEntity(
+                id = "programada",
+                userId = "u1",
+                accountId = "cash",
+                kind = "EXPENSE",
+                classification = null,
+                amountCents = 100,
+                occurredAt = futureDate.toEpochMillis(),
+                note = null,
+                updatedAt = 0,
+                syncState = "PENDING",
+                status = "SCHEDULED",
+            ),
+        )
+
+        repository.confirm("programada", today)
+
+        val confirmed = db.transactionDao().getById("programada")
+        assertEquals("COMPLETED", confirmed?.status)
+        assertEquals(today.toEpochMillis(), confirmed?.occurredAt)
+    }
+
+    @Test
+    fun `confirmar una transferencia programada con fecha futura ajusta la fecha de ambas patas`() = runTest {
+        seedUserAndAccounts()
+        val futureDate = LocalDate(2026, 6, 20)
+        db.transactionDao().upsert(
+            TransactionEntity(
+                id = "expense",
+                userId = "u1",
+                accountId = "cash",
+                kind = "EXPENSE",
+                classification = null,
+                amountCents = 500,
+                occurredAt = futureDate.toEpochMillis(),
+                note = null,
+                updatedAt = 0,
+                syncState = "PENDING",
+                status = "SCHEDULED",
+            ),
+        )
+        db.transactionDao().upsert(
+            TransactionEntity(
+                id = "income",
+                userId = "u1",
+                accountId = "bank",
+                kind = "INCOME",
+                classification = null,
+                amountCents = 500,
+                occurredAt = futureDate.toEpochMillis(),
+                note = null,
+                updatedAt = 0,
+                syncState = "PENDING",
+                status = "SCHEDULED",
+            ),
+        )
+        db.transferDao().upsert(
+            TransferEntity(id = "tr1", egresoId = "expense", ingresoId = "income", updatedAt = 0, syncState = "PENDING"),
+        )
+
+        repository.confirm("expense", today)
+
+        val expense = db.transactionDao().getById("expense")
+        val income = db.transactionDao().getById("income")
+        assertEquals("COMPLETED", expense?.status)
+        assertEquals(today.toEpochMillis(), expense?.occurredAt)
+        assertEquals("COMPLETED", income?.status)
+        assertEquals(today.toEpochMillis(), income?.occurredAt)
     }
 }

@@ -8,6 +8,7 @@ import mx.equilibrio.domain.model.AccountType
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
+import mx.equilibrio.domain.model.TransactionStatus
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -122,5 +123,38 @@ class SaveCreditPurchaseTest {
 
         val periodoEsperado = fixture.periodRepository.all().single()
         assertEquals(periodoEsperado.id, transaction.periodId)
+    }
+
+    @Test
+    fun `rechaza editar una compra ya confirmada para ponerle fecha futura`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                val fixture = setUp(creditLimitCents = 1_000_00)
+                fixture.transactionRepository.upsert(
+                    Transaction(
+                        id = "compra",
+                        userId = "u1",
+                        accountId = "cc1",
+                        kind = TransactionKind.EXPENSE,
+                        classification = null as Classification?,
+                        amountCents = 100_00,
+                        occurredAt = occurredAt,
+                        status = TransactionStatus.COMPLETED,
+                    ),
+                )
+
+                fixture.saveCreditPurchase(
+                    id = "compra",
+                    accountId = "cc1",
+                    classification = null,
+                    amountCents = 100_00,
+                    occurredAt = LocalDate(2026, 7, 1),
+                    note = null,
+                    categoryId = null,
+                    userId = "u1",
+                    today = occurredAt,
+                )
+            }
+        }
     }
 }

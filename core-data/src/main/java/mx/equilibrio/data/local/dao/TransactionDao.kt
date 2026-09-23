@@ -39,7 +39,14 @@ interface TransactionDao {
     suspend fun markDeleted(id: String, now: Long)
 
     @Query(
-        "UPDATE transactions SET status = 'COMPLETED', sync_state = 'PENDING', updated_at = :now WHERE id = :id",
+        """
+        UPDATE transactions
+        SET status = 'COMPLETED',
+            occurred_at = CASE WHEN occurred_at > :todayMillis THEN :todayMillis ELSE occurred_at END,
+            sync_state = 'PENDING',
+            updated_at = :now
+        WHERE id = :id
+        """,
     )
-    suspend fun confirm(id: String, now: Long)
+    suspend fun confirm(id: String, now: Long, todayMillis: Long)
 }

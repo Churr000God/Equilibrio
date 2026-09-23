@@ -6,6 +6,7 @@ import mx.equilibrio.domain.model.AccountType
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
+import mx.equilibrio.domain.model.TransactionStatus
 import mx.equilibrio.domain.model.deriveTransactionStatus
 import mx.equilibrio.domain.repository.TransactionRepository
 import javax.inject.Inject
@@ -49,6 +50,11 @@ class SaveCreditPurchase @Inject constructor(
         val availableCents = creditLimitCents - (period.carriedBalanceCents + spentInPeriod - period.amountPaidCents)
         require(amountCents <= availableCents) {
             "La compra de $amountCents excede el disponible de la tarjeta ($availableCents)"
+        }
+
+        val existing = transactionRepository.getById(id)
+        require(existing == null || existing.status != TransactionStatus.COMPLETED || occurredAt <= today) {
+            "No se puede editar una compra ya confirmada para ponerle fecha futura."
         }
 
         val transaction = Transaction(

@@ -195,7 +195,7 @@ private fun MonthSelector(label: String, canGoForward: Boolean, onPrevious: () -
 internal fun BalanceHeaderCard(balanceCents: Long, incomeCents: Long = 0, expenseCents: Long = 0) {
     EqCard(hero = true, modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "Saldo disponible",
+            text = "Saldo actual",
             style = EquilibrioTheme.typography.label,
             color = EquilibrioTheme.colors.inkMuted,
         )

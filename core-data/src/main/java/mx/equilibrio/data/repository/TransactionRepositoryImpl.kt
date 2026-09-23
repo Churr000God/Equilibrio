@@ -28,10 +28,6 @@ class TransactionRepositoryImpl @Inject constructor(
         emitAll(dao.observeAll(session.currentUserId()).map { list -> list.map { it.toDomain() } })
     }
 
-    override fun observeBalanceCents(): Flow<Long> = flow {
-        emitAll(dao.observeBalanceCents(session.currentUserId()))
-    }
-
     override fun observeByCategory(categoryId: String): Flow<List<Transaction>> = flow {
         emitAll(
             dao.observeByCategory(session.currentUserId(), categoryId)

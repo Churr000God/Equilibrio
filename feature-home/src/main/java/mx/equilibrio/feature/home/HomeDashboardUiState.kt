@@ -29,6 +29,8 @@ data class HomeDashboardUiState(
     val cards: List<HomeCardUi> = emptyList(),
     /** Suma del disponible en efectivo y banco; el crédito no cuenta como saldo. */
     val balanceCents: Long = 0,
+    /** `balanceCents` menos la deuda total de tarjetas (incluye cuotas futuras). */
+    val projectedBalanceCents: Long = 0,
     val recentTransactions: List<TransactionUi> = emptyList(),
     val reportHighlights: List<ReportHighlightUi> = emptyList(),
 )

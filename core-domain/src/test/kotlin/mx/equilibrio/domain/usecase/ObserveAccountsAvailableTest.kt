@@ -73,14 +73,4 @@ class ObserveAccountsAvailableTest {
         assertEquals(card.creditLimitCents, byId["cc"])
     }
 
-    @Test
-    fun `ownFundsCents suma solo efectivo y banco`() = runTest {
-        val list = listOf(
-            AccountAvailable(cash, 400_00),
-            AccountAvailable(bank, 1_250_00),
-            AccountAvailable(card, 8_000_00),
-        )
-
-        assertEquals(1_650_00L, list.ownFundsCents())
-    }
 }

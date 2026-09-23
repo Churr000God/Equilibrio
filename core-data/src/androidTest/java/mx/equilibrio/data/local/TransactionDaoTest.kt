@@ -86,17 +86,7 @@ class TransactionDaoTest {
     }
 
     @Test
-    fun observeBalanceCentsSumsIncomeMinusExpense() = runBlocking {
-        database.transactionDao().upsert(transaction("t1", "INCOME", 5000_00))
-        database.transactionDao().upsert(transaction("t2", "EXPENSE", 500_00))
-
-        database.transactionDao().observeBalanceCents(userId).test {
-            assertEquals(4500_00L, awaitItem())
-        }
-    }
-
-    @Test
-    fun markDeletedRemovesFromObserveAllAndUpdatesBalance() = runBlocking {
+    fun markDeletesRemovesFromObserveAll() = runBlocking {
         database.transactionDao().upsert(transaction("t1", "INCOME", 5000_00))
         database.transactionDao().upsert(transaction("t2", "EXPENSE", 500_00))
 
@@ -106,9 +96,6 @@ class TransactionDaoTest {
             val list = awaitItem()
             assertEquals(1, list.size)
             assertTrue(list.none { it.id == "t2" })
-        }
-        database.transactionDao().observeBalanceCents(userId).test {
-            assertEquals(5000_00L, awaitItem())
         }
         assertNull(database.transactionDao().getById("t2"))
     }

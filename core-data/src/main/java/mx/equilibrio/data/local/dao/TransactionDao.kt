@@ -27,15 +27,6 @@ interface TransactionDao {
     )
     fun observeByCategory(userId: String, categoryId: String): Flow<List<TransactionEntity>>
 
-    @Query(
-        """
-        SELECT COALESCE(SUM(CASE WHEN kind = 'INCOME' THEN amount_cents ELSE -amount_cents END), 0)
-        FROM transactions
-        WHERE user_id = :userId AND is_deleted = 0 AND status = 'COMPLETED'
-        """,
-    )
-    fun observeBalanceCents(userId: String): Flow<Long>
-
     @Query("SELECT * FROM transactions WHERE id = :id AND is_deleted = 0 LIMIT 1")
     suspend fun getById(id: String): TransactionEntity?
 

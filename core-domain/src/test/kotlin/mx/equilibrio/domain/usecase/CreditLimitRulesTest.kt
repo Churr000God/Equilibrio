@@ -7,6 +7,7 @@ import mx.equilibrio.domain.model.PeriodState
 import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.computeCreditAvailability
+import mx.equilibrio.domain.model.computeCreditTotalToPayCents
 import mx.equilibrio.domain.model.requireWithinCreditLimit
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -127,5 +128,44 @@ class CreditLimitRulesTest {
         val availability = computeCreditAvailability(1000_00, listOf(active, future), charges, today)
 
         assertEquals(500_00L, availability.projectedCents)
+    }
+
+    @Test
+    fun `computeCreditTotalToPayCents suma todos los periodos vivos, no el maximo`() {
+        val periods = (0 until 6).map { i -> period(id = "p$i", startAt = LocalDate(2026, i + 6, 1), endAt = LocalDate(2026, i + 6, 28)) }
+        val charges = periods.mapIndexed { i, p -> charge("c$i", p.id, 500_00, LocalDate(2026, i + 6, 10)) }
+
+        val totalToPay = computeCreditTotalToPayCents(periods, charges)
+
+        assertEquals(3000_00L, totalToPay)
+    }
+
+    @Test
+    fun `computeCreditTotalToPayCents ignora periodos CLOSED`() {
+        val closed = period(id = "p0", startAt = LocalDate(2026, 5, 1), endAt = LocalDate(2026, 5, 28), state = PeriodState.CLOSED)
+        val active = period(id = "p1", startAt = LocalDate(2026, 6, 1), endAt = LocalDate(2026, 6, 28))
+        val charges = listOf(
+            charge("c0", closed.id, 900_00, LocalDate(2026, 5, 10)),
+            charge("c1", active.id, 300_00, LocalDate(2026, 6, 10)),
+        )
+
+        val totalToPay = computeCreditTotalToPayCents(listOf(closed, active), charges)
+
+        assertEquals(300_00L, totalToPay)
+    }
+
+    @Test
+    fun `computeCreditTotalToPayCents descuenta amountPaidCents del periodo activo`() {
+        val active = period(
+            id = "p0",
+            startAt = LocalDate(2026, 6, 1),
+            endAt = LocalDate(2026, 6, 28),
+            amountPaidCents = 300_00,
+        )
+        val charges = listOf(charge("c1", active.id, 300_00, LocalDate(2026, 6, 10)))
+
+        val totalToPay = computeCreditTotalToPayCents(listOf(active), charges)
+
+        assertEquals(0L, totalToPay)
     }
 }

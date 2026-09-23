@@ -13,11 +13,6 @@ data class AccountAvailable(
     val availableCents: Long,
 )
 
-/** Suma del disponible en efectivo y banco; el crédito es dinero prestado y no cuenta como saldo. */
-fun List<AccountAvailable>.ownFundsCents(): Long =
-    filter { it.account.type == AccountType.CASH || it.account.type == AccountType.BANK }
-        .sumOf { it.availableCents }
-
 /**
  * Une [ObserveAvailableBalances] (CASH/BANK) y [ObserveCreditAvailable] (CREDIT_CARD,
  * usando el disponible real — [today] resuelve qué cargos ya "ocurrieron") en una sola

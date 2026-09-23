@@ -6,7 +6,7 @@ import kotlinx.datetime.LocalDate
  * Disponible real (solo cargos ya ocurridos) vs proyectado (incluye cargos
  * programados a futuro, ej. cuotas SCHEDULED) de una tarjeta.
  */
-data class CreditAvailability(val realCents: Long, val projectedCents: Long)
+data class CreditAvailability(val realCents: Long, val projectedCents: Long, val totalToPayCents: Long)
 
 private data class PeriodProjection(val period: Period, val projectedBalanceCents: Long)
 
@@ -45,20 +45,26 @@ fun computeCreditAvailability(
 ): CreditAvailability {
     val ordered = periods.sortedBy { it.startAt }
     val active = ordered.firstOrNull { it.state != PeriodState.CLOSED }
-        ?: return CreditAvailability(realCents = creditLimitCents, projectedCents = creditLimitCents)
+        ?: return CreditAvailability(realCents = creditLimitCents, projectedCents = creditLimitCents, totalToPayCents = 0)
 
     val activeCharges = charges.filter { it.kind == TransactionKind.EXPENSE && it.periodId == active.id }
     val realActive = active.carriedBalanceCents +
         activeCharges.filter { it.occurredAt <= today }.sumOf { it.amountCents } -
         active.amountPaidCents
 
-    val worstProjected = periodProjections(periods, charges).maxOf { it.projectedBalanceCents }
+    val projections = periodProjections(periods, charges)
+    val worstProjected = projections.maxOf { it.projectedBalanceCents }
 
     return CreditAvailability(
         realCents = creditLimitCents - realActive,
         projectedCents = creditLimitCents - worstProjected,
+        totalToPayCents = projections.sumOf { it.projectedBalanceCents },
     )
 }
+
+/** Suma de TODOS los periodos vivos (activo + futuros) — no el máximo. */
+fun computeCreditTotalToPayCents(periods: List<Period>, charges: List<Transaction>): Long =
+    periodProjections(periods, charges).sumOf { it.projectedBalanceCents }
 
 /**
  * Simula agregar [newCharges] a [existingCharges] y exige que el disponible

@@ -42,7 +42,7 @@ class HomeViewModel @Inject constructor(
     val state: StateFlow<HomeUiState> = combine(
         selectedMonth,
         observeTransactions(),
-        observeBalance(),
+        observeBalance(today()),
         combine(getCategories(), observeAccounts(), ::Pair),
         getPendingAlerts(),
     ) { month, transactions, balance, (categories, accounts), alerts ->
@@ -60,7 +60,8 @@ class HomeViewModel @Inject constructor(
         HomeUiState(
             month = month,
             isLoading = false,
-            balanceCents = balance,
+            balanceCents = balance.actualCents,
+            projectedBalanceCents = balance.projectedCents,
             monthIncomeCents = incomeCents,
             monthExpenseCents = expenseCents,
             canGoForward = month < currentMonth,

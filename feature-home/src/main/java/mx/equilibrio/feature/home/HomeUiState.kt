@@ -113,6 +113,7 @@ data class HomeUiState(
     val month: YearMonth,
     val isLoading: Boolean = true,
     val balanceCents: Long = 0,
+    val projectedBalanceCents: Long = 0,
     val monthIncomeCents: Long = 0,
     val monthExpenseCents: Long = 0,
     val canGoForward: Boolean = false,

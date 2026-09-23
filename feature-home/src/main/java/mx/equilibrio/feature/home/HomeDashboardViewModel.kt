@@ -15,10 +15,10 @@ import mx.equilibrio.domain.model.report.Report
 import mx.equilibrio.domain.model.report.ReportSection
 import mx.equilibrio.domain.usecase.AccountAvailable
 import mx.equilibrio.domain.usecase.ObserveAccountsAvailable
+import mx.equilibrio.domain.usecase.ObserveBalance
 import mx.equilibrio.domain.usecase.ObserveCurrentUser
 import mx.equilibrio.domain.usecase.ObserveReport
 import mx.equilibrio.domain.usecase.ObserveTransactions
-import mx.equilibrio.domain.usecase.ownFundsCents
 import mx.equilibrio.ui.components.EqAccountFamily
 import mx.equilibrio.ui.components.formatCents
 import mx.equilibrio.ui.theme.DomainTone
@@ -30,6 +30,7 @@ import kotlin.time.Clock
 class HomeDashboardViewModel @Inject constructor(
     observeCurrentUser: ObserveCurrentUser,
     observeAccountsAvailable: ObserveAccountsAvailable,
+    observeBalance: ObserveBalance,
     observeTransactions: ObserveTransactions,
     observeReport: ObserveReport,
 ) : ViewModel() {
@@ -45,13 +46,15 @@ class HomeDashboardViewModel @Inject constructor(
         observeAccountsAvailable(today),
         observeTransactions(),
         observeReport(YearMonth.of(today)),
-    ) { user, accounts, transactions, report ->
+        observeBalance(today),
+    ) { user, accounts, transactions, report, balance ->
         HomeDashboardUiState(
             isLoading = false,
             // RF01 — el saludo usa el nombre de usuario elegido en Perfil, no el nombre de Google.
             greetingName = user?.displayName?.takeIf { it.isNotBlank() },
             cards = accounts.map { it.toCardUi() },
-            balanceCents = accounts.ownFundsCents(),
+            balanceCents = balance.actualCents,
+            projectedBalanceCents = balance.projectedCents,
             // El repositorio ya entrega los movimientos del más reciente al más antiguo.
             recentTransactions = transactions.take(RECENT_TRANSACTIONS).map { it.toUi() },
             reportHighlights = if (report.isEmpty) emptyList() else highlightsOf(report),

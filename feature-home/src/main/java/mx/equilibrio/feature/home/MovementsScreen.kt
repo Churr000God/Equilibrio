@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -117,6 +118,7 @@ fun MovementsScreen(
                     item(key = "balance_header") {
                         BalanceHeaderCard(
                             balanceCents = state.balanceCents,
+                            projectedCents = state.projectedBalanceCents,
                             incomeCents = state.monthIncomeCents,
                             expenseCents = state.monthExpenseCents,
                         )
@@ -192,7 +194,12 @@ private fun MonthSelector(label: String, canGoForward: Boolean, onPrevious: () -
 }
 
 @Composable
-internal fun BalanceHeaderCard(balanceCents: Long, incomeCents: Long = 0, expenseCents: Long = 0) {
+internal fun BalanceHeaderCard(
+    balanceCents: Long,
+    projectedCents: Long = balanceCents,
+    incomeCents: Long = 0,
+    expenseCents: Long = 0,
+) {
     EqCard(hero = true, modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Saldo actual",
@@ -205,6 +212,22 @@ internal fun BalanceHeaderCard(balanceCents: Long, incomeCents: Long = 0, expens
             fontSize = 40.sp,
             modifier = Modifier.padding(top = Spacing.xs),
         )
+        // Solo si hay deuda de tarjeta pendiente — si coinciden, no hay nada que proyectar.
+        if (projectedCents != balanceCents) {
+            Row(
+                modifier = Modifier.padding(top = Spacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(text = "Saldo proyectado", style = EquilibrioTheme.typography.caption, color = EquilibrioTheme.colors.inkMuted)
+                EqAmount(
+                    amountCents = projectedCents,
+                    tone = if (projectedCents < 0) DomainTone.RECREATIONAL else DomainTone.ESSENTIAL,
+                    fontSize = 14.sp,
+                    weight = FontWeight.Normal,
+                )
+            }
+        }
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = Spacing.md),
             horizontalArrangement = Arrangement.spacedBy(Spacing.xl),

@@ -103,7 +103,6 @@ class FakeTransactionRepository : TransactionRepository {
     }
 
     override fun observeAll(): Flow<List<Transaction>> = flow { emit(transactionsById.values.toList()) }
-    override fun observeBalanceCents(): Flow<Long> = MutableStateFlow(0L)
     override suspend fun getById(id: String): Transaction? = transactionsById[id]
     override suspend fun upsert(transaction: Transaction) {
         transactionsById[transaction.id] = transaction

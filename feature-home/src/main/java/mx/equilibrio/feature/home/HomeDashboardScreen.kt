@@ -120,7 +120,9 @@ fun HomeDashboardScreen(
                         EqSectionHeader("Saldo", onClick = onBalanceClicked, modifier = SectionPadding.padding(top = Spacing.sm))
                     }
                     item(key = "balance") {
-                        Box(SectionPadding) { BalanceHeaderCard(state.balanceCents) }
+                        Box(SectionPadding) {
+                            BalanceHeaderCard(balanceCents = state.balanceCents, projectedCents = state.projectedBalanceCents)
+                        }
                     }
 
                     item(key = "recent_header") {

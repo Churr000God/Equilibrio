@@ -12,12 +12,11 @@ import javax.inject.Inject
 import kotlin.math.abs
 
 /**
- * No existe (todavía) un "índice de equilibrio" propio en el dominio — el único
- * cálculo funcional hoy es el saldo (`ObserveBalance`). Como proxy honesto del
- * equilibrio esencial/recreativo que da nombre al producto, esta alerta compara
- * la proporción de gasto recreativo contra un objetivo 50/50; si se desvía más
- * de [DEVIATION_THRESHOLD], dispara la alerta. Ajustar aquí si Producto define
- * un indicador propio más adelante.
+ * No existe (todavía) un "índice de equilibrio" propio en el dominio. Como
+ * proxy honesto del equilibrio esencial/recreativo que da nombre al producto,
+ * esta alerta compara la proporción de gasto recreativo contra un objetivo
+ * 50/50; si se desvía más de [DEVIATION_THRESHOLD], dispara la alerta. Ajustar
+ * aquí si Producto define un indicador propio más adelante.
  */
 class CheckBalanceDeviationAlertUseCase @Inject constructor(
     private val transactionRepository: TransactionRepository,

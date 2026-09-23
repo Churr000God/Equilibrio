@@ -31,7 +31,7 @@ import mx.equilibrio.data.local.entity.UserEntity
         PeriodEntity::class,
         GoalEntity::class,
     ],
-    version = 11,
+    version = 13,
     exportSchema = true,
 )
 abstract class EquilibrioDatabase : RoomDatabase() {

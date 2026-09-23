@@ -60,8 +60,12 @@ fun HomeScreen(
 
     state.pendingDeletion?.let { pending ->
         EqDestructiveDialog(
-            title = "¿Eliminar este movimiento?",
-            body = "${pending.label} de ${formatCents(pending.amountCents)} del ${pending.occurredAt}.",
+            title = if (pending.isInstallment) "¿Eliminar esta compra a meses?" else "¿Eliminar este movimiento?",
+            body = if (pending.isInstallment) {
+                "Se borrarán las ${pending.installmentCount} cuotas de esta compra."
+            } else {
+                "${pending.label} de ${formatCents(pending.amountCents)} del ${pending.occurredAt}."
+            },
             confirmLabel = "Eliminar",
             onConfirm = { viewModel.onEvent(HomeEvent.DeleteConfirmed) },
             onDismiss = { viewModel.onEvent(HomeEvent.DeleteCancelled) },
@@ -111,7 +115,11 @@ fun HomeScreen(
                 items(state.transactions, key = { it.id }) { transaction ->
                     TransactionRow(
                         transaction = transaction,
-                        onClick = { if (!transaction.isSavings) onTransactionClicked(transaction.id) },
+                        onClick = {
+                            if (!transaction.isSavings && !transaction.isInstallment) {
+                                onTransactionClicked(transaction.id)
+                            }
+                        },
                         onDeleteRequested = { viewModel.onEvent(HomeEvent.DeleteRequested(transaction)) },
                     )
                 }

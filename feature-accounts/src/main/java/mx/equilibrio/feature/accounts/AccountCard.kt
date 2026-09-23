@@ -101,6 +101,13 @@ fun AccountCard(account: AccountUi, modifier: Modifier = Modifier) {
                     style = tabularAmountStyle(fontSize = 28.sp),
                     color = colors.onGradient,
                 )
+                account.projectedBalanceCents?.let {
+                    Text(
+                        text = "Proyectado: ${formatCents(it)}",
+                        style = EquilibrioTheme.typography.caption,
+                        color = colors.onGradient.copy(alpha = 0.7f),
+                    )
+                }
             }
             if (account.dueDay != null) {
                 Column(horizontalAlignment = Alignment.End) {

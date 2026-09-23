@@ -18,6 +18,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import mx.equilibrio.domain.model.Account
 import mx.equilibrio.domain.model.AccountType
+import mx.equilibrio.domain.model.CreditAvailability
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.usecase.GetPendingAlertsUseCase
 import mx.equilibrio.domain.usecase.MarkAlertAsReadUseCase
@@ -52,7 +53,7 @@ class AccountsViewModel @Inject constructor(
         selectedAccountId,
         observeAvailableBalances(),
         getPendingAlerts(),
-        observeCreditAvailable(),
+        observeCreditAvailable(today()),
     ) { accounts, selectedId, availableBalances, alerts, creditAvailable ->
         val uiAccounts = accounts.map { it.toUi(availableBalances, creditAvailable) }
         AccountsUiState(
@@ -169,19 +170,21 @@ class AccountsViewModel @Inject constructor(
         }
     }
 
-    private fun Account.toUi(availableBalances: Map<String, Long>, creditAvailable: Map<String, Long>) = AccountUi(
-        id = id,
-        name = name,
-        type = type,
-        balanceCents = when (type) {
-            AccountType.CASH, AccountType.BANK -> availableBalances[id] ?: balanceCents
-            AccountType.CREDIT_CARD -> creditAvailable[id] ?: balanceCents
-        },
-        colorSlot = colorSlot,
-        lastDigits = lastDigits,
-        creditLimitCents = creditLimitCents,
-        dueDay = dueDay,
-    )
+    private fun Account.toUi(availableBalances: Map<String, Long>, creditAvailable: Map<String, CreditAvailability>) =
+        AccountUi(
+            id = id,
+            name = name,
+            type = type,
+            balanceCents = when (type) {
+                AccountType.CASH, AccountType.BANK -> availableBalances[id] ?: balanceCents
+                AccountType.CREDIT_CARD -> creditAvailable[id]?.realCents ?: balanceCents
+            },
+            colorSlot = colorSlot,
+            lastDigits = lastDigits,
+            creditLimitCents = creditLimitCents,
+            dueDay = dueDay,
+            projectedBalanceCents = if (type == AccountType.CREDIT_CARD) creditAvailable[id]?.projectedCents else null,
+        )
 }
 
 private fun sanitizePayAmountInput(raw: String): String {

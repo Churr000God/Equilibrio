@@ -55,7 +55,7 @@ private fun isLeapYear(year: Int): Boolean = (year % 4 == 0 && year % 100 != 0) 
 private fun clampedDate(year: Int, month: Int, day: Int): LocalDate =
     LocalDate(year, month, day.coerceAtMost(daysInMonth(year, month)))
 
-private fun addMonthsClamped(date: LocalDate, months: Int, targetDay: Int): LocalDate {
+internal fun addMonthsClamped(date: LocalDate, months: Int, targetDay: Int): LocalDate {
     val totalMonths = (date.monthNumber - 1) + months
     val year = date.year + Math.floorDiv(totalMonths, 12)
     val month = Math.floorMod(totalMonths, 12) + 1

@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -176,6 +177,135 @@ class EquilibrioDatabaseMigrationTest {
             MIGRATION_7_8,
             MIGRATION_8_9,
             MIGRATION_9_10,
+        )
+        db.close()
+    }
+
+    @Test
+    fun `11 a 12 agrega columnas de cuotas nullable y preserva transacciones existentes`() {
+        var db = helper.createDatabase(TEST_DB, 9)
+        insertUser(db, "u1", "u1@equilibrio.mx", 0)
+        db.close()
+        db = helper.runMigrationsAndValidate(TEST_DB, 10, true, MIGRATION_9_10)
+        db.close()
+        db = helper.runMigrationsAndValidate(TEST_DB, 11, true, MIGRATION_10_11)
+        db.execSQL(
+            """
+            INSERT INTO accounts (id, user_id, name, type, balance_cents, credit_limit_cents, statement_day, due_day, color_slot, last_digits, updated_at, sync_state, is_deleted)
+            VALUES ('cc1', 'u1', 'Tarjeta', 'CREDIT_CARD', 0, 300000, 20, 5, 0, NULL, 0, 'PENDING', 0)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            INSERT INTO transactions (id, user_id, account_id, kind, classification, amount_cents, occurred_at, note, category_id, updated_at, sync_state, is_deleted, status)
+            VALUES ('t1', 'u1', 'cc1', 'EXPENSE', NULL, 500, 0, NULL, NULL, 0, 'PENDING', 0, 'COMPLETED')
+            """.trimIndent(),
+        )
+        db.close()
+
+        db = helper.runMigrationsAndValidate(TEST_DB, 12, true, MIGRATION_11_12)
+
+        val cursor = db.query(
+            "SELECT amount_cents, installment_plan_id, installment_index, installment_count " +
+                "FROM transactions WHERE id = 't1'",
+        )
+        assertEquals(1, cursor.count)
+        cursor.moveToFirst()
+        assertEquals(500, cursor.getLong(0))
+        assertNull(cursor.getString(1))
+        assertTrue(cursor.isNull(2))
+        assertTrue(cursor.isNull(3))
+        cursor.close()
+
+        db.execSQL(
+            """
+            INSERT INTO transactions (id, user_id, account_id, kind, classification, amount_cents, occurred_at, note, category_id, updated_at, sync_state, is_deleted, status, installment_plan_id, installment_index, installment_count)
+            VALUES ('t2', 'u1', 'cc1', 'EXPENSE', NULL, 334, 0, NULL, NULL, 0, 'PENDING', 0, 'SCHEDULED', 'plan1', 3, 3)
+            """.trimIndent(),
+        )
+        val planCursor = db.query(
+            "SELECT installment_plan_id, installment_index, installment_count FROM transactions WHERE id = 't2'",
+        )
+        planCursor.moveToFirst()
+        assertEquals("plan1", planCursor.getString(0))
+        assertEquals(3, planCursor.getInt(1))
+        assertEquals(3, planCursor.getInt(2))
+        planCursor.close()
+        db.close()
+    }
+
+    @Test
+    fun `cadena completa 6 a 12 corre sin romper el schema exportado`() {
+        var db = helper.createDatabase(TEST_DB, 6)
+        insertUser(db, "u1", "u1@equilibrio.mx", 0)
+        db.close()
+
+        db = helper.runMigrationsAndValidate(
+            TEST_DB,
+            12,
+            true,
+            MIGRATION_6_7,
+            MIGRATION_7_8,
+            MIGRATION_8_9,
+            MIGRATION_9_10,
+            MIGRATION_10_11,
+            MIGRATION_11_12,
+        )
+        db.close()
+    }
+
+    @Test
+    fun `12 a 13 agrega monthly_budget_cents nullable a categories y preserva filas`() {
+        var db = helper.createDatabase(TEST_DB, 9)
+        insertUser(db, "u1", "u1@equilibrio.mx", 0)
+        db.close()
+        db = helper.runMigrationsAndValidate(TEST_DB, 10, true, MIGRATION_9_10)
+        db.close()
+        db = helper.runMigrationsAndValidate(TEST_DB, 11, true, MIGRATION_10_11)
+        db.close()
+        db = helper.runMigrationsAndValidate(TEST_DB, 12, true, MIGRATION_11_12)
+        db.execSQL(
+            """
+            INSERT INTO categories (id, user_id, name, type, color_slot, icon, is_system, sort_order, updated_at, sync_state, is_deleted)
+            VALUES ('c1', 'u1', 'Comida', 'EXPENSE', 0, 'food', 0, 0, 0, 'PENDING', 0)
+            """.trimIndent(),
+        )
+        db.close()
+
+        db = helper.runMigrationsAndValidate(TEST_DB, 13, true, MIGRATION_12_13)
+
+        val cursor = db.query("SELECT name, monthly_budget_cents FROM categories WHERE id = 'c1'")
+        assertEquals(1, cursor.count)
+        cursor.moveToFirst()
+        assertEquals("Comida", cursor.getString(0))
+        assertTrue(cursor.isNull(1))
+        cursor.close()
+
+        db.execSQL("UPDATE categories SET monthly_budget_cents = 500000 WHERE id = 'c1'")
+        val budgetCursor = db.query("SELECT monthly_budget_cents FROM categories WHERE id = 'c1'")
+        budgetCursor.moveToFirst()
+        assertEquals(500000, budgetCursor.getLong(0))
+        budgetCursor.close()
+        db.close()
+    }
+
+    @Test
+    fun `cadena completa 6 a 13 corre sin romper el schema exportado`() {
+        var db = helper.createDatabase(TEST_DB, 6)
+        insertUser(db, "u1", "u1@equilibrio.mx", 0)
+        db.close()
+
+        db = helper.runMigrationsAndValidate(
+            TEST_DB,
+            13,
+            true,
+            MIGRATION_6_7,
+            MIGRATION_7_8,
+            MIGRATION_8_9,
+            MIGRATION_9_10,
+            MIGRATION_10_11,
+            MIGRATION_11_12,
+            MIGRATION_12_13,
         )
         db.close()
     }

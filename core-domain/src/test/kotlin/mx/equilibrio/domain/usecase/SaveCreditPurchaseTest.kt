@@ -43,7 +43,12 @@ class SaveCreditPurchaseTest {
         val periodRepository = FakePeriodRepository()
         val transactionRepository = FakeTransactionRepository()
         val getOrCreatePeriodForDate = GetOrCreatePeriodForDate(periodRepository, accountRepository)
-        val saveCreditPurchase = SaveCreditPurchase(GetAccount(accountRepository), getOrCreatePeriodForDate, transactionRepository)
+        val saveCreditPurchase = SaveCreditPurchase(
+            GetAccount(accountRepository),
+            getOrCreatePeriodForDate,
+            periodRepository,
+            transactionRepository,
+        )
 
         if (carriedBalanceCents != 0L || existingSpentCents != 0L) {
             val period = getOrCreatePeriodForDate("cc1", occurredAt)

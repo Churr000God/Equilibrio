@@ -20,6 +20,15 @@ interface TransactionDao {
 
     @Query(
         """
+        SELECT * FROM transactions
+        WHERE user_id = :userId AND category_id = :categoryId AND is_deleted = 0
+        ORDER BY occurred_at DESC
+        """,
+    )
+    fun observeByCategory(userId: String, categoryId: String): Flow<List<TransactionEntity>>
+
+    @Query(
+        """
         SELECT COALESCE(SUM(CASE WHEN kind = 'INCOME' THEN amount_cents ELSE -amount_cents END), 0)
         FROM transactions
         WHERE user_id = :userId AND is_deleted = 0 AND status = 'COMPLETED'
@@ -37,6 +46,23 @@ interface TransactionDao {
         "UPDATE transactions SET is_deleted = 1, sync_state = 'PENDING', updated_at = :now WHERE id = :id",
     )
     suspend fun markDeleted(id: String, now: Long)
+
+    @Query(
+        "UPDATE transactions SET is_deleted = 1, updated_at = :now, sync_state = 'PENDING' WHERE installment_plan_id = :planId",
+    )
+    suspend fun markInstallmentPlanDeleted(planId: String, now: Long)
+
+    @Query(
+        "UPDATE transactions SET category_id = :toCategoryId, sync_state = 'PENDING', updated_at = :now " +
+            "WHERE category_id = :fromCategoryId AND is_deleted = 0",
+    )
+    suspend fun reassignCategory(fromCategoryId: String, toCategoryId: String, now: Long)
+
+    @Query(
+        "UPDATE transactions SET is_deleted = 1, sync_state = 'PENDING', updated_at = :now " +
+            "WHERE category_id = :categoryId AND is_deleted = 0",
+    )
+    suspend fun deleteByCategory(categoryId: String, now: Long)
 
     @Query(
         """

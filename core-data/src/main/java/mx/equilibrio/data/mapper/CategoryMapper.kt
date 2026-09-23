@@ -13,6 +13,7 @@ fun CategoryEntity.toDomain(): Category = Category(
     icon = icon,
     isSystem = isSystem,
     sortOrder = sortOrder,
+    monthlyBudgetCents = monthlyBudgetCents,
 )
 
 fun Category.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean = false): CategoryEntity = CategoryEntity(
@@ -27,4 +28,5 @@ fun Category.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean = f
     updatedAt = updatedAt,
     syncState = syncState,
     isDeleted = isDeleted,
+    monthlyBudgetCents = monthlyBudgetCents,
 )

@@ -14,6 +14,8 @@ data class AccountUi(
     val lastDigits: Int? = null,
     val creditLimitCents: Long? = null,
     val dueDay: Int? = null,
+    /** Disponible incluyendo cuotas SCHEDULED a futuro; null si no es tarjeta de crédito. */
+    val projectedBalanceCents: Long? = null,
 ) {
     val typeLabel: String
         get() = when (type) {

@@ -32,6 +32,13 @@ class TransactionRepositoryImpl @Inject constructor(
         emitAll(dao.observeBalanceCents(session.currentUserId()))
     }
 
+    override fun observeByCategory(categoryId: String): Flow<List<Transaction>> = flow {
+        emitAll(
+            dao.observeByCategory(session.currentUserId(), categoryId)
+                .map { list -> list.map { it.toDomain() } },
+        )
+    }
+
     override suspend fun getById(id: String): Transaction? = dao.getById(id)?.toDomain()
 
     override suspend fun upsert(transaction: Transaction) {
@@ -65,5 +72,17 @@ class TransactionRepositoryImpl @Inject constructor(
         } else {
             dao.markDeleted(id, now)
         }
+    }
+
+    override suspend fun markInstallmentPlanDeleted(planId: String) {
+        dao.markInstallmentPlanDeleted(planId, System.currentTimeMillis())
+    }
+
+    override suspend fun reassignCategory(fromCategoryId: String, toCategoryId: String) {
+        dao.reassignCategory(fromCategoryId, toCategoryId, System.currentTimeMillis())
+    }
+
+    override suspend fun deleteByCategory(categoryId: String) {
+        dao.deleteByCategory(categoryId, System.currentTimeMillis())
     }
 }

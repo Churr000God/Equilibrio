@@ -29,4 +29,5 @@ data class CategoryEntity(
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     @ColumnInfo(name = "sync_state") val syncState: String,
     @ColumnInfo(name = "is_deleted") val isDeleted: Boolean = false,
+    @ColumnInfo(name = "monthly_budget_cents") val monthlyBudgetCents: Long? = null,
 )

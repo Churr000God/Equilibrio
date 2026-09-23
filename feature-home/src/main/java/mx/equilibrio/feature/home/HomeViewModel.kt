@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mx.equilibrio.domain.usecase.DeleteInstallmentPlan
 import mx.equilibrio.domain.usecase.DeleteTransaction
 import mx.equilibrio.domain.usecase.GetPendingAlertsUseCase
 import mx.equilibrio.domain.usecase.MarkAlertAsReadUseCase
@@ -25,6 +26,7 @@ class HomeViewModel @Inject constructor(
     getPendingAlerts: GetPendingAlertsUseCase,
     observeCurrentUser: ObserveCurrentUser,
     private val deleteTransaction: DeleteTransaction,
+    private val deleteInstallmentPlan: DeleteInstallmentPlan,
     private val markAlertAsRead: MarkAlertAsReadUseCase,
 ) : ViewModel() {
 
@@ -49,6 +51,9 @@ class HomeViewModel @Inject constructor(
                     occurredAt = it.occurredAt,
                     note = it.note,
                     goalId = it.goalId,
+                    installmentPlanId = it.installmentPlanId,
+                    installmentIndex = it.installmentIndex,
+                    installmentCount = it.installmentCount,
                 )
             },
             pendingDeletion = pending,
@@ -69,7 +74,13 @@ class HomeViewModel @Inject constructor(
             HomeEvent.DeleteConfirmed -> {
                 val target = pendingDeletion.value ?: return
                 pendingDeletion.update { null }
-                viewModelScope.launch { deleteTransaction(target.id) }
+                viewModelScope.launch {
+                    if (target.isInstallment) {
+                        deleteInstallmentPlan(target.installmentPlanId!!)
+                    } else {
+                        deleteTransaction(target.id)
+                    }
+                }
             }
 
             is HomeEvent.AlertDismissed -> viewModelScope.launch { markAlertAsRead(event.alertId) }

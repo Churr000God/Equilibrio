@@ -15,6 +15,15 @@ interface CategoryDao {
     @Query("SELECT * FROM categories WHERE id = :id AND is_deleted = 0 LIMIT 1")
     suspend fun getById(id: String): CategoryEntity?
 
+    @Query(
+        """
+        SELECT * FROM categories
+        WHERE user_id = :userId AND type = :type AND is_system = 1 AND is_deleted = 0
+        LIMIT 1
+        """,
+    )
+    suspend fun findSystemByUserAndType(userId: String, type: String): CategoryEntity?
+
     @Upsert
     suspend fun upsert(entity: CategoryEntity)
 

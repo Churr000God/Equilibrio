@@ -20,6 +20,10 @@ data class Transaction(
     val periodId: String? = null,
     /** Si no es null, este movimiento es el abono espejo de una meta. */
     val goalId: String? = null,
+    /** Las 3 propiedades de cuota son todo-o-nada: ver validación en [init]. */
+    val installmentPlanId: String? = null,
+    val installmentIndex: Int? = null,
+    val installmentCount: Int? = null,
 ) {
     init {
         require(amountCents > 0) { "amountCents debe ser positivo, fue $amountCents" }
@@ -29,8 +33,22 @@ data class Transaction(
         require(goalId == null || kind == TransactionKind.EXPENSE) {
             "Un abono a meta siempre es un gasto"
         }
+        val installmentFields = listOf(installmentPlanId != null, installmentIndex != null, installmentCount != null)
+        require(installmentFields.all { it } || installmentFields.none { it }) {
+            "installmentPlanId/installmentIndex/installmentCount son todo-o-nada"
+        }
+        if (installmentCount != null && installmentIndex != null) {
+            require(kind == TransactionKind.EXPENSE) { "Una cuota siempre es un gasto" }
+            require(installmentCount >= 2) { "installmentCount debe ser >= 2, fue $installmentCount" }
+            require(installmentIndex in 1..installmentCount) {
+                "installmentIndex debe estar en 1..$installmentCount, fue $installmentIndex"
+            }
+        }
     }
 
     /** Abono a una meta: no se clasifica ni cuenta como gasto en reportes. */
     val isSavings: Boolean get() = goalId != null
+
+    /** Una cuota de una compra a meses. */
+    val isInstallment: Boolean get() = installmentPlanId != null
 }

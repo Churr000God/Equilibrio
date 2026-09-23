@@ -1,9 +1,12 @@
 package mx.equilibrio.feature.entry
 
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import mx.equilibrio.domain.model.Account
 import mx.equilibrio.domain.model.Category
 import mx.equilibrio.domain.model.Classification
+import mx.equilibrio.domain.model.CreditAvailability
 import mx.equilibrio.domain.model.Period
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.TransactionStatus
@@ -48,8 +51,10 @@ data class QuickEntryUiState(
     val confirmError: String? = null,
     val loadedSnapshot: EntrySnapshot? = null,
     val creditPeriod: Period? = null,
-    val creditAvailable: Map<String, Long> = emptyMap(),
+    val creditAvailable: Map<String, CreditAvailability> = emptyMap(),
     val creditLimitError: String? = null,
+    val isInstallment: Boolean = false,
+    val installmentCount: Int = 6,
 ) {
     val amountCents: Long
         get() = amountInput.toDoubleOrNull()?.let { (it * 100).toLong() } ?: 0L
@@ -61,12 +66,22 @@ data class QuickEntryUiState(
                 destinationAccountId != null &&
                 originAccountId != destinationAccountId &&
                 !isSaving
-            EntryMode.CREDIT_PURCHASE -> amountCents > 0 && accountId != null && !isSaving
+            EntryMode.CREDIT_PURCHASE -> amountCents > 0 &&
+                accountId != null &&
+                !isSaving &&
+                (!isInstallment || installmentCount >= 2)
             EntryMode.EXPENSE, EntryMode.INCOME -> amountCents > 0 &&
                 classification != null &&
                 accountId != null &&
                 !isSaving
         }
+
+    /** Monto base por cuota (el resto se ajusta en la última al guardar, en el use case de dominio). */
+    val installmentBaseCents: Long
+        get() = if (installmentCount > 0) amountCents / installmentCount else 0L
+
+    val installmentLastOccurredAt: LocalDate
+        get() = occurredAt.plus(installmentCount - 1, DateTimeUnit.MONTH)
 
     val hasUnsavedInput: Boolean
         get() {

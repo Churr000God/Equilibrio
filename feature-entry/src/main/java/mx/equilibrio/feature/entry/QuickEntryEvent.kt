@@ -18,6 +18,8 @@ sealed interface QuickEntryEvent {
     data class OriginAccountSelected(val accountId: String) : QuickEntryEvent
     data class DestinationAccountSelected(val accountId: String) : QuickEntryEvent
     data class CreditAccountSelected(val accountId: String) : QuickEntryEvent
+    data class InstallmentToggled(val enabled: Boolean) : QuickEntryEvent
+    data class InstallmentCountChanged(val count: Int) : QuickEntryEvent
     data class ViewTabChanged(val tab: EntryViewTab) : QuickEntryEvent
     data object ConfirmClicked : QuickEntryEvent
     data object SaveClicked : QuickEntryEvent

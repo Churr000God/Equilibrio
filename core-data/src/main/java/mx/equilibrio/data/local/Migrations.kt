@@ -235,3 +235,23 @@ val MIGRATION_10_11 = object : Migration(10, 11) {
         db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_goal_id` ON `transactions` (`goal_id`)")
     }
 }
+
+/** Compras a meses (installments): agrupa cuotas de una compra en `transactions`. */
+val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE transactions ADD COLUMN installment_plan_id TEXT DEFAULT NULL")
+        db.execSQL("ALTER TABLE transactions ADD COLUMN installment_index INTEGER DEFAULT NULL")
+        db.execSQL("ALTER TABLE transactions ADD COLUMN installment_count INTEGER DEFAULT NULL")
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_transactions_installment_plan_id` " +
+                "ON `transactions` (`installment_plan_id`)",
+        )
+    }
+}
+
+/** Detalle de categoría: presupuesto mensual opcional en `categories`. */
+val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE categories ADD COLUMN monthly_budget_cents INTEGER DEFAULT NULL")
+    }
+}

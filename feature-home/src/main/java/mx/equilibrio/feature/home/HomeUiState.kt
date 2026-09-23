@@ -15,9 +15,15 @@ data class TransactionUi(
     val occurredAt: LocalDate,
     val note: String?,
     val goalId: String? = null,
+    val installmentPlanId: String? = null,
+    val installmentIndex: Int? = null,
+    val installmentCount: Int? = null,
 ) {
     /** Abono espejo de una meta: se gestiona desde Metas, no desde aquí. */
     val isSavings: Boolean get() = goalId != null
+
+    /** Una cuota de una compra a meses: no editable, solo borrable como plan completo. */
+    val isInstallment: Boolean get() = installmentPlanId != null
 
     val tone: DomainTone
         get() = if (isSavings) DomainTone.ESSENTIAL else when (classification) {
@@ -29,7 +35,11 @@ data class TransactionUi(
         }
 
     val label: String
-        get() = if (isSavings) "Ahorro" else when (classification) {
+        get() = if (isSavings) {
+            "Ahorro"
+        } else if (installmentIndex != null && installmentCount != null) {
+            "Cuota $installmentIndex/$installmentCount"
+        } else when (classification) {
             Classification.FIXED -> "Fijo"
             Classification.VARIABLE -> "Variable"
             Classification.ESSENTIAL -> "Esencial"

@@ -110,6 +110,28 @@ class FakeTransactionRepository : TransactionRepository {
     }
     override suspend fun delete(id: String) = throw NotImplementedError("no usado en estos tests")
 
+    override suspend fun markInstallmentPlanDeleted(planId: String) {
+        transactionsById.values
+            .filter { it.installmentPlanId == planId }
+            .forEach { transactionsById.remove(it.id) }
+    }
+
+    override fun observeByCategory(categoryId: String): Flow<List<Transaction>> = flow {
+        emit(transactionsById.values.filter { it.categoryId == categoryId })
+    }
+
+    override suspend fun reassignCategory(fromCategoryId: String, toCategoryId: String) {
+        transactionsById.values
+            .filter { it.categoryId == fromCategoryId }
+            .forEach { transactionsById[it.id] = it.copy(categoryId = toCategoryId) }
+    }
+
+    override suspend fun deleteByCategory(categoryId: String) {
+        transactionsById.values
+            .filter { it.categoryId == categoryId }
+            .forEach { transactionsById.remove(it.id) }
+    }
+
     override suspend fun confirm(id: String, today: LocalDate) {
         confirmedIds += id
         transactionsById[id]?.let { transaction ->

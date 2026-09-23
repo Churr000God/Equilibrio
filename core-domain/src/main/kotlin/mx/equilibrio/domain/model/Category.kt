@@ -9,4 +9,5 @@ data class Category(
     val icon: String,
     val isSystem: Boolean = false,
     val sortOrder: Int,
+    val monthlyBudgetCents: Long? = null,
 )

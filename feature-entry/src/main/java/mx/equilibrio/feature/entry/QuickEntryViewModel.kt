@@ -13,23 +13,30 @@ import kotlinx.coroutines.launch
 import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import kotlinx.datetime.LocalDate
 import mx.equilibrio.domain.model.AccountType
 import mx.equilibrio.domain.model.Category
 import mx.equilibrio.domain.model.CategoryType
+import mx.equilibrio.domain.model.Period
+import mx.equilibrio.domain.model.PeriodBounds
+import mx.equilibrio.domain.model.PeriodState
 import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.TransactionStatus
+import mx.equilibrio.domain.model.deriveCycleBounds
 import mx.equilibrio.domain.model.deriveTransactionStatus
+import mx.equilibrio.domain.model.nextCycleBounds
 import mx.equilibrio.domain.usecase.CheckBalanceDeviationAlertUseCase
 import mx.equilibrio.domain.usecase.ConfirmTransaction
 import mx.equilibrio.domain.usecase.CreateTransfer
 import mx.equilibrio.domain.usecase.GetCategories
-import mx.equilibrio.domain.usecase.GetOrCreatePeriodForDate
 import mx.equilibrio.domain.usecase.GetTransaction
 import mx.equilibrio.domain.usecase.ObserveAccounts
 import mx.equilibrio.domain.usecase.ObserveCreditAvailable
+import mx.equilibrio.domain.usecase.ObservePeriods
 import mx.equilibrio.domain.usecase.SaveCategory
 import mx.equilibrio.domain.usecase.SaveCreditPurchase
+import mx.equilibrio.domain.usecase.SaveInstallmentPurchase
 import mx.equilibrio.domain.usecase.SaveTransaction
 import java.util.UUID
 import javax.inject.Inject
@@ -48,8 +55,9 @@ class QuickEntryViewModel @Inject constructor(
     private val confirmTransaction: ConfirmTransaction,
     private val checkBalanceDeviation: CheckBalanceDeviationAlertUseCase,
     private val saveCreditPurchaseUseCase: SaveCreditPurchase,
+    private val saveInstallmentPurchaseUseCase: SaveInstallmentPurchase,
     private val observeCreditAvailableUseCase: ObserveCreditAvailable,
-    private val getOrCreatePeriodForDate: GetOrCreatePeriodForDate,
+    private val observePeriods: ObservePeriods,
 ) : ViewModel() {
 
     private val editingId: String? = savedStateHandle["transactionId"]
@@ -111,7 +119,7 @@ class QuickEntryViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            observeCreditAvailableUseCase().collect { available ->
+            observeCreditAvailableUseCase(today()).collect { available ->
                 _state.update { it.copy(creditAvailable = available) }
             }
         }
@@ -146,6 +154,8 @@ class QuickEntryViewModel @Inject constructor(
                         transferError = null,
                         creditLimitError = null,
                         creditPeriod = if (event.mode == EntryMode.CREDIT_PURCHASE) it.creditPeriod else null,
+                        isInstallment = if (event.mode == EntryMode.CREDIT_PURCHASE) it.isInstallment else false,
+                        installmentCount = if (event.mode == EntryMode.CREDIT_PURCHASE) it.installmentCount else 6,
                     )
                 }
                 refreshCreditPeriodIfNeeded()
@@ -167,6 +177,14 @@ class QuickEntryViewModel @Inject constructor(
             is QuickEntryEvent.CreditAccountSelected -> {
                 _state.update { it.copy(accountId = event.accountId, creditLimitError = null) }
                 refreshCreditPeriodIfNeeded()
+            }
+
+            is QuickEntryEvent.InstallmentToggled -> _state.update {
+                it.copy(isInstallment = event.enabled, creditLimitError = null)
+            }
+
+            is QuickEntryEvent.InstallmentCountChanged -> _state.update {
+                it.copy(installmentCount = event.count, creditLimitError = null)
             }
 
             is QuickEntryEvent.NoteChanged -> _state.update { it.copy(note = event.text) }
@@ -261,13 +279,23 @@ class QuickEntryViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Solo lectura: deriva el ciclo que contiene la fecha con deriveCycleBounds/nextCycleBounds
+     * encadenando desde el último periodo conocido, sin persistir nada (a diferencia del use case
+     * de dominio que hace upsert). Necesario para no crear periodos basura al previsualizar una
+     * cuota a meses que cae varios ciclos adelante.
+     */
     private fun refreshCreditPeriodIfNeeded() {
         val current = _state.value
         if (current.mode != EntryMode.CREDIT_PURCHASE) return
         val accountId = current.accountId ?: return
+        val account = current.accounts.firstOrNull { it.id == accountId } ?: return
+        val statementDay = account.statementDay ?: return
+        val dueDay = account.dueDay ?: return
 
         viewModelScope.launch {
-            val period = getOrCreatePeriodForDate(accountId, current.occurredAt)
+            val periods = observePeriods(accountId).first()
+            val period = previewPeriodFor(accountId, current.occurredAt, periods, statementDay, dueDay)
             _state.update { it.copy(creditPeriod = period) }
         }
     }
@@ -280,17 +308,32 @@ class QuickEntryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                saveCreditPurchaseUseCase(
-                    id = editingId ?: UUID.randomUUID().toString(),
-                    accountId = accountId,
-                    classification = current.classification,
-                    amountCents = current.amountCents,
-                    occurredAt = current.occurredAt,
-                    note = current.note.ifBlank { null },
-                    categoryId = current.categoryId,
-                    userId = ownerId,
-                    today = today(),
-                )
+                if (current.isInstallment) {
+                    saveInstallmentPurchaseUseCase(
+                        planId = editingId ?: UUID.randomUUID().toString(),
+                        accountId = accountId,
+                        classification = current.classification,
+                        totalAmountCents = current.amountCents,
+                        installmentCount = current.installmentCount,
+                        firstOccurredAt = current.occurredAt,
+                        note = current.note.ifBlank { null },
+                        categoryId = current.categoryId,
+                        userId = ownerId,
+                        today = today(),
+                    )
+                } else {
+                    saveCreditPurchaseUseCase(
+                        id = editingId ?: UUID.randomUUID().toString(),
+                        accountId = accountId,
+                        classification = current.classification,
+                        amountCents = current.amountCents,
+                        occurredAt = current.occurredAt,
+                        note = current.note.ifBlank { null },
+                        categoryId = current.categoryId,
+                        userId = ownerId,
+                        today = today(),
+                    )
+                }
                 _state.update { it.copy(isSaving = false, saved = true) }
             } catch (e: IllegalArgumentException) {
                 _state.update {
@@ -383,6 +426,38 @@ class QuickEntryViewModel @Inject constructor(
             }
         }
     }
+}
+
+private fun previewPeriodFor(
+    accountId: String,
+    date: LocalDate,
+    periods: List<Period>,
+    statementDay: Int,
+    dueDay: Int,
+): Period {
+    periods.firstOrNull { date >= it.startAt && date <= it.endAt }?.let { return it }
+
+    val latest = periods.maxByOrNull { it.endAt }
+    val bounds = if (latest == null || date < latest.startAt) {
+        deriveCycleBounds(statementDay, dueDay, date)
+    } else {
+        var current = PeriodBounds(latest.startAt, latest.endAt, latest.payAt, statementDay, dueDay)
+        while (date > current.endAt) {
+            current = nextCycleBounds(current)
+        }
+        current
+    }
+
+    return Period(
+        id = "preview",
+        accountId = accountId,
+        startAt = bounds.startAt,
+        endAt = bounds.endAt,
+        payAt = bounds.payAt,
+        state = PeriodState.OPEN,
+        carriedBalanceCents = 0,
+        amountPaidCents = 0,
+    )
 }
 
 private fun sanitizeAmountInput(raw: String): String {

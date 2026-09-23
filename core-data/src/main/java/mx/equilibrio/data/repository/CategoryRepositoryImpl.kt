@@ -9,7 +9,9 @@ import mx.equilibrio.data.mapper.toDomain
 import mx.equilibrio.data.mapper.toEntity
 import mx.equilibrio.data.prefs.LocalSession
 import mx.equilibrio.domain.model.Category
+import mx.equilibrio.domain.model.CategoryType
 import mx.equilibrio.domain.repository.CategoryRepository
+import java.util.UUID
 import javax.inject.Inject
 
 class CategoryRepositoryImpl @Inject constructor(
@@ -34,5 +36,23 @@ class CategoryRepositoryImpl @Inject constructor(
 
     override suspend fun delete(id: String) {
         dao.markDeleted(id, now = System.currentTimeMillis())
+    }
+
+    override suspend fun getOrCreateOtros(userId: String, type: CategoryType): Category {
+        val existing = dao.findSystemByUserAndType(userId, type.name)
+        if (existing != null) return existing.toDomain()
+
+        val otros = Category(
+            id = UUID.randomUUID().toString(),
+            userId = userId,
+            name = "Otros",
+            type = type,
+            colorSlot = 0,
+            icon = "other",
+            isSystem = true,
+            sortOrder = Int.MAX_VALUE,
+        )
+        dao.upsert(otros.toEntity(syncState = "PENDING", updatedAt = System.currentTimeMillis()))
+        return otros
     }
 }

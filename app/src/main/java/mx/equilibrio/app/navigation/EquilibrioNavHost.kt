@@ -21,6 +21,7 @@ import mx.equilibrio.feature.accounts.AccountsScreen
 import mx.equilibrio.feature.accounts.AddAccountScreen
 import mx.equilibrio.feature.categories.AddCategoryScreen
 import mx.equilibrio.feature.categories.CategoriesScreen
+import mx.equilibrio.feature.categories.CategoryDetailScreen
 import mx.equilibrio.feature.entry.QuickEntryScreen
 import mx.equilibrio.feature.goals.GoalEditorScreen
 import mx.equilibrio.feature.goals.GoalsScreen
@@ -35,7 +36,15 @@ private const val ROUTE_HOME = "home"
 private const val ROUTE_ACCOUNTS = "accounts"
 private const val ROUTE_ADD_ACCOUNT = "add_account"
 private const val ROUTE_CATEGORIES = "categories"
-private const val ROUTE_ADD_CATEGORY = "add_category"
+private const val ARG_CATEGORY_ID = "categoryId"
+private const val ROUTE_ADD_CATEGORY = "add_category?categoryId={$ARG_CATEGORY_ID}"
+
+private fun addCategoryRoute(categoryId: String? = null) =
+    "add_category" + if (categoryId != null) "?categoryId=$categoryId" else ""
+
+private const val ROUTE_CATEGORY_DETAIL = "category_detail/{$ARG_CATEGORY_ID}"
+
+private fun categoryDetailRoute(categoryId: String) = "category_detail/$categoryId"
 private const val ROUTE_GOALS = "goals"
 private const val ROUTE_REPORTS = "reports"
 private const val ROUTE_PROFILE = "profile"
@@ -124,8 +133,20 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
             }
             composable(ROUTE_CATEGORIES) {
                 CategoriesScreen(
-                    onAddCategoryClicked = { navController.navigate(ROUTE_ADD_CATEGORY) },
+                    onAddCategoryClicked = { navController.navigate(addCategoryRoute()) },
+                    onCategoryClicked = { id -> navController.navigate(categoryDetailRoute(id)) },
                     trailing = { ProfileHud(onOpenProfile = { navController.navigate(ROUTE_PROFILE) }) },
+                )
+            }
+            composable(
+                route = ROUTE_CATEGORY_DETAIL,
+                arguments = listOf<NamedNavArgument>(
+                    navArgument(ARG_CATEGORY_ID) { type = NavType.StringType },
+                ),
+            ) {
+                CategoryDetailScreen(
+                    onEditClicked = { id -> navController.navigate(addCategoryRoute(id)) },
+                    onClosed = { navController.popBackStack() },
                 )
             }
             composable(ROUTE_PROFILE) {
@@ -134,7 +155,16 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                     onLoginWithPassword = { navController.navigate(ROUTE_LOGIN) },
                 )
             }
-            composable(ROUTE_ADD_CATEGORY) {
+            composable(
+                route = ROUTE_ADD_CATEGORY,
+                arguments = listOf<NamedNavArgument>(
+                    navArgument(ARG_CATEGORY_ID) {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                ),
+            ) {
                 AddCategoryScreen(
                     onSaved = { navController.popBackStack() },
                     onCancel = { navController.popBackStack() },

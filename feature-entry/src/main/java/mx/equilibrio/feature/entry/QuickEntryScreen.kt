@@ -42,6 +42,7 @@ import mx.equilibrio.domain.model.AccountType
 import mx.equilibrio.domain.model.Category
 import mx.equilibrio.domain.model.CategoryType
 import mx.equilibrio.domain.model.Classification
+import mx.equilibrio.domain.model.CreditAvailability
 import mx.equilibrio.domain.model.Period
 import mx.equilibrio.domain.model.PeriodState
 import mx.equilibrio.domain.model.TransactionKind
@@ -54,6 +55,7 @@ import mx.equilibrio.ui.components.EqDestructiveDialog
 import mx.equilibrio.ui.components.EqDomainToggleOption
 import mx.equilibrio.ui.components.EqInlineValidation
 import mx.equilibrio.ui.components.EqKeyValueRow
+import mx.equilibrio.ui.components.EqKeyValueRowGroup
 import mx.equilibrio.ui.components.EqSegmentedControl
 import mx.equilibrio.ui.components.EqTextField
 import mx.equilibrio.ui.components.EqTopBar
@@ -189,6 +191,13 @@ fun QuickEntryScreen(
                             onSelect = { viewModel.onEvent(QuickEntryEvent.CreditAccountSelected(it)) },
                         )
 
+                        InstallmentSection(
+                            isInstallment = state.isInstallment,
+                            installmentCount = state.installmentCount,
+                            onToggle = { viewModel.onEvent(QuickEntryEvent.InstallmentToggled(it)) },
+                            onCountSelected = { viewModel.onEvent(QuickEntryEvent.InstallmentCountChanged(it)) },
+                        )
+
                         ClassificationSection(
                             kind = state.kind,
                             selected = state.classification,
@@ -199,7 +208,7 @@ fun QuickEntryScreen(
                             kind = state.kind,
                             categories = state.categories,
                             selectedId = state.categoryId,
-                            isCreating = state.isCreatingCategory,
+                               isCreating = state.isCreatingCategory,
                             newCategoryName = state.newCategoryName,
                             newCategoryNameError = state.newCategoryNameError,
                             newCategoryColorSlot = state.newCategoryColorSlot,
@@ -211,9 +220,18 @@ fun QuickEntryScreen(
                             onSaveCategory = { viewModel.onEvent(QuickEntryEvent.SaveCategoryClicked) },
                         )
 
+                        if (state.isInstallment) {
+                            InstallmentPreview(
+                                totalCents = state.amountCents,
+                                monthlyCents = state.installmentBaseCents,
+                                firstOccurredAt = state.occurredAt,
+                                lastOccurredAt = state.installmentLastOccurredAt,
+                            )
+                        }
+
                         CreditPeriodInfo(
                             period = state.creditPeriod,
-                            availableCents = state.accountId?.let { state.creditAvailable[it] },
+                            available = state.accountId?.let { state.creditAvailable[it] },
                         )
 
                         state.creditLimitError?.let { EqInlineValidation(it) }
@@ -500,6 +518,64 @@ private fun AccountPickerSection(
     }
 }
 
+private val InstallmentCountOptions = listOf(3, 6, 9, 12, 18, 24)
+
+@Composable
+private fun InstallmentSection(
+    isInstallment: Boolean,
+    installmentCount: Int,
+    onToggle: (Boolean) -> Unit,
+    onCountSelected: (Int) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        EqSegmentedControl(
+            options = listOf("Un pago", "A meses"),
+            selectedIndex = if (isInstallment) 1 else 0,
+            onSelect = { index -> onToggle(index == 1) },
+        )
+        if (isInstallment) {
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            ) {
+                InstallmentCountOptions.forEach { count ->
+                    EqDomainToggleOption(
+                        label = "${count}x",
+                        tone = DomainTone.NEUTRAL,
+                        selected = installmentCount == count,
+                        onClick = { onCountSelected(count) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InstallmentPreview(
+    totalCents: Long,
+    monthlyCents: Long,
+    firstOccurredAt: kotlinx.datetime.LocalDate,
+    lastOccurredAt: kotlinx.datetime.LocalDate,
+) {
+    EqCard(modifier = Modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            EqKeyValueRowGroup(
+                items = listOf(
+                    "Cuota mensual" to formatCents(monthlyCents),
+                    "Total" to formatCents(totalCents),
+                ),
+            )
+            EqKeyValueRowGroup(
+                items = listOf(
+                    "Primera cuota" to firstOccurredAt.toString(),
+                    "Última cuota" to lastOccurredAt.toString(),
+                ),
+            )
+        }
+    }
+}
+
 private fun periodStateLabel(state: PeriodState): String = when (state) {
     PeriodState.OPEN -> "Periodo abierto"
     PeriodState.AWAITING_PAYMENT -> "Esperando pago"
@@ -507,8 +583,8 @@ private fun periodStateLabel(state: PeriodState): String = when (state) {
 }
 
 @Composable
-private fun CreditPeriodInfo(period: Period?, availableCents: Long?) {
-    if (period == null && availableCents == null) return
+private fun CreditPeriodInfo(period: Period?, available: CreditAvailability?) {
+    if (period == null && available == null) return
     val colors = EquilibrioTheme.colors
 
     EqCard(modifier = Modifier.fillMaxWidth()) {
@@ -525,12 +601,18 @@ private fun CreditPeriodInfo(period: Period?, availableCents: Long?) {
                     color = colors.inkMuted,
                 )
             }
-            availableCents?.let {
+            available?.let {
                 EqKeyValueRow(
                     label = "Disponible",
-                    value = formatCents(it),
-                    valueColor = if (it < 0) colors.error else colors.ink,
+                    value = formatCents(it.realCents),
+                    valueColor = if (it.realCents < 0) colors.error else colors.ink,
                     modifier = Modifier.padding(top = if (period != null) Spacing.xs else 0.dp),
+                )
+                EqKeyValueRow(
+                    label = "Disponible proyectado",
+                    value = formatCents(it.projectedCents),
+                    valueColor = if (it.projectedCents < 0) colors.error else colors.ink,
+                    modifier = Modifier.padding(top = Spacing.xs),
                 )
             }
         }

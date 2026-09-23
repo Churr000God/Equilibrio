@@ -20,6 +20,7 @@ import androidx.room.PrimaryKey
         Index(value = ["category_id"]),
         Index(value = ["period_id"]),
         Index(value = ["goal_id"]),
+        Index(value = ["installment_plan_id"]),
     ],
 )
 data class TransactionEntity(
@@ -39,4 +40,7 @@ data class TransactionEntity(
     @ColumnInfo(name = "period_id") val periodId: String? = null,
     /** Abono espejo de una meta. Sin FK: la meta puede borrarse y el dinero ya salió. */
     @ColumnInfo(name = "goal_id") val goalId: String? = null,
+    @ColumnInfo(name = "installment_plan_id") val installmentPlanId: String? = null,
+    @ColumnInfo(name = "installment_index") val installmentIndex: Int? = null,
+    @ColumnInfo(name = "installment_count") val installmentCount: Int? = null,
 )

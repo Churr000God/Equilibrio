@@ -13,7 +13,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,10 +22,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mx.equilibrio.domain.model.CategoryType
+import mx.equilibrio.ui.components.CategoryIcons
 import mx.equilibrio.ui.components.EqButton
 import mx.equilibrio.ui.components.EqButtonVariant
 import mx.equilibrio.ui.components.EqCard
@@ -68,20 +69,19 @@ fun CategoryDetailScreen(
         )
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = EquilibrioTheme.colors.background,
-        topBar = { EqTopBar(title = state.name.ifBlank { "Categoría" }, onBack = onClosed) },
-    ) { padding ->
+    Column(modifier = modifier.fillMaxSize().background(EquilibrioTheme.colors.background)) {
+        EqTopBar(title = state.name.ifBlank { "Categoría" }, onBack = onClosed)
+
         if (state.isLoading) {
-            EqSkeleton(modifier = Modifier.padding(top = padding.calculateTopPadding()), rowHeight = 72.dp)
-            return@Scaffold
+            EqSkeleton(modifier = Modifier.weight(1f), rowHeight = 72.dp)
+            return@Column
         }
 
         Column(
             modifier = Modifier
-                .padding(padding)
+                .weight(1f)
                 .padding(horizontal = Spacing.base)
+                .clipToBounds()
                 .verticalScroll(rememberScrollState())
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),

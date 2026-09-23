@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -32,12 +31,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mx.equilibrio.domain.model.CategoryType
+import mx.equilibrio.ui.components.CategoryIcons
 import mx.equilibrio.ui.components.EqButton
 import mx.equilibrio.ui.components.EqColorSlotPicker
 import mx.equilibrio.ui.components.EqSegmentedControl
@@ -79,31 +80,27 @@ fun AddCategoryScreen(
         )
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = EquilibrioTheme.colors.background,
-        topBar = {
-            EqTopBar(
-                title = if (state.isEditing) "Editar categoría" else "Nueva categoría",
-                onBack = onCancel,
-                trailing = if (state.isEditing && !state.isSystem) {
-                    {
-                        IconButton(onClick = { showDeleteConfirm = true }) {
-                            Icon(
-                                Icons.Rounded.Delete,
-                                contentDescription = "Eliminar categoría",
-                                tint = EquilibrioTheme.colors.error,
-                            )
-                        }
+    Column(modifier = modifier.fillMaxSize().background(EquilibrioTheme.colors.background)) {
+        EqTopBar(
+            title = if (state.isEditing) "Editar categoría" else "Nueva categoría",
+            onBack = onCancel,
+            trailing = if (state.isEditing && !state.isSystem) {
+                {
+                    IconButton(onClick = { showDeleteConfirm = true }) {
+                        Icon(
+                            Icons.Rounded.Delete,
+                            contentDescription = "Eliminar categoría",
+                            tint = EquilibrioTheme.colors.error,
+                        )
                     }
-                } else null,
-            )
-        },
-    ) { padding ->
+                }
+            } else null,
+        )
         Column(
             modifier = Modifier
-                .padding(padding)
+                .weight(1f)
                 .padding(horizontal = Spacing.base)
+                .clipToBounds()
                 .verticalScroll(rememberScrollState())
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),

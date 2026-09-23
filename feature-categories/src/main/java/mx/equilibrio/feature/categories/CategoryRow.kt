@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mx.equilibrio.domain.model.CategoryType
+import mx.equilibrio.ui.components.CategoryIcons
 import mx.equilibrio.ui.components.formatCents
 import mx.equilibrio.ui.theme.EquilibrioColors
 import mx.equilibrio.ui.theme.EquilibrioTheme

@@ -3,21 +3,23 @@ package mx.equilibrio.app.auth
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -50,15 +52,13 @@ fun ProfileScreen(
         contract = ActivityResultContracts.PickVisualMedia(),
     ) { uri -> uri?.let { viewModel.onPhotoPicked(context, it) } }
 
-    Scaffold(
-        modifier = modifier.fillMaxWidth(),
-        containerColor = colors.background,
-        topBar = { EqTopBar(title = "Perfil", onBack = onBack) },
-    ) { padding ->
+    Column(modifier = modifier.fillMaxSize().background(colors.background)) {
+        EqTopBar(title = "Perfil", onBack = onBack)
         Column(
             modifier = Modifier
-                .padding(padding)
+                .weight(1f)
                 .padding(horizontal = Spacing.base)
+                .clipToBounds()
                 .verticalScroll(rememberScrollState())
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -1,4 +1,4 @@
-package mx.equilibrio.feature.categories
+package mx.equilibrio.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apartment
@@ -24,7 +24,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
  * Set fijo de íconos disponibles para categorías (§10 del manual: Material Symbols Rounded).
- * `Category.icon` guarda la [key]; una key desconocida o vacía cae al avatar de inicial en [CategoryRow].
+ * `Category.icon` guarda la [key]; una key desconocida o vacía cae al avatar de inicial en el caller.
+ * Vive en core-ui (no en :feature-categories) porque :feature-home también necesita pintar el
+ * ícono de categoría en la lista de Transacciones.
  */
 object CategoryIcons {
     val ALL: List<Pair<String, ImageVector>> = listOf(

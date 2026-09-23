@@ -6,6 +6,8 @@ import mx.equilibrio.domain.model.AlertType
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
+import mx.equilibrio.domain.model.TransactionStatus
+import mx.equilibrio.domain.model.YearMonth
 import mx.equilibrio.ui.theme.DomainTone
 
 data class TransactionUi(
@@ -19,12 +21,20 @@ data class TransactionUi(
     val installmentPlanId: String? = null,
     val installmentIndex: Int? = null,
     val installmentCount: Int? = null,
+    val status: TransactionStatus = TransactionStatus.COMPLETED,
+    val categoryId: String? = null,
+    val categoryName: String? = null,
+    val categoryIcon: String? = null,
+    val accountId: String = "",
+    val accountName: String? = null,
 ) {
     /** Abono espejo de una meta: se gestiona desde Metas, no desde aquí. */
     val isSavings: Boolean get() = goalId != null
 
-    /** Una cuota de una compra a meses: no editable, solo borrable como plan completo. */
+    /** Una cuota de una compra a meses: no editable individualmente, solo borrable como plan completo. */
     val isInstallment: Boolean get() = installmentPlanId != null
+
+    val isScheduled: Boolean get() = status == TransactionStatus.SCHEDULED
 
     val tone: DomainTone
         get() = if (isSavings) DomainTone.ESSENTIAL else when (classification) {
@@ -48,6 +58,15 @@ data class TransactionUi(
             null -> "Transferencia"
         }
 
+    /** "Gasto en cuotas" / "Ahorro" / "Gasto" / "Ingreso" — para la pantalla de detalle. */
+    val typeLabel: String
+        get() = when {
+            isInstallment -> "Gasto en cuotas"
+            isSavings -> "Ahorro"
+            kind == TransactionKind.EXPENSE -> "Gasto"
+            else -> "Ingreso"
+        }
+
     val isExpense: Boolean get() = kind == TransactionKind.EXPENSE
 }
 
@@ -62,6 +81,16 @@ fun Transaction.toUi() = TransactionUi(
     installmentPlanId = installmentPlanId,
     installmentIndex = installmentIndex,
     installmentCount = installmentCount,
+    status = status,
+    categoryId = categoryId,
+    accountId = accountId,
+)
+
+/** Igual que [toUi] pero resolviendo nombre/ícono de categoría y nombre de cuenta (lista de Transacciones y detalle). */
+fun Transaction.toMovementUi(categoryName: String?, categoryIcon: String?, accountName: String?) = toUi().copy(
+    categoryName = categoryName,
+    categoryIcon = categoryIcon,
+    accountName = accountName,
 )
 
 data class AlertUi(
@@ -81,12 +110,14 @@ private fun Alert.toUi() = AlertUi(
 fun List<Alert>.toUi(): List<AlertUi> = filter { it.type == AlertType.BALANCE_DEVIATION }.map { it.toUi() }
 
 data class HomeUiState(
+    val month: YearMonth,
     val isLoading: Boolean = true,
     val balanceCents: Long = 0,
+    val monthIncomeCents: Long = 0,
+    val monthExpenseCents: Long = 0,
+    val canGoForward: Boolean = false,
     val transactions: List<TransactionUi> = emptyList(),
-    val pendingDeletion: TransactionUi? = null,
     val pendingAlerts: List<AlertUi> = emptyList(),
-    val greetingName: String? = null,
 ) {
     val isEmpty: Boolean get() = !isLoading && transactions.isEmpty()
 }

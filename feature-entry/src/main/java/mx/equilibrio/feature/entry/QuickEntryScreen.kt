@@ -1,5 +1,6 @@
 package mx.equilibrio.feature.entry
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -19,7 +20,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -30,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -113,20 +114,16 @@ fun QuickEntryScreen(
         )
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = EquilibrioTheme.colors.background,
-        topBar = {
-            EqTopBar(
-                title = if (state.isEditing) "Editar movimiento" else "Nuevo movimiento",
-                onBack = ::handleBack,
-            )
-        },
-    ) { padding ->
+    Column(modifier = modifier.fillMaxSize().background(EquilibrioTheme.colors.background)) {
+        EqTopBar(
+            title = if (state.isEditing) "Editar movimiento" else "Nuevo movimiento",
+            onBack = ::handleBack,
+        )
         Column(
             modifier = Modifier
-                .padding(padding)
+                .weight(1f)
                 .padding(horizontal = Spacing.base)
+                .clipToBounds()
                 .verticalScroll(rememberScrollState())
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),

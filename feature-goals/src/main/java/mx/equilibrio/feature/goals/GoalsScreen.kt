@@ -26,12 +26,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
@@ -93,30 +93,26 @@ fun GoalsScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = colors.background,
-        topBar = {
-            EqTopBar(
-                title = "Tus metas",
-                subtitle = if (state.totalSavedCents > 0) "Has guardado ${formatCents(state.totalSavedCents)} en total" else null,
-                trailing = {
-                    IconButton(
-                        onClick = onAddClicked,
-                        modifier = Modifier
-                            .size(TouchTarget.minSize)
-                            .background(colors.green, ShapeMedium),
-                    ) {
-                        Icon(Icons.Rounded.Add, contentDescription = "Nueva meta", tint = Color.White)
-                    }
-                },
-            )
-        },
-    ) { padding ->
+    Column(modifier = modifier.fillMaxSize().background(colors.background)) {
+        EqTopBar(
+            title = "Tus metas",
+            subtitle = if (state.totalSavedCents > 0) "Has guardado ${formatCents(state.totalSavedCents)} en total" else null,
+            trailing = {
+                IconButton(
+                    onClick = onAddClicked,
+                    modifier = Modifier
+                        .size(TouchTarget.minSize)
+                        .background(colors.green, ShapeMedium),
+                ) {
+                    Icon(Icons.Rounded.Add, contentDescription = "Nueva meta", tint = Color.White)
+                }
+            },
+        )
+
         when {
-            state.isLoading -> Box(Modifier.fillMaxSize().padding(padding))
+            state.isLoading -> Box(Modifier.weight(1f).fillMaxWidth())
             state.isEmpty -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier = Modifier.weight(1f).fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
                 EqEmptyState(
@@ -127,11 +123,12 @@ fun GoalsScreen(
             }
 
             else -> LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                // clipToBounds(): el stretch de overscroll no debe pintar fuera de sus bounds.
+                modifier = Modifier.weight(1f).fillMaxWidth().clipToBounds(),
                 contentPadding = PaddingValues(
                     start = Spacing.base,
                     end = Spacing.base,
-                    top = padding.calculateTopPadding() + Spacing.sm,
+                    top = Spacing.sm,
                     bottom = bottomInset,
                 ),
                 verticalArrangement = Arrangement.spacedBy(Spacing.base),

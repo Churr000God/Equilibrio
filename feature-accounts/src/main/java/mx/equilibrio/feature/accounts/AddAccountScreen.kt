@@ -1,5 +1,6 @@
 package mx.equilibrio.feature.accounts
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,11 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -51,15 +52,13 @@ fun AddAccountScreen(
         )
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = EquilibrioTheme.colors.background,
-        topBar = { EqTopBar(title = "Nueva cuenta", onBack = onCancel) },
-    ) { padding ->
+    Column(modifier = modifier.fillMaxSize().background(EquilibrioTheme.colors.background)) {
+        EqTopBar(title = "Nueva cuenta", onBack = onCancel)
         Column(
             modifier = Modifier
-                .padding(padding)
+                .weight(1f)
                 .padding(horizontal = Spacing.base)
+                .clipToBounds()
                 .verticalScroll(rememberScrollState())
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),

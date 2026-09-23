@@ -24,13 +24,13 @@ import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.PieChart
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -74,89 +74,89 @@ fun HomeDashboardScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = EquilibrioTheme.colors.background,
-        topBar = {
-            val title = state.greetingName?.let { "Hola, $it" } ?: "Hola"
-            EqTopBar(title = title, trailing = trailing)
-        },
-        floatingActionButton = { EqFab(onClick = onAddClicked) },
-    ) { padding ->
-        if (state.isLoading) {
-            EqSkeleton(modifier = Modifier.padding(padding))
-            return@Scaffold
-        }
+    Column(modifier = modifier.fillMaxSize().background(EquilibrioTheme.colors.background)) {
+        val title = state.greetingName?.let { "Hola, $it" } ?: "Hola"
+        EqTopBar(title = title, trailing = trailing)
 
-        // Sin padding horizontal en la lista: los carruseles llegan al borde para que se asome la siguiente tarjeta.
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                top = padding.calculateTopPadding() + Spacing.sm,
-                bottom = Spacing.xxxl + Spacing.xxl,
-            ),
-            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
-        ) {
-            item(key = "cards_header") {
-                EqSectionHeader("Tarjetas", onClick = onCardsClicked, modifier = SectionPadding)
-            }
-            item(key = "cards") {
-                if (state.cards.isEmpty()) {
-                    EqEmptyState(
-                        title = "Aún no tienes tarjetas",
-                        body = "Agrega tu efectivo, cuenta o tarjeta de crédito para ver cuánto tienes disponible.",
-                        icon = Icons.Rounded.CreditCard,
-                        action = {
-                            EqButton(
-                                text = "Agregar cuenta",
-                                onClick = onAddCardClicked,
-                                variant = EqButtonVariant.SECONDARY,
-                                fullWidth = false,
+        Box(modifier = Modifier.weight(1f)) {
+            if (state.isLoading) {
+                EqSkeleton()
+            } else {
+                // clipToBounds(): el stretch/glow de overscroll (Android 12+) puede pintar fuera de los
+                // bounds del LazyColumn al hacer fling contra el tope — sin esto invade el área del topBar.
+                // Sin padding horizontal en la lista: los carruseles llegan al borde para que se asome la siguiente tarjeta.
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().clipToBounds(),
+                    contentPadding = PaddingValues(
+                        top = Spacing.sm,
+                        bottom = Spacing.xxxl + Spacing.xxl,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                ) {
+                    item(key = "cards_header") {
+                        EqSectionHeader("Tarjetas", onClick = onCardsClicked, modifier = SectionPadding)
+                    }
+                    item(key = "cards") {
+                        if (state.cards.isEmpty()) {
+                            EqEmptyState(
+                                title = "Aún no tienes tarjetas",
+                                body = "Agrega tu efectivo, cuenta o tarjeta de crédito para ver cuánto tienes disponible.",
+                                icon = Icons.Rounded.CreditCard,
+                                action = {
+                                    EqButton(
+                                        text = "Agregar cuenta",
+                                        onClick = onAddCardClicked,
+                                        variant = EqButtonVariant.SECONDARY,
+                                        fullWidth = false,
+                                    )
+                                },
                             )
-                        },
-                    )
-                } else {
-                    CardsCarousel(cards = state.cards, onCardClicked = onCardClicked)
+                        } else {
+                            CardsCarousel(cards = state.cards, onCardClicked = onCardClicked)
+                        }
+                    }
+
+                    item(key = "balance_header") {
+                        EqSectionHeader("Saldo", onClick = onBalanceClicked, modifier = SectionPadding.padding(top = Spacing.sm))
+                    }
+                    item(key = "balance") {
+                        Box(SectionPadding) { BalanceHeaderCard(state.balanceCents) }
+                    }
+
+                    item(key = "recent_header") {
+                        Text(
+                            text = "Últimas transacciones",
+                            style = EquilibrioTheme.typography.h3,
+                            color = EquilibrioTheme.colors.ink,
+                            modifier = SectionPadding.padding(top = Spacing.base, bottom = Spacing.xs),
+                        )
+                    }
+                    item(key = "recent") {
+                        RecentTransactions(
+                            transactions = state.recentTransactions,
+                            onSeeMoreClicked = onSeeMoreClicked,
+                            modifier = SectionPadding,
+                        )
+                    }
+
+                    item(key = "reports_header") {
+                        EqSectionHeader("Reportes", onClick = onReportsClicked, modifier = SectionPadding.padding(top = Spacing.sm))
+                    }
+                    item(key = "reports") {
+                        if (state.reportHighlights.isEmpty()) {
+                            EqEmptyState(
+                                title = "Aún no hay reportes",
+                                body = "Registra movimientos este mes para ver tus reportes aquí.",
+                                icon = Icons.Rounded.PieChart,
+                            )
+                        } else {
+                            ReportsCarousel(highlights = state.reportHighlights, onReportClicked = onReportClicked)
+                        }
+                    }
                 }
             }
 
-            item(key = "balance_header") {
-                EqSectionHeader("Saldo", onClick = onBalanceClicked, modifier = SectionPadding.padding(top = Spacing.sm))
-            }
-            item(key = "balance") {
-                Box(SectionPadding) { BalanceHeaderCard(state.balanceCents) }
-            }
-
-            item(key = "recent_header") {
-                Text(
-                    text = "Últimas transacciones",
-                    style = EquilibrioTheme.typography.h3,
-                    color = EquilibrioTheme.colors.ink,
-                    modifier = SectionPadding.padding(top = Spacing.base, bottom = Spacing.xs),
-                )
-            }
-            item(key = "recent") {
-                RecentTransactions(
-                    transactions = state.recentTransactions,
-                    onSeeMoreClicked = onSeeMoreClicked,
-                    modifier = SectionPadding,
-                )
-            }
-
-            item(key = "reports_header") {
-                EqSectionHeader("Reportes", onClick = onReportsClicked, modifier = SectionPadding.padding(top = Spacing.sm))
-            }
-            item(key = "reports") {
-                if (state.reportHighlights.isEmpty()) {
-                    EqEmptyState(
-                        title = "Aún no hay reportes",
-                        body = "Registra movimientos este mes para ver tus reportes aquí.",
-                        icon = Icons.Rounded.PieChart,
-                    )
-                } else {
-                    ReportsCarousel(highlights = state.reportHighlights, onReportClicked = onReportClicked)
-                }
-            }
+            EqFab(onClick = onAddClicked, modifier = Modifier.align(Alignment.BottomEnd).padding(Spacing.lg))
         }
     }
 }

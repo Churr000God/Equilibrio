@@ -15,6 +15,7 @@ import androidx.compose.material.icons.rounded.CreditCard
 import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.PieChart
+import androidx.compose.material.icons.rounded.ReceiptLong
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ import mx.equilibrio.ui.theme.eqShadow
 
 enum class EqNavDestination(val label: String, val icon: ImageVector) {
     HOME("Inicio", Icons.Rounded.Home),
+    TRANSACTIONS("Transacciones", Icons.Rounded.ReceiptLong),
     ACCOUNTS("Cuentas", Icons.Rounded.CreditCard),
     CATEGORIES("Categorías", Icons.Rounded.Category),
     GOALS("Metas", Icons.Rounded.Flag),

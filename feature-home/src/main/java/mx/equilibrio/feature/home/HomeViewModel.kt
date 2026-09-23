@@ -10,66 +10,79 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import mx.equilibrio.domain.usecase.DeleteInstallmentPlan
-import mx.equilibrio.domain.usecase.DeleteTransaction
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
+import mx.equilibrio.domain.model.TransactionKind
+import mx.equilibrio.domain.model.TransactionStatus
+import mx.equilibrio.domain.model.YearMonth
+import mx.equilibrio.domain.usecase.GetCategories
 import mx.equilibrio.domain.usecase.GetPendingAlertsUseCase
 import mx.equilibrio.domain.usecase.MarkAlertAsReadUseCase
+import mx.equilibrio.domain.usecase.ObserveAccounts
 import mx.equilibrio.domain.usecase.ObserveBalance
-import mx.equilibrio.domain.usecase.ObserveCurrentUser
 import mx.equilibrio.domain.usecase.ObserveTransactions
 import javax.inject.Inject
+import kotlin.time.Clock
+
+internal fun today() = Clock.System.todayIn(TimeZone.UTC)
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     observeTransactions: ObserveTransactions,
     observeBalance: ObserveBalance,
+    getCategories: GetCategories,
+    observeAccounts: ObserveAccounts,
     getPendingAlerts: GetPendingAlertsUseCase,
-    observeCurrentUser: ObserveCurrentUser,
-    private val deleteTransaction: DeleteTransaction,
-    private val deleteInstallmentPlan: DeleteInstallmentPlan,
     private val markAlertAsRead: MarkAlertAsReadUseCase,
 ) : ViewModel() {
 
-    private val pendingDeletion = MutableStateFlow<TransactionUi?>(null)
+    private val currentMonth = YearMonth.of(today())
+    private val selectedMonth = MutableStateFlow(currentMonth)
 
     val state: StateFlow<HomeUiState> = combine(
+        selectedMonth,
         observeTransactions(),
         observeBalance(),
-        pendingDeletion,
+        combine(getCategories(), observeAccounts(), ::Pair),
         getPendingAlerts(),
-        observeCurrentUser(),
-    ) { transactions, balance, pending, alerts, user ->
+    ) { month, transactions, balance, (categories, accounts), alerts ->
+        val categoriesById = categories.associateBy { it.id }
+        val accountsById = accounts.associateBy { it.id }
+
+        val monthTransactions = transactions
+            .filter { it.occurredAt in month }
+            .sortedByDescending { it.occurredAt }
+
+        val settled = monthTransactions.filter { it.status == TransactionStatus.COMPLETED && it.goalId == null }
+        val incomeCents = settled.filter { it.kind == TransactionKind.INCOME }.sumOf { it.amountCents }
+        val expenseCents = settled.filter { it.kind == TransactionKind.EXPENSE }.sumOf { it.amountCents }
+
         HomeUiState(
+            month = month,
             isLoading = false,
             balanceCents = balance,
-            transactions = transactions.map { it.toUi() },
-            pendingDeletion = pending,
+            monthIncomeCents = incomeCents,
+            monthExpenseCents = expenseCents,
+            canGoForward = month < currentMonth,
+            transactions = monthTransactions.map { tx ->
+                tx.toMovementUi(
+                    categoryName = tx.categoryId?.let { categoriesById[it]?.name },
+                    categoryIcon = tx.categoryId?.let { categoriesById[it]?.icon },
+                    accountName = accountsById[tx.accountId]?.name,
+                )
+            },
             pendingAlerts = alerts.toUi(),
-            // RF01 — el saludo usa el nombre de usuario elegido en Perfil, no el nombre de Google.
-            greetingName = user?.displayName?.takeIf { it.isNotBlank() },
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = HomeUiState(isLoading = true),
+        initialValue = HomeUiState(month = currentMonth),
     )
 
     fun onEvent(event: HomeEvent) {
         when (event) {
-            is HomeEvent.DeleteRequested -> pendingDeletion.update { event.transaction }
-            HomeEvent.DeleteCancelled -> pendingDeletion.update { null }
-            HomeEvent.DeleteConfirmed -> {
-                val target = pendingDeletion.value ?: return
-                pendingDeletion.update { null }
-                viewModelScope.launch {
-                    if (target.isInstallment) {
-                        deleteInstallmentPlan(target.installmentPlanId!!)
-                    } else {
-                        deleteTransaction(target.id)
-                    }
-                }
-            }
-
+            HomeEvent.PreviousMonth -> selectedMonth.update { it.previous() }
+            HomeEvent.NextMonth -> selectedMonth.update { if (it < currentMonth) it.next() else it }
             is HomeEvent.AlertDismissed -> viewModelScope.launch { markAlertAsRead(event.alertId) }
         }
     }

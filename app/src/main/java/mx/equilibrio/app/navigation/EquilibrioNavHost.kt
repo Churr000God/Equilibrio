@@ -27,6 +27,7 @@ import mx.equilibrio.feature.goals.GoalEditorScreen
 import mx.equilibrio.feature.goals.GoalsScreen
 import mx.equilibrio.feature.home.HomeDashboardScreen
 import mx.equilibrio.feature.home.MovementsScreen
+import mx.equilibrio.feature.home.TransactionDetailScreen
 import mx.equilibrio.domain.model.report.ReportSection
 import mx.equilibrio.feature.reports.ReportsScreen
 import mx.equilibrio.ui.components.EqBottomNav
@@ -69,6 +70,10 @@ private const val ROUTE_QUICK_ENTRY = "quick_entry?transactionId={$ARG_TRANSACTI
 private fun quickEntryRoute(transactionId: String? = null) =
     "quick_entry" + if (transactionId != null) "?transactionId=$transactionId" else ""
 
+private const val ROUTE_TRANSACTION_DETAIL = "transaction_detail/{$ARG_TRANSACTION_ID}"
+
+private fun transactionDetailRoute(transactionId: String) = "transaction_detail/$transactionId"
+
 private const val ARG_GOAL_ID = "goalId"
 private const val ROUTE_GOAL_EDITOR = "goal_editor?goalId={$ARG_GOAL_ID}"
 
@@ -77,8 +82,7 @@ private fun goalEditorRoute(goalId: String? = null) =
 
 private val ROUTE_TO_DESTINATION = mapOf(
     ROUTE_HOME to EqNavDestination.HOME,
-    // El Inicio anterior sigue bajo la pestaña Inicio.
-    ROUTE_MOVEMENTS to EqNavDestination.HOME,
+    ROUTE_MOVEMENTS to EqNavDestination.TRANSACTIONS,
     ROUTE_ACCOUNTS to EqNavDestination.ACCOUNTS,
     ROUTE_CATEGORIES to EqNavDestination.CATEGORIES,
     ROUTE_GOALS to EqNavDestination.GOALS,
@@ -87,6 +91,7 @@ private val ROUTE_TO_DESTINATION = mapOf(
 
 private val DESTINATION_TO_ROUTE = mapOf(
     EqNavDestination.HOME to ROUTE_HOME,
+    EqNavDestination.TRANSACTIONS to ROUTE_MOVEMENTS,
     EqNavDestination.ACCOUNTS to ROUTE_ACCOUNTS_BASE,
     EqNavDestination.CATEGORIES to ROUTE_CATEGORIES,
     EqNavDestination.GOALS to ROUTE_GOALS,
@@ -138,7 +143,11 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
         NavHost(
             navController = navController,
             startDestination = ROUTE_HOME,
-            modifier = Modifier.padding(padding),
+            // Solo el padding inferior (bottomBar) es de este Scaffold externo. Cada pantalla arma su
+            // propio EqTopBar como primer hijo de un Column normal (no otro Scaffold anidado) — el
+            // orden secuencial de Compose garantiza que el contenido de abajo empiece después del
+            // topBar, sin depender de un cálculo de inset que se desincronizaba con el real.
+            modifier = Modifier.padding(bottom = padding.calculateBottomPadding()),
         ) {
             composable(ROUTE_LOGIN) {
                 LoginScreen(
@@ -162,8 +171,19 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
             composable(ROUTE_MOVEMENTS) {
                 MovementsScreen(
                     onAddClicked = { navController.navigate(quickEntryRoute()) },
-                    onTransactionClicked = { id -> navController.navigate(quickEntryRoute(id)) },
+                    onTransactionClicked = { id -> navController.navigate(transactionDetailRoute(id)) },
                     trailing = { ProfileHud(onOpenProfile = { navController.navigate(ROUTE_PROFILE) }) },
+                )
+            }
+            composable(
+                route = ROUTE_TRANSACTION_DETAIL,
+                arguments = listOf<NamedNavArgument>(
+                    navArgument(ARG_TRANSACTION_ID) { type = NavType.StringType },
+                ),
+            ) {
+                TransactionDetailScreen(
+                    onEditClicked = { id -> navController.navigate(quickEntryRoute(id)) },
+                    onClosed = { navController.popBackStack() },
                 )
             }
             composable(

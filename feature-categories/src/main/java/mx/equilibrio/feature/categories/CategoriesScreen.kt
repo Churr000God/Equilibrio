@@ -19,7 +19,6 @@ import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,56 +59,58 @@ fun CategoriesScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var selectedType by remember { mutableStateOf(CategoryType.EXPENSE) }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = EquilibrioTheme.colors.background,
-        topBar = { EqTopBar(title = "Categorías", trailing = trailing) },
-        floatingActionButton = { EqFab(onClick = onAddCategoryClicked) },
-    ) { padding ->
-        when {
-            state.isLoading -> EqSkeleton(modifier = Modifier.padding(top = padding.calculateTopPadding()), rowHeight = 56.dp)
+    Column(modifier = modifier.fillMaxSize().background(EquilibrioTheme.colors.background)) {
+        EqTopBar(title = "Categorías", trailing = trailing)
 
-            state.isEmpty -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center,
-            ) {
-                EqEmptyState(
-                    title = "Aún no tienes categorías",
-                    body = "Agrega categorías para organizar tus ingresos y gastos.",
-                )
-            }
+        Box(modifier = Modifier.weight(1f)) {
+            when {
+                state.isLoading -> EqSkeleton(rowHeight = 56.dp)
 
-            else -> {
-                val shown = if (selectedType == CategoryType.EXPENSE) state.expenseCategories else state.incomeCategories
-                val total = if (selectedType == CategoryType.EXPENSE) state.expenseTotalCents else state.incomeTotalCents
-                val totalLabel = if (selectedType == CategoryType.EXPENSE) "Total gastado" else "Total recibido"
-
-                Column(modifier = Modifier.fillMaxSize().padding(top = padding.calculateTopPadding())) {
-                    EqSegmentedControl(
-                        options = TAB_OPTIONS.map { it.first },
-                        selectedIndex = TAB_OPTIONS.indexOfFirst { it.second == selectedType },
-                        onSelect = { index -> selectedType = TAB_OPTIONS[index].second },
-                        modifier = Modifier.padding(horizontal = Spacing.base),
+                state.isEmpty -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    EqEmptyState(
+                        title = "Aún no tienes categorías",
+                        body = "Agrega categorías para organizar tus ingresos y gastos.",
                     )
+                }
 
-                    CategoriesHeader(
-                        label = totalLabel,
-                        totalCents = total,
-                        categories = shown,
-                        monthLabel = state.month.label(),
-                        canGoForward = state.canGoForward,
-                        onPreviousMonth = { viewModel.onEvent(CategoriesEvent.PreviousMonth) },
-                        onNextMonth = { viewModel.onEvent(CategoriesEvent.NextMonth) },
-                        modifier = Modifier.padding(Spacing.base),
-                    )
+                else -> {
+                    val shown = if (selectedType == CategoryType.EXPENSE) state.expenseCategories else state.incomeCategories
+                    val total = if (selectedType == CategoryType.EXPENSE) state.expenseTotalCents else state.incomeTotalCents
+                    val totalLabel = if (selectedType == CategoryType.EXPENSE) "Total gastado" else "Total recibido"
 
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(shown, key = { it.id }) { category ->
-                            CategoryRow(category = category, onClick = { onCategoryClicked(category.id) })
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        EqSegmentedControl(
+                            options = TAB_OPTIONS.map { it.first },
+                            selectedIndex = TAB_OPTIONS.indexOfFirst { it.second == selectedType },
+                            onSelect = { index -> selectedType = TAB_OPTIONS[index].second },
+                            modifier = Modifier.padding(horizontal = Spacing.base),
+                        )
+
+                        CategoriesHeader(
+                            label = totalLabel,
+                            totalCents = total,
+                            categories = shown,
+                            monthLabel = state.month.label(),
+                            canGoForward = state.canGoForward,
+                            onPreviousMonth = { viewModel.onEvent(CategoriesEvent.PreviousMonth) },
+                            onNextMonth = { viewModel.onEvent(CategoriesEvent.NextMonth) },
+                            modifier = Modifier.padding(Spacing.base),
+                        )
+
+                        // clipToBounds(): el stretch de overscroll no debe pintar fuera de sus bounds.
+                        LazyColumn(modifier = Modifier.fillMaxSize().clipToBounds()) {
+                            items(shown, key = { it.id }) { category ->
+                                CategoryRow(category = category, onClick = { onCategoryClicked(category.id) })
+                            }
                         }
                     }
                 }
             }
+
+            EqFab(onClick = onAddCategoryClicked, modifier = Modifier.align(Alignment.BottomEnd).padding(Spacing.lg))
         }
     }
 }

@@ -16,15 +16,16 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Catch-up perezoso, mismo patrón que [SettleDuePeriods] pero por usuario, no
- * por cuenta: las series recurrentes abarcan todas las cuentas CASH/BANK.
- * Procesa la serie activa vencida más antigua repetidamente, para ponerse al
- * día en una sola llamada aunque hayan quedado varios ciclos sin generar.
+ * Red de seguridad, no catch-up: por cada serie activa que TODAVÍA no generó
+ * ninguna ocurrencia (típicamente recién creada), materializa la primera.
+ * Series con al menos una ocurrencia ya generada (SCHEDULED o COMPLETED) no
+ * se tocan — de ahí en adelante, la siguiente ocurrencia se dispara al
+ * confirmar la anterior a mano, ver [ConfirmTransaction]. No hay auto-confirm
+ * por fecha vencida: el usuario confirma, el sistema reacciona a eso.
  *
- * `@Singleton` + [Mutex]: a diferencia de [SettleDuePeriods] (un solo call
- * site), esta va a tener dos (Inicio y Transacciones) que pueden construirse
- * casi simultáneamente — sin el mutex, ambos podrían generar la misma
- * ocurrencia duplicada.
+ * `@Singleton` + [Mutex]: dos call sites (Inicio y Transacciones) pueden
+ * construirse casi simultáneamente — sin el mutex, ambos podrían generar la
+ * misma primera ocurrencia duplicada.
  */
 @Singleton
 class GenerateDueRecurringTransactions @Inject constructor(
@@ -35,26 +36,29 @@ class GenerateDueRecurringTransactions @Inject constructor(
     private val mutex = Mutex()
 
     suspend operator fun invoke(today: LocalDate) = mutex.withLock {
-        while (true) {
-            val due = recurringRepository.observeAll().first()
-                .filter { it.isActive && it.nextOccurrenceAt <= today }
-                .minByOrNull { it.nextOccurrenceAt } ?: return@withLock
-            generateOne(due, today)
-        }
+        recurringRepository.observeAll().first()
+            .filter { it.isActive }
+            .forEach { series ->
+                val hasAnyOccurrence = transactionRepository.observeByRecurringSeries(series.id).first().isNotEmpty()
+                if (!hasAnyOccurrence) materializeNext(series, today)
+            }
     }
 
     /**
-     * Guardia crítica: si la cuenta ya no existe o es CREDIT_CARD, desactiva la
-     * serie y devuelve — nunca "saltarla" sin mutar nada, o el `while(true)` de
-     * [invoke] gira infinito sobre la misma serie vencida.
+     * Materializa la ocurrencia en `series.nextOccurrenceAt` (status derivado
+     * de la fecha vía [deriveTransactionStatus]) y avanza la serie. Reusado
+     * por [ConfirmTransaction] para armar la siguiente ocurrencia justo al
+     * confirmar la anterior. Guardia crítica: si la cuenta ya no existe o es
+     * CREDIT_CARD, desactiva la serie en su lugar y no genera nada.
      */
-    internal suspend fun generateOne(series: RecurringTransaction, today: LocalDate) {
+    internal suspend fun materializeNext(series: RecurringTransaction, today: LocalDate) {
         val account = getAccount(series.accountId)
         if (account == null || account.type == AccountType.CREDIT_CARD) {
             recurringRepository.upsert(series.copy(isActive = false))
             return
         }
 
+        val occurredAt = series.nextOccurrenceAt
         transactionRepository.upsert(
             Transaction(
                 id = UUID.randomUUID().toString(),
@@ -63,15 +67,15 @@ class GenerateDueRecurringTransactions @Inject constructor(
                 kind = series.kind,
                 classification = series.classification,
                 amountCents = series.amountCents,
-                occurredAt = series.nextOccurrenceAt,
+                occurredAt = occurredAt,
                 note = series.note,
                 categoryId = series.categoryId,
-                status = deriveTransactionStatus(series.nextOccurrenceAt, today),
+                status = deriveTransactionStatus(occurredAt, today),
                 recurringSeriesId = series.id,
             ),
         )
         recurringRepository.upsert(
-            series.copy(nextOccurrenceAt = nextOccurrence(series.nextOccurrenceAt, series.frequency, series.anchorDay)),
+            series.copy(nextOccurrenceAt = nextOccurrence(occurredAt, series.frequency, series.anchorDay)),
         )
     }
 }

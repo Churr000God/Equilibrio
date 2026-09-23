@@ -15,6 +15,9 @@ interface TransactionRepository {
 
     fun observeByCategory(categoryId: String): Flow<List<Transaction>>
 
+    /** Movimientos generados por una serie recurrente (para saber si ya hay una ocurrencia SCHEDULED pendiente). */
+    fun observeByRecurringSeries(seriesId: String): Flow<List<Transaction>>
+
     /** Reasigna todos los movimientos de [fromCategoryId] a [toCategoryId]. */
     suspend fun reassignCategory(fromCategoryId: String, toCategoryId: String)
 

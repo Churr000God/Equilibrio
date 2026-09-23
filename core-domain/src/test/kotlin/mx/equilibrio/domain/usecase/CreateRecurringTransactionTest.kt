@@ -8,6 +8,7 @@ import mx.equilibrio.domain.model.AccountType
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.RecurrenceFrequency
 import mx.equilibrio.domain.model.TransactionKind
+import mx.equilibrio.domain.model.TransactionStatus
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -72,11 +73,10 @@ class CreateRecurringTransactionTest {
     @Test
     fun `CASH o BANK acepta y persiste la serie`() = runTest {
         val fixture = fixture()
-        // startAt futuro respecto a today: sin generación, la serie persistida es la devuelta tal cual.
         val series = create(fixture, "bank1", RecurrenceFrequency.WEEKLY, startAt = LocalDate(2026, 9, 8), today = LocalDate(2026, 9, 1))
 
         assertEquals("bank1", series.accountId)
-        assertEquals(series, fixture.recurringRepository.getById("s1"))
+        assertEquals("s1", fixture.recurringRepository.getById("s1")?.id)
     }
 
     @Test
@@ -107,12 +107,13 @@ class CreateRecurringTransactionTest {
     }
 
     @Test
-    fun `startAt futuro no genera nada todavia`() = runTest {
+    fun `startAt futuro materializa de inmediato la primera ocurrencia como SCHEDULED`() = runTest {
         val fixture = fixture()
 
-        val series = create(fixture, "bank1", RecurrenceFrequency.MONTHLY, LocalDate(2026, 10, 15), today = LocalDate(2026, 9, 15))
+        create(fixture, "bank1", RecurrenceFrequency.MONTHLY, LocalDate(2026, 10, 15), today = LocalDate(2026, 9, 15))
 
-        assertTrue(fixture.transactionRepository.observeAll().first().isEmpty())
-        assertEquals(LocalDate(2026, 10, 15), series.nextOccurrenceAt)
+        val generated = fixture.transactionRepository.observeAll().first().single()
+        assertEquals(LocalDate(2026, 10, 15), generated.occurredAt)
+        assertEquals(TransactionStatus.SCHEDULED, generated.status)
     }
 }

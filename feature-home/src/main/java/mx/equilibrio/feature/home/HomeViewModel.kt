@@ -70,7 +70,7 @@ class HomeViewModel @Inject constructor(
             projectedBalanceCents = balance.projectedCents,
             monthIncomeCents = incomeCents,
             monthExpenseCents = expenseCents,
-            canGoForward = month < currentMonth,
+            canGoForward = month < maxOf(currentMonth, transactions.maxOfOrNull { YearMonth.of(it.occurredAt) } ?: currentMonth),
             transactions = monthTransactions.map { tx ->
                 tx.toMovementUi(
                     categoryName = tx.categoryId?.let { categoriesById[it]?.name },
@@ -89,7 +89,9 @@ class HomeViewModel @Inject constructor(
     fun onEvent(event: HomeEvent) {
         when (event) {
             HomeEvent.PreviousMonth -> selectedMonth.update { it.previous() }
-            HomeEvent.NextMonth -> selectedMonth.update { if (it < currentMonth) it.next() else it }
+            // Sin tope defensivo acá: confía en que el botón "siguiente" ya está deshabilitado
+            // cuando canGoForward=false, mismo criterio que PreviousMonth (sin tope tampoco).
+            HomeEvent.NextMonth -> selectedMonth.update { it.next() }
             is HomeEvent.AlertDismissed -> viewModelScope.launch { markAlertAsRead(event.alertId) }
         }
     }

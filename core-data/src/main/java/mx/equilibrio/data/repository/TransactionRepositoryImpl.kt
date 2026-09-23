@@ -35,6 +35,10 @@ class TransactionRepositoryImpl @Inject constructor(
         )
     }
 
+    override fun observeByRecurringSeries(seriesId: String): Flow<List<Transaction>> = flow {
+        emitAll(dao.observeByRecurringSeries(seriesId).map { list -> list.map { it.toDomain() } })
+    }
+
     override suspend fun getById(id: String): Transaction? = dao.getById(id)?.toDomain()
 
     override suspend fun upsert(transaction: Transaction) {

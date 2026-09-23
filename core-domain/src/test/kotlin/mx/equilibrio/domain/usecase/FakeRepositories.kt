@@ -121,6 +121,10 @@ class FakeTransactionRepository : TransactionRepository {
         emit(transactionsById.values.filter { it.categoryId == categoryId })
     }
 
+    override fun observeByRecurringSeries(seriesId: String): Flow<List<Transaction>> = flow {
+        emit(transactionsById.values.filter { it.recurringSeriesId == seriesId })
+    }
+
     override suspend fun reassignCategory(fromCategoryId: String, toCategoryId: String) {
         transactionsById.values
             .filter { it.categoryId == fromCategoryId }

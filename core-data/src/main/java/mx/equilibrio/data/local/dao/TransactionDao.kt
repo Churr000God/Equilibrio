@@ -27,6 +27,15 @@ interface TransactionDao {
     )
     fun observeByCategory(userId: String, categoryId: String): Flow<List<TransactionEntity>>
 
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE recurring_series_id = :seriesId AND is_deleted = 0
+        ORDER BY occurred_at DESC
+        """,
+    )
+    fun observeByRecurringSeries(seriesId: String): Flow<List<TransactionEntity>>
+
     @Query("SELECT * FROM transactions WHERE id = :id AND is_deleted = 0 LIMIT 1")
     suspend fun getById(id: String): TransactionEntity?
 

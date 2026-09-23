@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.ChevronLeft
@@ -23,6 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +38,7 @@ import mx.equilibrio.domain.model.report.CrossMatrix
 import mx.equilibrio.domain.model.report.MatrixInsight
 import mx.equilibrio.domain.model.report.MonthlyTrendPoint
 import mx.equilibrio.domain.model.report.PeriodComparison
+import mx.equilibrio.domain.model.report.ReportSection
 import mx.equilibrio.ui.components.BarPair
 import mx.equilibrio.ui.components.EqAmount
 import mx.equilibrio.ui.components.EqBarChart
@@ -56,10 +59,21 @@ import mx.equilibrio.ui.theme.Spacing
 fun ReportsScreen(
     modifier: Modifier = Modifier,
     bottomInset: Dp = Spacing.xxl,
+    focusSection: ReportSection? = null,
     viewModel: ReportsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val colors = EquilibrioTheme.colors
+    val listState = rememberLazyListState()
+    val sections = state.report?.let { report ->
+        ReportSection.entries.filter { it != ReportSection.CATEGORIES || report.categories.isNotEmpty() }
+    }.orEmpty()
+
+    // Llegar desde Inicio con una sección elegida: se baja hasta ella una sola vez, cuando ya hay datos.
+    LaunchedEffect(focusSection, sections.isNotEmpty()) {
+        val index = sections.indexOf(focusSection)
+        if (index > 0) listState.animateScrollToItem(index)
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -93,6 +107,7 @@ fun ReportsScreen(
 
             else -> LazyColumn(
                 modifier = Modifier.fillMaxSize(),
+                state = listState,
                 contentPadding = PaddingValues(
                     start = Spacing.base,
                     end = Spacing.base,
@@ -101,11 +116,15 @@ fun ReportsScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(Spacing.base),
             ) {
-                item { SummaryTiles(report.comparison) }
-                item { TrendCard(report.trend) }
-                item { MatrixCard(report.matrix, report.insight) }
-                if (report.categories.isNotEmpty()) {
-                    item { CategoriesCard(report.categories) }
+                sections.forEach { section ->
+                    item(key = section) {
+                        when (section) {
+                            ReportSection.SUMMARY -> SummaryTiles(report.comparison)
+                            ReportSection.TREND -> TrendCard(report.trend)
+                            ReportSection.MATRIX -> MatrixCard(report.matrix, report.insight)
+                            ReportSection.CATEGORIES -> CategoriesCard(report.categories)
+                        }
+                    }
                 }
             }
         }

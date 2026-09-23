@@ -38,7 +38,7 @@ data class EquilibrioColors(
     val warningSoft: Color,
     val info: Color,
     val infoSoft: Color,
-    /** Texto/ícono sobre un gradiente de dominio oscuro (p. ej. [AccountCard]) — mismo blanco en claro y oscuro. */
+    /** Texto/ícono sobre un gradiente de dominio oscuro (p. ej. [mx.equilibrio.ui.components.EqAccountCard]) — mismo blanco en claro y oscuro. */
     val onGradient: Color,
 )
 

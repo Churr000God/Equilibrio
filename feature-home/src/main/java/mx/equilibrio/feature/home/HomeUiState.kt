@@ -4,6 +4,7 @@ import kotlinx.datetime.LocalDate
 import mx.equilibrio.domain.model.Alert
 import mx.equilibrio.domain.model.AlertType
 import mx.equilibrio.domain.model.Classification
+import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.ui.theme.DomainTone
 
@@ -49,6 +50,19 @@ data class TransactionUi(
 
     val isExpense: Boolean get() = kind == TransactionKind.EXPENSE
 }
+
+fun Transaction.toUi() = TransactionUi(
+    id = id,
+    kind = kind,
+    classification = classification,
+    amountCents = amountCents,
+    occurredAt = occurredAt,
+    note = note,
+    goalId = goalId,
+    installmentPlanId = installmentPlanId,
+    installmentIndex = installmentIndex,
+    installmentCount = installmentCount,
+)
 
 data class AlertUi(
     val id: String,

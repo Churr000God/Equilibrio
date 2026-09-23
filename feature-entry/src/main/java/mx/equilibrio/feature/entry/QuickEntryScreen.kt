@@ -46,6 +46,7 @@ import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.CreditAvailability
 import mx.equilibrio.domain.model.Period
 import mx.equilibrio.domain.model.PeriodState
+import mx.equilibrio.domain.model.RecurrenceFrequency
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.TransactionStatus
 import mx.equilibrio.ui.components.EqBadge
@@ -263,6 +264,17 @@ fun QuickEntryScreen(
                             onNewColorSlotChanged = { viewModel.onEvent(QuickEntryEvent.NewCategoryColorSlotChanged(it)) },
                             onSaveCategory = { viewModel.onEvent(QuickEntryEvent.SaveCategoryClicked) },
                         )
+
+                        // Convertir una transacción existente en serie recurrente queda fuera de alcance.
+                        if (!state.isEditing) {
+                            RecurrenceSection(
+                                isRecurring = state.isRecurring,
+                                frequency = state.recurrenceFrequency,
+                                nextAt = state.recurrenceNextAt,
+                                onToggle = { viewModel.onEvent(QuickEntryEvent.RecurringToggled(it)) },
+                                onFrequencyChanged = { viewModel.onEvent(QuickEntryEvent.RecurrenceFrequencyChanged(it)) },
+                            )
+                        }
                     }
                 }
 
@@ -281,8 +293,8 @@ fun QuickEntryScreen(
 
                 EqButton(
                     text = when (state.mode) {
-                        EntryMode.EXPENSE -> "Guardar gasto"
-                        EntryMode.INCOME -> "Guardar ingreso"
+                        EntryMode.EXPENSE -> if (state.isRecurring) "Guardar gasto recurrente" else "Guardar gasto"
+                        EntryMode.INCOME -> if (state.isRecurring) "Guardar ingreso recurrente" else "Guardar ingreso"
                         EntryMode.TRANSFER -> "Guardar transferencia"
                         EntryMode.CREDIT_PURCHASE -> "Guardar compra"
                     },
@@ -544,6 +556,41 @@ private fun InstallmentSection(
                     )
                 }
             }
+        }
+    }
+}
+
+private val RECURRENCE_OPTIONS = listOf(
+    "Semanal" to RecurrenceFrequency.WEEKLY,
+    "Quincenal" to RecurrenceFrequency.BIWEEKLY,
+    "Mensual" to RecurrenceFrequency.MONTHLY,
+)
+
+@Composable
+private fun RecurrenceSection(
+    isRecurring: Boolean,
+    frequency: RecurrenceFrequency,
+    nextAt: kotlinx.datetime.LocalDate,
+    onToggle: (Boolean) -> Unit,
+    onFrequencyChanged: (RecurrenceFrequency) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        EqSegmentedControl(
+            options = listOf("Una vez", "Se repite"),
+            selectedIndex = if (isRecurring) 1 else 0,
+            onSelect = { index -> onToggle(index == 1) },
+        )
+        if (isRecurring) {
+            EqSegmentedControl(
+                options = RECURRENCE_OPTIONS.map { it.first },
+                selectedIndex = RECURRENCE_OPTIONS.indexOfFirst { it.second == frequency },
+                onSelect = { index -> onFrequencyChanged(RECURRENCE_OPTIONS[index].second) },
+            )
+            Text(
+                text = "Próxima ocurrencia: $nextAt",
+                style = EquilibrioTheme.typography.bodySmall,
+                color = EquilibrioTheme.colors.inkMuted,
+            )
         }
     }
 }

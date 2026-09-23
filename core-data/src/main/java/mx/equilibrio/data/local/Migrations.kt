@@ -255,3 +255,46 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
         db.execSQL("ALTER TABLE categories ADD COLUMN monthly_budget_cents INTEGER DEFAULT NULL")
     }
 }
+
+/**
+ * Transacciones recurrentes: plantilla propia en `recurring_transactions` +
+ * `transactions.recurring_series_id`. Sin FK a la serie (mismo criterio que
+ * `goal_id`, ver comentario en MIGRATION_10_11): borrar la plantilla no debe
+ * arrastrar ni bloquear el borrado de las ocurrencias ya generadas.
+ */
+val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `recurring_transactions` (
+                `id` TEXT NOT NULL,
+                `user_id` TEXT NOT NULL,
+                `account_id` TEXT NOT NULL,
+                `kind` TEXT NOT NULL,
+                `classification` TEXT NOT NULL,
+                `amount_cents` INTEGER NOT NULL,
+                `note` TEXT,
+                `category_id` TEXT,
+                `frequency` TEXT NOT NULL,
+                `anchor_day` INTEGER,
+                `next_occurrence_at` INTEGER NOT NULL,
+                `is_active` INTEGER NOT NULL,
+                `created_at` INTEGER NOT NULL,
+                `updated_at` INTEGER NOT NULL,
+                `sync_state` TEXT NOT NULL,
+                `is_deleted` INTEGER NOT NULL,
+                PRIMARY KEY(`id`),
+                FOREIGN KEY(`user_id`) REFERENCES `users`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION
+            )
+            """.trimIndent(),
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_recurring_transactions_user_id` ON `recurring_transactions` (`user_id`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_recurring_transactions_account_id` ON `recurring_transactions` (`account_id`)")
+
+        db.execSQL("ALTER TABLE transactions ADD COLUMN recurring_series_id TEXT DEFAULT NULL")
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_transactions_recurring_series_id` " +
+                "ON `transactions` (`recurring_series_id`)",
+        )
+    }
+}

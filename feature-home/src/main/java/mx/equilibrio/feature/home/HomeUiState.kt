@@ -27,12 +27,17 @@ data class TransactionUi(
     val categoryIcon: String? = null,
     val accountId: String = "",
     val accountName: String? = null,
+    val recurringSeriesId: String? = null,
 ) {
     /** Abono espejo de una meta: se gestiona desde Metas, no desde aquí. */
     val isSavings: Boolean get() = goalId != null
 
     /** Una cuota de una compra a meses: no editable individualmente, solo borrable como plan completo. */
     val isInstallment: Boolean get() = installmentPlanId != null
+
+    /** Una ocurrencia generada por una transacción recurrente: a diferencia de una cuota, SÍ es
+     * editable/borrable como cualquier movimiento normal — ver [mx.equilibrio.domain.model.Transaction.recurringSeriesId]. */
+    val isRecurringOccurrence: Boolean get() = recurringSeriesId != null
 
     val isScheduled: Boolean get() = status == TransactionStatus.SCHEDULED
 
@@ -58,11 +63,13 @@ data class TransactionUi(
             null -> "Transferencia"
         }
 
-    /** "Gasto en cuotas" / "Ahorro" / "Gasto" / "Ingreso" — para la pantalla de detalle. */
+    /** "Gasto en cuotas" / "Ahorro" / "Gasto recurrente" / "Gasto" / "Ingreso" — para la pantalla de detalle. */
     val typeLabel: String
         get() = when {
             isInstallment -> "Gasto en cuotas"
             isSavings -> "Ahorro"
+            isRecurringOccurrence && kind == TransactionKind.EXPENSE -> "Gasto recurrente"
+            isRecurringOccurrence -> "Ingreso recurrente"
             kind == TransactionKind.EXPENSE -> "Gasto"
             else -> "Ingreso"
         }
@@ -84,6 +91,7 @@ fun Transaction.toUi() = TransactionUi(
     status = status,
     categoryId = categoryId,
     accountId = accountId,
+    recurringSeriesId = recurringSeriesId,
 )
 
 /** Igual que [toUi] pero resolviendo nombre/ícono de categoría y nombre de cuenta (lista de Transacciones y detalle). */

@@ -4,7 +4,9 @@ import kotlinx.datetime.LocalDate
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class TransactionTest {
@@ -80,5 +82,22 @@ class TransactionTest {
                 occurredAt = today,
             )
         }
+    }
+
+    @Test
+    fun `construir con solo recurringSeriesId no lanza, no lo agarra la regla todo-o-nada de cuotas`() {
+        val transaction = Transaction(
+            id = "t1",
+            userId = "u1",
+            accountId = "a1",
+            kind = TransactionKind.EXPENSE,
+            classification = Classification.ESSENTIAL,
+            amountCents = 100_00,
+            occurredAt = today,
+            recurringSeriesId = "serie1",
+        )
+
+        assertTrue(transaction.isRecurringOccurrence)
+        assertFalse(transaction.isInstallment)
     }
 }

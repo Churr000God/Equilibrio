@@ -31,6 +31,7 @@ fun TransactionEntity.toDomain(): Transaction = Transaction(
     installmentPlanId = installmentPlanId,
     installmentIndex = installmentIndex,
     installmentCount = installmentCount,
+    recurringSeriesId = recurringSeriesId,
 )
 
 fun Transaction.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean = false): TransactionEntity = TransactionEntity(
@@ -52,4 +53,5 @@ fun Transaction.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean 
     installmentPlanId = installmentPlanId,
     installmentIndex = installmentIndex,
     installmentCount = installmentCount,
+    recurringSeriesId = recurringSeriesId,
 )

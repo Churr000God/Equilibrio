@@ -8,8 +8,11 @@ import mx.equilibrio.domain.model.Category
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.CreditAvailability
 import mx.equilibrio.domain.model.Period
+import mx.equilibrio.domain.model.RecurrenceFrequency
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.TransactionStatus
+import mx.equilibrio.domain.model.anchorDayFor
+import mx.equilibrio.domain.model.nextOccurrence
 
 /** Snapshot de los campos editables al cargar una transacción existente, para detectar cambios reales del usuario. */
 data class EntrySnapshot(
@@ -55,6 +58,8 @@ data class QuickEntryUiState(
     val creditLimitError: String? = null,
     val isInstallment: Boolean = false,
     val installmentCount: Int = 6,
+    val isRecurring: Boolean = false,
+    val recurrenceFrequency: RecurrenceFrequency = RecurrenceFrequency.MONTHLY,
 ) {
     val amountCents: Long
         get() = amountInput.toDoubleOrNull()?.let { (it * 100).toLong() } ?: 0L
@@ -82,6 +87,10 @@ data class QuickEntryUiState(
 
     val installmentLastOccurredAt: LocalDate
         get() = occurredAt.plus(installmentCount - 1, DateTimeUnit.MONTH)
+
+    /** Preview de la próxima ocurrencia si se guarda como recurrente, a partir de [occurredAt]. */
+    val recurrenceNextAt: LocalDate
+        get() = nextOccurrence(occurredAt, recurrenceFrequency, anchorDayFor(occurredAt, recurrenceFrequency))
 
     val hasUnsavedInput: Boolean
         get() {

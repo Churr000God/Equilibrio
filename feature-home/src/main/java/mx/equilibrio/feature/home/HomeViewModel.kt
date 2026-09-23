@@ -19,6 +19,7 @@ import mx.equilibrio.domain.usecase.GetCategories
 import mx.equilibrio.domain.usecase.GetPendingAlertsUseCase
 import mx.equilibrio.domain.usecase.MarkAlertAsReadUseCase
 import mx.equilibrio.domain.usecase.ObserveAccounts
+import mx.equilibrio.domain.usecase.GenerateDueRecurringTransactions
 import mx.equilibrio.domain.usecase.ObserveBalance
 import mx.equilibrio.domain.usecase.ObserveTransactions
 import javax.inject.Inject
@@ -34,10 +35,15 @@ class HomeViewModel @Inject constructor(
     observeAccounts: ObserveAccounts,
     getPendingAlerts: GetPendingAlertsUseCase,
     private val markAlertAsRead: MarkAlertAsReadUseCase,
+    private val generateDueRecurringTransactions: GenerateDueRecurringTransactions,
 ) : ViewModel() {
 
     private val currentMonth = YearMonth.of(today())
     private val selectedMonth = MutableStateFlow(currentMonth)
+
+    init {
+        viewModelScope.launch { generateDueRecurringTransactions(today()) }
+    }
 
     val state: StateFlow<HomeUiState> = combine(
         selectedMonth,

@@ -7,12 +7,14 @@ import kotlinx.datetime.LocalDate
 import mx.equilibrio.domain.model.Account
 import mx.equilibrio.domain.model.Period
 import mx.equilibrio.domain.model.PeriodState
+import mx.equilibrio.domain.model.RecurringTransaction
 import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionStatus
 import mx.equilibrio.domain.model.Transfer
 import mx.equilibrio.domain.model.User
 import mx.equilibrio.domain.repository.AccountRepository
 import mx.equilibrio.domain.repository.PeriodRepository
+import mx.equilibrio.domain.repository.RecurringTransactionRepository
 import mx.equilibrio.domain.repository.TransactionRepository
 import mx.equilibrio.domain.repository.TransferRepository
 import mx.equilibrio.domain.repository.UserRepository
@@ -166,5 +168,34 @@ class FakePeriodRepository : PeriodRepository {
 
     override suspend fun upsert(period: Period) {
         periodsById[period.id] = period
+    }
+}
+
+/**
+ * Fake de series recurrentes, mismo molde que [FakePeriodRepository]: `observeAll` se
+ * recalcula en cada colecta (`flow { }`, no `StateFlow`) para que el catch-up de
+ * [GenerateDueRecurringTransactions] vea estado fresco entre iteraciones del `while(true)`.
+ */
+class FakeRecurringTransactionRepository : RecurringTransactionRepository {
+    private val seriesById = mutableMapOf<String, RecurringTransaction>()
+
+    fun seed(vararg series: RecurringTransaction) {
+        series.forEach { seriesById[it.id] = it }
+    }
+
+    fun all(): List<RecurringTransaction> = seriesById.values.toList()
+
+    override fun observeAll(): Flow<List<RecurringTransaction>> = flow { emit(seriesById.values.toList()) }
+    override suspend fun getById(id: String): RecurringTransaction? = seriesById[id]
+    override suspend fun upsert(series: RecurringTransaction) {
+        seriesById[series.id] = series
+    }
+
+    override suspend fun setActive(id: String, isActive: Boolean) {
+        seriesById[id]?.let { seriesById[id] = it.copy(isActive = isActive) }
+    }
+
+    override suspend fun delete(id: String) {
+        seriesById.remove(id)
     }
 }

@@ -310,6 +310,89 @@ class EquilibrioDatabaseMigrationTest {
         db.close()
     }
 
+    @Test
+    fun `13 a 14 crea recurring_transactions y agrega recurring_series_id nullable a transactions sin perder filas`() {
+        var db = helper.createDatabase(TEST_DB, 9)
+        insertUser(db, "u1", "u1@equilibrio.mx", 0)
+        db.close()
+        db = helper.runMigrationsAndValidate(TEST_DB, 10, true, MIGRATION_9_10)
+        db.close()
+        db = helper.runMigrationsAndValidate(TEST_DB, 11, true, MIGRATION_10_11)
+        db.close()
+        db = helper.runMigrationsAndValidate(TEST_DB, 12, true, MIGRATION_11_12)
+        db.close()
+        db = helper.runMigrationsAndValidate(TEST_DB, 13, true, MIGRATION_12_13)
+        db.execSQL(
+            """
+            INSERT INTO accounts (id, user_id, name, type, balance_cents, credit_limit_cents, statement_day, due_day, color_slot, last_digits, updated_at, sync_state, is_deleted)
+            VALUES ('a1', 'u1', 'Efectivo', 'CASH', 0, NULL, NULL, NULL, 0, NULL, 0, 'PENDING', 0)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            INSERT INTO transactions (id, user_id, account_id, kind, classification, amount_cents, occurred_at, note, category_id, updated_at, sync_state, is_deleted, status)
+            VALUES ('t1', 'u1', 'a1', 'EXPENSE', NULL, 500, 0, NULL, NULL, 0, 'PENDING', 0, 'COMPLETED')
+            """.trimIndent(),
+        )
+        db.close()
+
+        db = helper.runMigrationsAndValidate(TEST_DB, 14, true, MIGRATION_13_14)
+
+        val cursor = db.query("SELECT amount_cents, recurring_series_id FROM transactions WHERE id = 't1'")
+        assertEquals(1, cursor.count)
+        cursor.moveToFirst()
+        assertEquals(500, cursor.getLong(0))
+        assertTrue(cursor.isNull(1))
+        cursor.close()
+
+        db.execSQL(
+            """
+            INSERT INTO recurring_transactions (id, user_id, account_id, kind, classification, amount_cents, note, category_id, frequency, anchor_day, next_occurrence_at, is_active, created_at, updated_at, sync_state, is_deleted)
+            VALUES ('r1', 'u1', 'a1', 'EXPENSE', 'ESSENTIAL', 15000, 'Renta', NULL, 'MONTHLY', 31, 100, 1, 0, 0, 'PENDING', 0)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            INSERT INTO transactions (id, user_id, account_id, kind, classification, amount_cents, occurred_at, note, category_id, updated_at, sync_state, is_deleted, status, recurring_series_id)
+            VALUES ('t2', 'u1', 'a1', 'EXPENSE', NULL, 15000, 100, NULL, NULL, 0, 'PENDING', 0, 'COMPLETED', 'r1')
+            """.trimIndent(),
+        )
+
+        val seriesCursor = db.query("SELECT frequency, anchor_day FROM recurring_transactions WHERE id = 'r1'")
+        seriesCursor.moveToFirst()
+        assertEquals("MONTHLY", seriesCursor.getString(0))
+        assertEquals(31, seriesCursor.getInt(1))
+        seriesCursor.close()
+
+        val occurrenceCursor = db.query("SELECT recurring_series_id FROM transactions WHERE id = 't2'")
+        occurrenceCursor.moveToFirst()
+        assertEquals("r1", occurrenceCursor.getString(0))
+        occurrenceCursor.close()
+        db.close()
+    }
+
+    @Test
+    fun `cadena completa 6 a 14 corre sin romper el schema exportado`() {
+        var db = helper.createDatabase(TEST_DB, 6)
+        insertUser(db, "u1", "u1@equilibrio.mx", 0)
+        db.close()
+
+        db = helper.runMigrationsAndValidate(
+            TEST_DB,
+            14,
+            true,
+            MIGRATION_6_7,
+            MIGRATION_7_8,
+            MIGRATION_8_9,
+            MIGRATION_9_10,
+            MIGRATION_10_11,
+            MIGRATION_11_12,
+            MIGRATION_12_13,
+            MIGRATION_13_14,
+        )
+        db.close()
+    }
+
     private companion object {
         const val TEST_DB = "migration-test"
     }

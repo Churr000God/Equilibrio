@@ -21,6 +21,7 @@ import androidx.room.PrimaryKey
         Index(value = ["period_id"]),
         Index(value = ["goal_id"]),
         Index(value = ["installment_plan_id"]),
+        Index(value = ["recurring_series_id"]),
     ],
 )
 data class TransactionEntity(
@@ -43,4 +44,6 @@ data class TransactionEntity(
     @ColumnInfo(name = "installment_plan_id") val installmentPlanId: String? = null,
     @ColumnInfo(name = "installment_index") val installmentIndex: Int? = null,
     @ColumnInfo(name = "installment_count") val installmentCount: Int? = null,
+    /** Ocurrencia de una serie recurrente. Sin FK: borrar la serie no debe arrastrar nada. */
+    @ColumnInfo(name = "recurring_series_id") val recurringSeriesId: String? = null,
 )

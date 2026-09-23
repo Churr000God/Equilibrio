@@ -1,6 +1,7 @@
 package mx.equilibrio.feature.home
 
 import kotlinx.datetime.LocalDate
+import mx.equilibrio.domain.model.RecurrenceFrequency
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.TransactionStatus
 
@@ -30,10 +31,15 @@ data class TransactionDetailUiState(
     val installmentIndex: Int? = null,
     val installmentCount: Int? = null,
     val plan: InstallmentPlanUi? = null,
+    val recurringSeriesId: String? = null,
+    val recurrenceFrequency: RecurrenceFrequency? = null,
+    val isRecurringActive: Boolean = false,
+    val isPausingRecurring: Boolean = false,
     val isDeleting: Boolean = false,
     val deleted: Boolean = false,
 ) {
     val isInstallment: Boolean get() = installmentPlanId != null
+    val isRecurringOccurrence: Boolean get() = recurringSeriesId != null
     val isExpense: Boolean get() = kind == TransactionKind.EXPENSE
     val isScheduled: Boolean get() = status == TransactionStatus.SCHEDULED
 
@@ -41,8 +47,18 @@ data class TransactionDetailUiState(
         get() = when {
             isInstallment -> "Gasto en cuotas"
             isSavings -> "Ahorro"
+            isRecurringOccurrence && isExpense -> "Gasto recurrente"
+            isRecurringOccurrence -> "Ingreso recurrente"
             isExpense -> "Gasto"
             else -> "Ingreso"
+        }
+
+    val recurrenceLabel: String?
+        get() = when (recurrenceFrequency) {
+            RecurrenceFrequency.WEEKLY -> "Recurrente · Semanal"
+            RecurrenceFrequency.BIWEEKLY -> "Recurrente · Quincenal"
+            RecurrenceFrequency.MONTHLY -> "Recurrente · Mensual"
+            null -> null
         }
 
     val statusLabel: String get() = if (isScheduled) "Programada" else "Confirmada"
@@ -52,4 +68,5 @@ data class TransactionDetailUiState(
 
 sealed interface TransactionDetailEvent {
     data object DeleteConfirmed : TransactionDetailEvent
+    data object StopRecurringConfirmed : TransactionDetailEvent
 }

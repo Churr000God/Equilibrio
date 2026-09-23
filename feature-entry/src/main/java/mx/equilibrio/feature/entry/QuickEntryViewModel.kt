@@ -28,6 +28,7 @@ import mx.equilibrio.domain.model.deriveTransactionStatus
 import mx.equilibrio.domain.model.nextCycleBounds
 import mx.equilibrio.domain.usecase.CheckBalanceDeviationAlertUseCase
 import mx.equilibrio.domain.usecase.ConfirmTransaction
+import mx.equilibrio.domain.usecase.CreateRecurringTransaction
 import mx.equilibrio.domain.usecase.CreateTransfer
 import mx.equilibrio.domain.usecase.GetCategories
 import mx.equilibrio.domain.usecase.GetTransaction
@@ -58,6 +59,7 @@ class QuickEntryViewModel @Inject constructor(
     private val saveInstallmentPurchaseUseCase: SaveInstallmentPurchase,
     private val observeCreditAvailableUseCase: ObserveCreditAvailable,
     private val observePeriods: ObservePeriods,
+    private val createRecurringTransaction: CreateRecurringTransaction,
 ) : ViewModel() {
 
     private val editingId: String? = savedStateHandle["transactionId"]
@@ -156,6 +158,7 @@ class QuickEntryViewModel @Inject constructor(
                         creditPeriod = if (event.mode == EntryMode.CREDIT_PURCHASE) it.creditPeriod else null,
                         isInstallment = if (event.mode == EntryMode.CREDIT_PURCHASE) it.isInstallment else false,
                         installmentCount = if (event.mode == EntryMode.CREDIT_PURCHASE) it.installmentCount else 6,
+                        isRecurring = if (event.mode == EntryMode.EXPENSE || event.mode == EntryMode.INCOME) it.isRecurring else false,
                     )
                 }
                 refreshCreditPeriodIfNeeded()
@@ -185,6 +188,12 @@ class QuickEntryViewModel @Inject constructor(
 
             is QuickEntryEvent.InstallmentCountChanged -> _state.update {
                 it.copy(installmentCount = event.count, creditLimitError = null)
+            }
+
+            is QuickEntryEvent.RecurringToggled -> _state.update { it.copy(isRecurring = event.enabled) }
+
+            is QuickEntryEvent.RecurrenceFrequencyChanged -> _state.update {
+                it.copy(recurrenceFrequency = event.frequency)
             }
 
             is QuickEntryEvent.NoteChanged -> _state.update { it.copy(note = event.text) }
@@ -352,21 +361,38 @@ class QuickEntryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                saveTransaction(
-                    Transaction(
-                        id = editingId ?: UUID.randomUUID().toString(),
+                if (current.isRecurring) {
+                    // Crea la serie Y su primera ocurrencia — nunca junto con saveTransaction, sería duplicarla.
+                    createRecurringTransaction(
+                        id = UUID.randomUUID().toString(),
                         userId = ownerId,
                         accountId = accountId,
                         kind = current.kind,
                         classification = classification,
                         amountCents = current.amountCents,
-                        occurredAt = current.occurredAt,
                         note = current.note.ifBlank { null },
                         categoryId = current.categoryId,
-                        status = deriveTransactionStatus(current.occurredAt, today()),
-                    ),
-                    today = today(),
-                )
+                        frequency = current.recurrenceFrequency,
+                        startAt = current.occurredAt,
+                        today = today(),
+                    )
+                } else {
+                    saveTransaction(
+                        Transaction(
+                            id = editingId ?: UUID.randomUUID().toString(),
+                            userId = ownerId,
+                            accountId = accountId,
+                            kind = current.kind,
+                            classification = classification,
+                            amountCents = current.amountCents,
+                            occurredAt = current.occurredAt,
+                            note = current.note.ifBlank { null },
+                            categoryId = current.categoryId,
+                            status = deriveTransactionStatus(current.occurredAt, today()),
+                        ),
+                        today = today(),
+                    )
+                }
                 checkBalanceDeviation()
                 _state.update { it.copy(isSaving = false, saved = true) }
             } catch (e: IllegalArgumentException) {

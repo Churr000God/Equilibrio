@@ -24,6 +24,13 @@ data class Transaction(
     val installmentPlanId: String? = null,
     val installmentIndex: Int? = null,
     val installmentCount: Int? = null,
+    /**
+     * Etiqueta suelta hacia la serie que generó este movimiento — a diferencia
+     * del trío de cuotas, no participa en la regla todo-o-nada del [init]: no
+     * hay campos hermanos que deban viajar junto a ella, y una ocurrencia
+     * recurrente es editable/borrable como cualquier transacción normal.
+     */
+    val recurringSeriesId: String? = null,
 ) {
     init {
         require(amountCents > 0) { "amountCents debe ser positivo, fue $amountCents" }
@@ -51,4 +58,7 @@ data class Transaction(
 
     /** Una cuota de una compra a meses. */
     val isInstallment: Boolean get() = installmentPlanId != null
+
+    /** Una ocurrencia generada por una transacción recurrente. */
+    val isRecurringOccurrence: Boolean get() = recurringSeriesId != null
 }

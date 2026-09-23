@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import mx.equilibrio.domain.model.AccountType
@@ -14,6 +15,7 @@ import mx.equilibrio.domain.model.YearMonth
 import mx.equilibrio.domain.model.report.Report
 import mx.equilibrio.domain.model.report.ReportSection
 import mx.equilibrio.domain.usecase.AccountAvailable
+import mx.equilibrio.domain.usecase.GenerateDueRecurringTransactions
 import mx.equilibrio.domain.usecase.ObserveAccountsAvailable
 import mx.equilibrio.domain.usecase.ObserveBalance
 import mx.equilibrio.domain.usecase.ObserveCurrentUser
@@ -33,6 +35,7 @@ class HomeDashboardViewModel @Inject constructor(
     observeBalance: ObserveBalance,
     observeTransactions: ObserveTransactions,
     observeReport: ObserveReport,
+    private val generateDueRecurringTransactions: GenerateDueRecurringTransactions,
 ) : ViewModel() {
 
     /** Orden y cantidad de reportes se sortean una vez por carga de la pantalla. */
@@ -40,6 +43,10 @@ class HomeDashboardViewModel @Inject constructor(
     private val reportCount = Random.nextInt(MIN_REPORTS, MAX_REPORTS + 1)
 
     private val today = Clock.System.todayIn(TimeZone.UTC)
+
+    init {
+        viewModelScope.launch { generateDueRecurringTransactions(today) }
+    }
 
     val state: StateFlow<HomeDashboardUiState> = combine(
         observeCurrentUser(),

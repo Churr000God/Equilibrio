@@ -21,11 +21,13 @@ import mx.equilibrio.data.local.MIGRATION_9_10
 import mx.equilibrio.data.local.MIGRATION_10_11
 import mx.equilibrio.data.local.MIGRATION_11_12
 import mx.equilibrio.data.local.MIGRATION_12_13
+import mx.equilibrio.data.local.MIGRATION_13_14
 import mx.equilibrio.data.local.dao.AccountDao
 import mx.equilibrio.data.local.dao.AlertDao
 import mx.equilibrio.data.local.dao.CategoryDao
 import mx.equilibrio.data.local.dao.GoalDao
 import mx.equilibrio.data.local.dao.PeriodDao
+import mx.equilibrio.data.local.dao.RecurringTransactionDao
 import mx.equilibrio.data.local.dao.ReportDao
 import mx.equilibrio.data.local.dao.TransactionDao
 import mx.equilibrio.data.local.dao.TransferDao
@@ -35,6 +37,7 @@ import mx.equilibrio.data.repository.AlertRepositoryImpl
 import mx.equilibrio.data.repository.CategoryRepositoryImpl
 import mx.equilibrio.data.repository.GoalRepositoryImpl
 import mx.equilibrio.data.repository.PeriodRepositoryImpl
+import mx.equilibrio.data.repository.RecurringTransactionRepositoryImpl
 import mx.equilibrio.data.repository.ReportRepositoryImpl
 import mx.equilibrio.data.repository.TransactionRepositoryImpl
 import mx.equilibrio.data.repository.TransferRepositoryImpl
@@ -44,6 +47,7 @@ import mx.equilibrio.domain.repository.AlertRepository
 import mx.equilibrio.domain.repository.CategoryRepository
 import mx.equilibrio.domain.repository.GoalRepository
 import mx.equilibrio.domain.repository.PeriodRepository
+import mx.equilibrio.domain.repository.RecurringTransactionRepository
 import mx.equilibrio.domain.repository.ReportRepository
 import mx.equilibrio.domain.repository.TransactionRepository
 import mx.equilibrio.domain.repository.TransferRepository
@@ -71,6 +75,7 @@ object DatabaseModule {
                 MIGRATION_10_11,
                 MIGRATION_11_12,
                 MIGRATION_12_13,
+                MIGRATION_13_14,
             )
             .build()
 
@@ -100,6 +105,10 @@ object DatabaseModule {
 
     @Provides
     fun provideReportDao(database: EquilibrioDatabase): ReportDao = database.reportDao()
+
+    @Provides
+    fun provideRecurringTransactionDao(database: EquilibrioDatabase): RecurringTransactionDao =
+        database.recurringTransactionDao()
 }
 
 @Module
@@ -132,4 +141,9 @@ abstract class RepositoryModule {
 
     @Binds
     abstract fun bindReportRepository(impl: ReportRepositoryImpl): ReportRepository
+
+    @Binds
+    abstract fun bindRecurringTransactionRepository(
+        impl: RecurringTransactionRepositoryImpl,
+    ): RecurringTransactionRepository
 }

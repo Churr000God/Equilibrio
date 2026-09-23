@@ -7,6 +7,7 @@ import mx.equilibrio.data.local.dao.AlertDao
 import mx.equilibrio.data.local.dao.CategoryDao
 import mx.equilibrio.data.local.dao.GoalDao
 import mx.equilibrio.data.local.dao.PeriodDao
+import mx.equilibrio.data.local.dao.RecurringTransactionDao
 import mx.equilibrio.data.local.dao.ReportDao
 import mx.equilibrio.data.local.dao.TransactionDao
 import mx.equilibrio.data.local.dao.TransferDao
@@ -16,6 +17,7 @@ import mx.equilibrio.data.local.entity.AlertEntity
 import mx.equilibrio.data.local.entity.CategoryEntity
 import mx.equilibrio.data.local.entity.GoalEntity
 import mx.equilibrio.data.local.entity.PeriodEntity
+import mx.equilibrio.data.local.entity.RecurringTransactionEntity
 import mx.equilibrio.data.local.entity.TransactionEntity
 import mx.equilibrio.data.local.entity.TransferEntity
 import mx.equilibrio.data.local.entity.UserEntity
@@ -30,8 +32,9 @@ import mx.equilibrio.data.local.entity.UserEntity
         TransferEntity::class,
         PeriodEntity::class,
         GoalEntity::class,
+        RecurringTransactionEntity::class,
     ],
-    version = 13,
+    version = 14,
     exportSchema = true,
 )
 abstract class EquilibrioDatabase : RoomDatabase() {
@@ -44,6 +47,7 @@ abstract class EquilibrioDatabase : RoomDatabase() {
     abstract fun periodDao(): PeriodDao
     abstract fun goalDao(): GoalDao
     abstract fun reportDao(): ReportDao
+    abstract fun recurringTransactionDao(): RecurringTransactionDao
 
     companion object {
         const val DATABASE_NAME = "equilibrio.db"

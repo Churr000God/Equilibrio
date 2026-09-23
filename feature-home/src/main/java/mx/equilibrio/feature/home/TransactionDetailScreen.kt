@@ -55,12 +55,15 @@ fun TransactionDetailScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showStopRecurringConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.deleted) {
         if (state.deleted) onClosed()
     }
 
     if (showDeleteConfirm) {
+        // Sin rama para isRecurringOccurrence acá: es un movimiento normal, mismo diálogo que
+        // cualquier otro — borrar UNA ocurrencia nunca toca la plantilla ni las demás.
         EqDestructiveDialog(
             title = if (state.isInstallment) "¿Eliminar esta compra a meses?" else "¿Eliminar este movimiento?",
             body = if (state.isInstallment) {
@@ -74,6 +77,19 @@ fun TransactionDetailScreen(
                 viewModel.onEvent(TransactionDetailEvent.DeleteConfirmed)
             },
             onDismiss = { showDeleteConfirm = false },
+        )
+    }
+
+    if (showStopRecurringConfirm) {
+        EqDestructiveDialog(
+            title = "¿Dejar de repetir este movimiento?",
+            body = "No se van a generar más ocurrencias. Los movimientos ya registrados se quedan como están.",
+            confirmLabel = "Dejar de repetir",
+            onConfirm = {
+                showStopRecurringConfirm = false
+                viewModel.onEvent(TransactionDetailEvent.StopRecurringConfirmed)
+            },
+            onDismiss = { showStopRecurringConfirm = false },
         )
     }
 
@@ -110,6 +126,15 @@ fun TransactionDetailScreen(
 
                 state.plan?.let { plan -> InstallmentPlanSection(plan = plan) }
 
+                if (state.isRecurringOccurrence) {
+                    RecurringSection(
+                        label = state.recurrenceLabel,
+                        isActive = state.isRecurringActive,
+                        isPausing = state.isPausingRecurring,
+                        onStopClicked = { showStopRecurringConfirm = true },
+                    )
+                }
+
                 if (!state.note.isNullOrBlank()) {
                     EqCard {
                         Text(text = "Nota", style = EquilibrioTheme.typography.bodyStrong, color = EquilibrioTheme.colors.ink)
@@ -122,6 +147,8 @@ fun TransactionDetailScreen(
                     }
                 }
 
+                // Sin condición extra para isRecurringOccurrence: a diferencia de una cuota, una
+                // ocurrencia recurrente es un movimiento normal y editable como cualquier otro.
                 if (!state.isInstallment) {
                     EqButton(
                         text = "Editar",
@@ -207,6 +234,31 @@ private fun InfoRow(label: String, value: String, isLast: Boolean = false) {
     ) {
         Text(text = label, style = EquilibrioTheme.typography.body, color = colors.inkMuted)
         Text(text = value, style = EquilibrioTheme.typography.bodyStrong, color = colors.ink)
+    }
+}
+
+@Composable
+private fun RecurringSection(label: String?, isActive: Boolean, isPausing: Boolean, onStopClicked: () -> Unit) {
+    val colors = EquilibrioTheme.colors
+    EqCard {
+        Text(text = label ?: "Recurrente", style = EquilibrioTheme.typography.bodyStrong, color = colors.ink)
+        if (isActive) {
+            EqButton(
+                text = "Dejar de repetir",
+                onClick = onStopClicked,
+                variant = EqButtonVariant.SECONDARY,
+                enabled = !isPausing,
+                loading = isPausing,
+                modifier = Modifier.padding(top = Spacing.sm),
+            )
+        } else {
+            Text(
+                text = "Ya no se van a generar más ocurrencias.",
+                style = EquilibrioTheme.typography.caption,
+                color = colors.inkMuted,
+                modifier = Modifier.padding(top = Spacing.xs),
+            )
+        }
     }
 }
 

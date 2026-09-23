@@ -2,6 +2,7 @@ package mx.equilibrio.feature.entry
 
 import kotlinx.datetime.LocalDate
 import mx.equilibrio.domain.model.Classification
+import mx.equilibrio.domain.model.RecurrenceFrequency
 
 sealed interface QuickEntryEvent {
     data class EntryModeChanged(val mode: EntryMode) : QuickEntryEvent
@@ -20,6 +21,8 @@ sealed interface QuickEntryEvent {
     data class CreditAccountSelected(val accountId: String) : QuickEntryEvent
     data class InstallmentToggled(val enabled: Boolean) : QuickEntryEvent
     data class InstallmentCountChanged(val count: Int) : QuickEntryEvent
+    data class RecurringToggled(val enabled: Boolean) : QuickEntryEvent
+    data class RecurrenceFrequencyChanged(val frequency: RecurrenceFrequency) : QuickEntryEvent
     data class ViewTabChanged(val tab: EntryViewTab) : QuickEntryEvent
     data object ConfirmClicked : QuickEntryEvent
     data object SaveClicked : QuickEntryEvent

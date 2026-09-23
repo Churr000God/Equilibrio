@@ -160,7 +160,7 @@ class QuickEntryViewModel @Inject constructor(
             }
 
             is QuickEntryEvent.DateChanged -> {
-                _state.update { it.copy(occurredAt = event.date) }
+                _state.update { it.copy(occurredAt = event.date, dateError = null) }
                 refreshCreditPeriodIfNeeded()
             }
 
@@ -305,36 +305,53 @@ class QuickEntryViewModel @Inject constructor(
         val classification = current.classification ?: return
         val ownerId = userId ?: return
 
-        _state.update { it.copy(isSaving = true) }
+        _state.update { it.copy(isSaving = true, dateError = null) }
 
         viewModelScope.launch {
-            saveTransaction(
-                Transaction(
-                    id = editingId ?: UUID.randomUUID().toString(),
-                    userId = ownerId,
-                    accountId = accountId,
-                    kind = current.kind,
-                    classification = classification,
-                    amountCents = current.amountCents,
-                    occurredAt = current.occurredAt,
-                    note = current.note.ifBlank { null },
-                    categoryId = current.categoryId,
-                    status = deriveTransactionStatus(current.occurredAt, today()),
-                ),
-            )
-            checkBalanceDeviation()
-            _state.update { it.copy(isSaving = false, saved = true) }
+            try {
+                saveTransaction(
+                    Transaction(
+                        id = editingId ?: UUID.randomUUID().toString(),
+                        userId = ownerId,
+                        accountId = accountId,
+                        kind = current.kind,
+                        classification = classification,
+                        amountCents = current.amountCents,
+                        occurredAt = current.occurredAt,
+                        note = current.note.ifBlank { null },
+                        categoryId = current.categoryId,
+                        status = deriveTransactionStatus(current.occurredAt, today()),
+                    ),
+                    today = today(),
+                )
+                checkBalanceDeviation()
+                _state.update { it.copy(isSaving = false, saved = true) }
+            } catch (e: IllegalArgumentException) {
+                _state.update {
+                    it.copy(isSaving = false, dateError = e.message ?: "No se pudo guardar el movimiento.")
+                }
+            }
         }
     }
 
     private fun confirmScheduledTransaction() {
         val id = editingId ?: return
 
-        _state.update { it.copy(isConfirming = true) }
+        _state.update { it.copy(isConfirming = true, confirmError = null) }
 
         viewModelScope.launch {
-            confirmTransaction(id)
-            _state.update { it.copy(isConfirming = false, status = TransactionStatus.COMPLETED) }
+            try {
+                confirmTransaction(id, today())
+                _state.update { it.copy(isConfirming = false, status = TransactionStatus.COMPLETED) }
+            } catch (e: IllegalArgumentException) {
+                _state.update {
+                    it.copy(isConfirming = false, confirmError = e.message ?: "No se pudo confirmar el movimiento.")
+                }
+            } catch (e: IllegalStateException) {
+                _state.update {
+                    it.copy(isConfirming = false, confirmError = e.message ?: "No se pudo confirmar el movimiento.")
+                }
+            }
         }
     }
 

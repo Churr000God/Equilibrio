@@ -254,7 +254,9 @@ fun QuickEntryScreen(
                 DateSection(
                     dateLabel = state.occurredAt.toString(),
                     onDateSelected = { viewModel.onEvent(QuickEntryEvent.DateChanged(it)) },
+                    maxDate = if (state.isEditing && state.status == TransactionStatus.COMPLETED) today() else null,
                 )
+                state.dateError?.let { EqInlineValidation(it) }
 
                 EqTextField(
                     value = state.note,
@@ -563,6 +565,7 @@ private fun TransactionViewSection(
                 loading = state.isConfirming,
                 modifier = Modifier.padding(top = Spacing.base),
             )
+            state.confirmError?.let { EqInlineValidation(it) }
         }
     }
 }
@@ -580,6 +583,7 @@ private fun SummaryRow(label: String, value: String) {
 private fun DateSection(
     dateLabel: String,
     onDateSelected: (kotlinx.datetime.LocalDate) -> Unit,
+    maxDate: kotlinx.datetime.LocalDate? = null,
 ) {
     var showPicker by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -612,7 +616,20 @@ private fun DateSection(
     )
 
     if (showPicker) {
-        val pickerState = rememberDatePickerState()
+        val selectableDates = remember(maxDate) {
+            if (maxDate == null) {
+                androidx.compose.material3.DatePickerDefaults.AllDates
+            } else {
+                object : androidx.compose.material3.SelectableDates {
+                    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                        val date = Instant.fromEpochMilliseconds(utcTimeMillis)
+                            .toLocalDateTime(TimeZone.UTC).date
+                        return date <= maxDate
+                    }
+                }
+            }
+        }
+        val pickerState = rememberDatePickerState(selectableDates = selectableDates)
         DatePickerDialog(
             onDismissRequest = { showPicker = false },
             confirmButton = {

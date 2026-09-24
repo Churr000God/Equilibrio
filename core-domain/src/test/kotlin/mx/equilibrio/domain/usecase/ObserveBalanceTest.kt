@@ -10,6 +10,7 @@ import mx.equilibrio.domain.model.Period
 import mx.equilibrio.domain.model.PeriodState
 import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
+import mx.equilibrio.domain.model.TransactionStatus
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -38,6 +39,25 @@ class ObserveBalanceTest {
         periodId = periodId,
     )
 
+    private fun scheduled(
+        id: String,
+        accountId: String,
+        kind: TransactionKind,
+        cents: Long,
+        occurredAt: LocalDate,
+        periodId: String? = null,
+    ) = Transaction(
+        id = id,
+        userId = "u1",
+        accountId = accountId,
+        kind = kind,
+        classification = if (kind == TransactionKind.INCOME) Classification.FIXED else Classification.ESSENTIAL,
+        amountCents = cents,
+        occurredAt = occurredAt,
+        status = TransactionStatus.SCHEDULED,
+        periodId = periodId,
+    )
+
     private fun useCase(
         accountRepository: FakeAccountRepository,
         periodRepository: FakePeriodRepository,
@@ -45,6 +65,7 @@ class ObserveBalanceTest {
     ) = ObserveBalance(
         ObserveAvailableBalances(accountRepository, transactionRepository),
         ObserveCreditAvailable(accountRepository, periodRepository, transactionRepository),
+        ObserveScheduledCashFlowCents(accountRepository, transactionRepository),
     )
 
     @Test
@@ -114,5 +135,65 @@ class ObserveBalanceTest {
 
         assertEquals(1_000_00L, totals.actualCents)
         assertEquals(400_00L, totals.projectedCents)
+    }
+
+    @Test
+    fun `un gasto programado en CASH o BANK baja el proyectado pero no el actual`() = runTest {
+        val accountRepository = FakeAccountRepository(mapOf("bank" to bank))
+        val transactionRepository = FakeTransactionRepository()
+        transactionRepository.seed(scheduled("s1", "bank", TransactionKind.EXPENSE, 200_00, LocalDate(2026, 9, 15)))
+        val useCase = useCase(accountRepository, FakePeriodRepository(), transactionRepository)
+
+        val totals = useCase(LocalDate(2026, 9, 1)).first()
+
+        assertEquals(1_000_00L, totals.actualCents)
+        assertEquals(800_00L, totals.projectedCents)
+    }
+
+    @Test
+    fun `un ingreso programado en CASH o BANK sube el proyectado`() = runTest {
+        val accountRepository = FakeAccountRepository(mapOf("bank" to bank))
+        val transactionRepository = FakeTransactionRepository()
+        transactionRepository.seed(scheduled("s1", "bank", TransactionKind.INCOME, 300_00, LocalDate(2026, 9, 15)))
+        val useCase = useCase(accountRepository, FakePeriodRepository(), transactionRepository)
+
+        val totals = useCase(LocalDate(2026, 9, 1)).first()
+
+        assertEquals(1_000_00L, totals.actualCents)
+        assertEquals(1_300_00L, totals.projectedCents)
+    }
+
+    @Test
+    fun `una SCHEDULED en tarjeta no se cuenta dos veces, solo via totalToPayCents`() = runTest {
+        val accountRepository = FakeAccountRepository(mapOf("bank" to bank, "cc" to card))
+        val periodRepository = FakePeriodRepository()
+        val transactionRepository = FakeTransactionRepository()
+        periodRepository.seed(period("p1", LocalDate(2026, 8, 16), LocalDate(2026, 9, 15)))
+        transactionRepository.seed(scheduled("s1", "cc", TransactionKind.EXPENSE, 300_00, LocalDate(2026, 9, 10), periodId = "p1"))
+        val useCase = useCase(accountRepository, periodRepository, transactionRepository)
+
+        val totals = useCase(LocalDate(2026, 9, 1)).first()
+
+        assertEquals(1_000_00L, totals.actualCents)
+        // Si se contara dos veces (acá y en totalToPayCents) daría 400_00, no 700_00.
+        assertEquals(700_00L, totals.projectedCents)
+    }
+
+    @Test
+    fun `confirmar la transaccion programada mueve el monto de proyectado a actual sin cambiar el proyectado`() = runTest {
+        val accountRepository = FakeAccountRepository(mapOf("bank" to bank))
+        val transactionRepository = FakeTransactionRepository()
+        transactionRepository.seed(scheduled("s1", "bank", TransactionKind.EXPENSE, 200_00, LocalDate(2026, 9, 1)))
+        val useCase = useCase(accountRepository, FakePeriodRepository(), transactionRepository)
+
+        val before = useCase(LocalDate(2026, 9, 1)).first()
+        assertEquals(1_000_00L, before.actualCents)
+        assertEquals(800_00L, before.projectedCents)
+
+        transactionRepository.confirm("s1", LocalDate(2026, 9, 1))
+
+        val after = useCase(LocalDate(2026, 9, 1)).first()
+        assertEquals(800_00L, after.actualCents)
+        assertEquals(800_00L, after.projectedCents, "el proyectado no debe moverse: el actual solo alcanza al valor que ya proyectaba")
     }
 }

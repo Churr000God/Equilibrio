@@ -7,21 +7,24 @@ import javax.inject.Inject
 
 /**
  * `actualCents`: líquido real (CASH/BANK), sin tocar deuda. `projectedCents`:
- * líquido menos deuda total de tarjetas ([CreditAvailability.totalToPayCents]
- * de todas las cuentas) — evita el doble conteo que había entre pantallas.
+ * líquido + neto de SCHEDULED en CASH/BANK ([ObserveScheduledCashFlowCents])
+ * - deuda total de tarjetas ([CreditAvailability.totalToPayCents] de todas
+ * las cuentas) — evita el doble conteo que había entre pantallas.
  */
 data class BalanceTotals(val actualCents: Long, val projectedCents: Long)
 
 class ObserveBalance @Inject constructor(
     private val observeAvailableBalances: ObserveAvailableBalances,
     private val observeCreditAvailable: ObserveCreditAvailable,
+    private val observeScheduledCashFlowCents: ObserveScheduledCashFlowCents,
 ) {
     operator fun invoke(today: LocalDate): Flow<BalanceTotals> = combine(
         observeAvailableBalances(),
         observeCreditAvailable(today),
-    ) { ownFundsByAccount, creditByAccount ->
+        observeScheduledCashFlowCents(),
+    ) { ownFundsByAccount, creditByAccount, scheduledCashFlow ->
         val ownFunds = ownFundsByAccount.values.sum()
         val totalToPay = creditByAccount.values.sumOf { it.totalToPayCents }
-        BalanceTotals(actualCents = ownFunds, projectedCents = ownFunds - totalToPay)
+        BalanceTotals(actualCents = ownFunds, projectedCents = ownFunds + scheduledCashFlow - totalToPay)
     }
 }

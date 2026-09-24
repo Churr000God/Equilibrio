@@ -86,20 +86,27 @@ fun EqAccountCard(
             .padding(Spacing.lg),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        Column {
-            Text(
-                text = title,
-                style = EquilibrioTheme.typography.h3,
-                color = colors.onGradient,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = maskedDigits,
-                style = EquilibrioTheme.typography.label,
-                color = colors.onGradient.copy(alpha = 0.75f),
-                modifier = Modifier.padding(top = Spacing.xs),
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = EquilibrioTheme.typography.h3,
+                    color = colors.onGradient,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = maskedDigits,
+                    style = EquilibrioTheme.typography.label,
+                    color = colors.onGradient.copy(alpha = 0.75f),
+                    modifier = Modifier.padding(top = Spacing.xs),
+                )
+            }
+            // Sello de marca, como el de la red en una tarjeta bancaria.
+            EqLogoMark(color = colors.onGradient.copy(alpha = 0.85f), width = 34.dp)
         }
 
         Row(

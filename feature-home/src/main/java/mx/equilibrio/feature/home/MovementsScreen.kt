@@ -65,6 +65,7 @@ private enum class MovementsTab(val label: String) {
 /** Todos los movimientos del mes en curso, con detalle propio. Se abre desde "Ver más" en Inicio o la pestaña Transacciones. */
 @Composable
 fun MovementsScreen(
+    onBack: () -> Unit,
     onAddClicked: () -> Unit,
     onTransactionClicked: (String) -> Unit,
     onSearchClicked: () -> Unit,
@@ -79,6 +80,7 @@ fun MovementsScreen(
     Column(modifier = modifier.fillMaxSize().background(EquilibrioTheme.colors.background)) {
         EqTopBar(
             title = "Transacciones",
+            onBack = onBack,
             trailing = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onSearchClicked) {

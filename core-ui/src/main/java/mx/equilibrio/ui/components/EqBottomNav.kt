@@ -15,7 +15,6 @@ import androidx.compose.material.icons.rounded.CreditCard
 import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.PieChart
-import androidx.compose.material.icons.rounded.ReceiptLong
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -36,7 +36,6 @@ import mx.equilibrio.ui.theme.eqShadow
 
 enum class EqNavDestination(val label: String, val icon: ImageVector) {
     HOME("Inicio", Icons.Rounded.Home),
-    TRANSACTIONS("Transacciones", Icons.Rounded.ReceiptLong),
     ACCOUNTS("Cuentas", Icons.Rounded.CreditCard),
     CATEGORIES("Categorías", Icons.Rounded.Category),
     GOALS("Metas", Icons.Rounded.Flag),
@@ -62,10 +61,14 @@ fun EqBottomNav(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         EqNavDestination.entries.forEach { destination ->
+            val isSelected = destination == selected
             EqBottomNavItem(
                 destination = destination,
-                isSelected = destination == selected,
+                isSelected = isSelected,
                 onClick = { onSelect(destination) },
+                // La pestaña activa (con texto) solo toma el espacio que sobra: en pantallas
+                // angostas o con fuente grande su texto se corta en vez de empujar a los demás iconos.
+                modifier = if (isSelected) Modifier.weight(1f, fill = false) else Modifier,
             )
         }
     }
@@ -102,7 +105,7 @@ private fun EqBottomNavItem(
                 style = EquilibrioTheme.typography.label,
                 color = tint,
                 maxLines = 1,
-                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

@@ -90,7 +90,8 @@ private fun goalEditorRoute(goalId: String? = null) =
 
 private val ROUTE_TO_DESTINATION = mapOf(
     ROUTE_HOME to EqNavDestination.HOME,
-    ROUTE_MOVEMENTS to EqNavDestination.TRANSACTIONS,
+    // Transacciones ya no es pestaña (issue #8): se abre desde Inicio y cuelga de esa pestaña.
+    ROUTE_MOVEMENTS to EqNavDestination.HOME,
     ROUTE_ACCOUNTS to EqNavDestination.ACCOUNTS,
     ROUTE_CATEGORIES to EqNavDestination.CATEGORIES,
     ROUTE_GOALS to EqNavDestination.GOALS,
@@ -99,7 +100,6 @@ private val ROUTE_TO_DESTINATION = mapOf(
 
 private val DESTINATION_TO_ROUTE = mapOf(
     EqNavDestination.HOME to ROUTE_HOME,
-    EqNavDestination.TRANSACTIONS to ROUTE_MOVEMENTS,
     EqNavDestination.ACCOUNTS to ROUTE_ACCOUNTS_BASE,
     EqNavDestination.CATEGORIES to ROUTE_CATEGORIES,
     EqNavDestination.GOALS to ROUTE_GOALS,
@@ -178,6 +178,7 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
             }
             composable(ROUTE_MOVEMENTS) {
                 MovementsScreen(
+                    onBack = { navController.popBackStack() },
                     onAddClicked = { navController.navigate(quickEntryRoute()) },
                     onTransactionClicked = { id -> navController.navigate(transactionDetailRoute(id)) },
                     onSearchClicked = { navController.navigate(ROUTE_SEARCH) },

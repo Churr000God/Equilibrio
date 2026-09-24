@@ -38,8 +38,6 @@ data class EquilibrioColors(
     val warningSoft: Color,
     val info: Color,
     val infoSoft: Color,
-    /** Texto/ícono sobre un gradiente de dominio oscuro (p. ej. [mx.equilibrio.ui.components.EqAccountCard]) — mismo blanco en claro y oscuro. */
-    val onGradient: Color,
 )
 
 val LightEquilibrioColors = EquilibrioColors(
@@ -66,7 +64,6 @@ val LightEquilibrioColors = EquilibrioColors(
     warningSoft = WarningSoft,
     info = Info,
     infoSoft = InfoSoft,
-    onGradient = Color.White,
 )
 
 val DarkEquilibrioColors = EquilibrioColors(
@@ -93,7 +90,6 @@ val DarkEquilibrioColors = EquilibrioColors(
     warningSoft = WarningSoftDark,
     info = InfoDark,
     infoSoft = InfoSoftDark,
-    onGradient = Color.White,
 )
 
 val LocalEquilibrioColors: ProvidableCompositionLocal<EquilibrioColors> =
@@ -102,7 +98,6 @@ val LocalEquilibrioColors: ProvidableCompositionLocal<EquilibrioColors> =
 val LocalEquilibrioTypography: ProvidableCompositionLocal<EquilibrioTypography> =
     staticCompositionLocalOf { EquilibrioTypographyDefaults }
 
-/** Refuerza con ícono, además de color, los componentes que dependen de purple-vs-green (ver docs/identidad). */
 val LocalAccessibilityMode: ProvidableCompositionLocal<Boolean> =
     staticCompositionLocalOf { false }
 
@@ -172,7 +167,22 @@ fun EquilibrioTheme(
     accessibilityMode: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val colors = if (darkTheme) DarkEquilibrioColors else LightEquilibrioColors
+    val baseColors = if (darkTheme) DarkEquilibrioColors else LightEquilibrioColors
+    val colors = if (accessibilityMode) {
+        baseColors.copy(
+            green = AccessibleBlue,
+            greenDeep = AccessibleBlueDeep,
+            greenMid = AccessibleBlue,
+            greenSoft = AccessibleBlueSoft,
+            purple = AccessibleOrange,
+            purpleDeep = AccessibleOrangeDeep,
+            purpleMid = AccessibleOrange,
+            purpleSoft = AccessibleOrangeSoft
+        )
+    } else {
+        baseColors
+    }
+
     CompositionLocalProvider(
         LocalEquilibrioColors provides colors,
         LocalEquilibrioTypography provides EquilibrioTypographyDefaults,

@@ -1,6 +1,7 @@
 package mx.equilibrio.domain.usecase
 
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import mx.equilibrio.domain.model.Account
@@ -12,6 +13,7 @@ import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.TransactionStatus
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -104,5 +106,28 @@ class ConfirmTransactionTest {
 
         assertEquals(listOf("o1"), fixture.transactionRepository.confirmedIds)
         assertTrue(fixture.transactionRepository.observeAll().first().size == 1)
+    }
+
+    @Test
+    fun `confirmar un movimiento con fecha futura falla y no lo confirma`() = runTest {
+        val fixture = fixture()
+        fixture.transactionRepository.seed(occurrence("o1", seriesId = null, occurredAt = LocalDate(2026, 9, 20)))
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking { fixture.confirmTransaction("o1", LocalDate(2026, 9, 10)) }
+        }
+
+        assertTrue(fixture.transactionRepository.confirmedIds.isEmpty())
+        assertEquals(TransactionStatus.SCHEDULED, fixture.transactionRepository.getById("o1")?.status)
+    }
+
+    @Test
+    fun `confirmar un movimiento con fecha de hoy si se permite`() = runTest {
+        val fixture = fixture()
+        fixture.transactionRepository.seed(occurrence("o1", seriesId = null, occurredAt = LocalDate(2026, 9, 10)))
+
+        fixture.confirmTransaction("o1", LocalDate(2026, 9, 10))
+
+        assertEquals(listOf("o1"), fixture.transactionRepository.confirmedIds)
     }
 }

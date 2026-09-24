@@ -27,6 +27,8 @@ fun EqEmptyState(
     modifier: Modifier = Modifier,
     icon: ImageVector = Icons.Rounded.Inbox,
     iconTint: Color = EquilibrioTheme.colors.inkFaint,
+    /** Si se da, reemplaza a [icon] por una ilustración de marca (vacíos de pantalla completa). */
+    illustration: EqIllustration? = null,
     action: (@Composable () -> Unit)? = null,
 ) {
     val colors = EquilibrioTheme.colors
@@ -36,12 +38,16 @@ fun EqEmptyState(
             .padding(Spacing.xxl),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = iconTint,
-            modifier = Modifier.padding(bottom = Spacing.base).size(48.dp),
-        )
+        if (illustration != null) {
+            EqIllustrationImage(illustration, modifier = Modifier.padding(bottom = Spacing.base).size(112.dp))
+        } else {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.padding(bottom = Spacing.base).size(48.dp),
+            )
+        }
         Text(
             text = title,
             style = EquilibrioTheme.typography.h3,
@@ -66,6 +72,7 @@ private fun EqEmptyStatePreview() {
         EqEmptyState(
             title = "Aún no registras movimientos",
             body = "Registra tu primer ingreso o gasto para ver tu equilibrio.",
+            illustration = EqIllustration.BALANCE,
         )
     }
 }

@@ -45,6 +45,7 @@ import mx.equilibrio.ui.components.EqBarChart
 import mx.equilibrio.ui.components.EqBarChartLegend
 import mx.equilibrio.ui.components.EqCard
 import mx.equilibrio.ui.components.EqEmptyState
+import mx.equilibrio.ui.components.EqIllustration
 import mx.equilibrio.ui.components.EqMatrixCell
 import mx.equilibrio.ui.components.EqProgressBar
 import mx.equilibrio.ui.components.EqStatTile
@@ -103,6 +104,7 @@ fun ReportsScreen(
                 EqEmptyState(
                     title = "Aún no hay movimientos en ${state.month.label().lowercase()}",
                     body = "Registra ingresos y gastos y aquí verás cómo se mueve tu mes.",
+                    illustration = EqIllustration.NEUTRAL,
                 )
             }
 

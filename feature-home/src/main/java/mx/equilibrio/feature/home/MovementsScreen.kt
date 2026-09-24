@@ -45,6 +45,7 @@ import mx.equilibrio.ui.components.EqAlertBanner
 import mx.equilibrio.ui.components.EqAmount
 import mx.equilibrio.ui.components.EqCard
 import mx.equilibrio.ui.components.EqEmptyState
+import mx.equilibrio.ui.components.EqIllustration
 import mx.equilibrio.ui.components.EqFab
 import mx.equilibrio.ui.components.EqSegmentedControl
 import mx.equilibrio.ui.components.EqSkeleton
@@ -175,6 +176,7 @@ fun MovementsScreen(
                             EqEmptyState(
                                 title = if (selectedTab == MovementsTab.ALL) "Sin movimientos este mes" else "Sin movimientos en esta vista",
                                 body = "Cambiá de mes con el selector de arriba o registrá un ingreso o gasto.",
+                                illustration = EqIllustration.BALANCE,
                             )
                         }
                     }

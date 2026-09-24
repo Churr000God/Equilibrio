@@ -45,6 +45,7 @@ import mx.equilibrio.ui.components.EqCard
 import mx.equilibrio.ui.components.EqChip
 import mx.equilibrio.ui.components.EqDestructiveDialog
 import mx.equilibrio.ui.components.EqEmptyState
+import mx.equilibrio.ui.components.EqIllustration
 import mx.equilibrio.ui.components.EqProgressBar
 import mx.equilibrio.ui.components.EqProgressRing
 import mx.equilibrio.ui.components.EqTextField
@@ -118,6 +119,7 @@ fun GoalsScreen(
                 EqEmptyState(
                     title = "Aún no tienes metas",
                     body = "Ponle nombre a algo que quieras lograr y ve cómo avanza con cada abono.",
+                    illustration = EqIllustration.BALANCE,
                     action = { EqButton(text = "Crear mi primera meta", onClick = onAddClicked, fullWidth = false) },
                 )
             }

@@ -46,6 +46,7 @@ import mx.equilibrio.ui.components.EqButton
 import mx.equilibrio.ui.components.EqButtonVariant
 import mx.equilibrio.ui.components.EqCard
 import mx.equilibrio.ui.components.EqEmptyState
+import mx.equilibrio.ui.components.EqIllustration
 import mx.equilibrio.ui.components.EqFab
 import mx.equilibrio.ui.components.EqSectionHeader
 import mx.equilibrio.ui.components.EqSkeleton
@@ -212,6 +213,7 @@ private fun RecentTransactions(
         EqEmptyState(
             title = "Aún no registras movimientos",
             body = "Registra tu primer ingreso o gasto para ver tu equilibrio.",
+            illustration = EqIllustration.BALANCE,
             modifier = modifier,
         )
         return

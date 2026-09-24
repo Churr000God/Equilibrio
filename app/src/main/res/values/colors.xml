@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Marca (mx.equilibrio.ui.theme.Purple / Background), duplicados acá porque
+    <!-- Marca (mx.equilibrio.ui.theme.Background / Purple / Green), duplicados acá porque
          el ícono/splash son recursos de plataforma y no pueden leer del theme de Compose. -->
-    <color name="brand_purple">#FF6C4CE0</color>
     <color name="splash_background">#FFF5F7F3</color>
+    <color name="ic_launcher_background">#FFF5F7F3</color>
+    <color name="brand_purple">#FF6C4CE0</color>
+    <color name="brand_green">#FF2F7D5B</color>
+    <color name="brand_overlap">#FF3B4F7A</color>
 </resources>

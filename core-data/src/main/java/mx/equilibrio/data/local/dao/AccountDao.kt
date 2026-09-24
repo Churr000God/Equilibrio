@@ -12,8 +12,8 @@ interface AccountDao {
     @Query("SELECT * FROM accounts WHERE user_id = :userId AND is_deleted = 0")
     fun observeAll(userId: String): Flow<List<AccountEntity>>
 
-    @Query("SELECT COUNT(*) FROM accounts WHERE user_id = :userId AND is_deleted = 0")
-    suspend fun count(userId: String): Int
+    @Query("SELECT COUNT(*) FROM accounts WHERE user_id = :userId AND is_deleted = 0 AND type != 'CASH'")
+    suspend fun countNonCash(userId: String): Int
 
     @Query("SELECT * FROM accounts WHERE id = :id AND is_deleted = 0 LIMIT 1")
     suspend fun getById(id: String): AccountEntity?

@@ -80,7 +80,7 @@ class AddAccountViewModel @Inject constructor(
         _state.update { it.copy(isSaving = true) }
 
         viewModelScope.launch {
-            if (checkFreemiumLimit() == FreemiumResult.LIMIT_REACHED) {
+            if (checkFreemiumLimit(current.type) == FreemiumResult.LIMIT_REACHED) {
                 _state.update { it.copy(isSaving = false, freemiumLimitReached = true) }
                 return@launch
             }

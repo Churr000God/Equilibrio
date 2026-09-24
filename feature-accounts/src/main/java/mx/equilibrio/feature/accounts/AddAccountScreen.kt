@@ -46,7 +46,7 @@ fun AddAccountScreen(
     if (state.freemiumLimitReached) {
         EqInfoDialog(
             title = "Límite del plan gratuito",
-            body = "El plan FREE permite hasta 2 cuentas. Actualiza a Premium para agregar más.",
+            body = "El plan FREE permite hasta 2 cuentas de banco o tarjeta (Efectivo no cuenta). Actualiza a Premium para agregar más.",
             confirmLabel = "Entendido",
             onConfirm = { viewModel.onEvent(AddAccountEvent.FreemiumDialogDismissed) },
         )

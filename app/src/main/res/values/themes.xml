@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Tema de arranque (androidx.core.splashscreen): el ícono se ve sobre un
-         chip morado de marca (windowSplashScreenIconBackgroundColor) para que
-         el glifo blanco lea igual en claro y oscuro, aunque el fondo de la
-         pantalla completa siga el token Background/BackgroundDark del theme. -->
+    <!-- Tema de arranque (androidx.core.splashscreen): el logo animado va directo sobre el
+         fondo Background/BackgroundDark, sin chip de color — el logo ya trae los suyos. -->
     <style name="Theme.Equilibrio.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
-        <item name="windowSplashScreenIconBackgroundColor">@color/brand_purple</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo_animated</item>
+        <item name="windowSplashScreenAnimationDuration">900</item>
         <item name="postSplashScreenTheme">@android:style/Theme.Material.Light.NoActionBar</item>
     </style>
 </resources>

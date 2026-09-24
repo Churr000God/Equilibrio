@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Splash animado con el logo plano (assets_para_el_logo/asset-3.svg, mismas coordenadas en
+  un viewport de 1000): aparece el triángulo (gastos), cae la esfera (ingresos) y al final
+  se enciende el cruce (el equilibrio). 288dp de lienzo con todo dentro del círculo de
+  192dp que pide la API de splash para íconos sin fondo: escala 0.2 → radio máx. ≈ 96dp.
+-->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="288dp"
+            android:height="288dp"
+            android:viewportWidth="288"
+            android:viewportHeight="288">
+            <group
+                android:translateX="44"
+                android:translateY="44"
+                android:scaleX="0.2"
+                android:scaleY="0.2">
+
+                <group
+                    android:name="triangle"
+                    android:pivotX="398"
+                    android:pivotY="642"
+                    android:scaleX="0.6"
+                    android:scaleY="0.6">
+                    <path
+                        android:name="triangle_path"
+                        android:fillAlpha="0"
+                        android:fillColor="@color/brand_purple"
+                        android:pathData="M398,362 L158,782 L638,782 Z"
+                        android:strokeAlpha="0"
+                        android:strokeColor="@color/brand_purple"
+                        android:strokeLineJoin="round"
+                        android:strokeWidth="72" />
+                </group>
+
+                <group
+                    android:name="sphere"
+                    android:translateY="-260">
+                    <path
+                        android:name="sphere_path"
+                        android:fillAlpha="0"
+                        android:fillColor="@color/brand_green"
+                        android:pathData="M398,422 a240,240 0 1,0 480,0 a240,240 0 1,0 -480,0 Z" />
+                </group>
+
+                <!-- Cruce: el triángulo recortado por la esfera, en el tono mezclado. -->
+                <group android:name="overlap">
+                    <clip-path android:pathData="M398,422 a240,240 0 1,0 480,0 a240,240 0 1,0 -480,0 Z" />
+                    <path
+                        android:name="overlap_path"
+                        android:fillAlpha="0"
+                        android:fillColor="@color/brand_overlap"
+                        android:pathData="M398,362 L158,782 L638,782 Z"
+                        android:strokeAlpha="0"
+                        android:strokeColor="@color/brand_overlap"
+                        android:strokeLineJoin="round"
+                        android:strokeWidth="72" />
+                </group>
+            </group>
+        </vector>
+    </aapt:attr>
+
+    <target android:name="triangle">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="380"
+                    android:interpolator="@android:interpolator/overshoot"
+                    android:propertyName="scaleX"
+                    android:valueFrom="0.6"
+                    android:valueTo="1" />
+                <objectAnimator
+                    android:duration="380"
+                    android:interpolator="@android:interpolator/overshoot"
+                    android:propertyName="scaleY"
+                    android:valueFrom="0.6"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+
+    <target android:name="triangle_path">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="240"
+                    android:propertyName="fillAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+                <objectAnimator
+                    android:duration="240"
+                    android:propertyName="strokeAlpha"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+
+    <target android:name="sphere">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="420"
+                android:interpolator="@android:interpolator/decelerate_cubic"
+                android:propertyName="translateY"
+                android:startOffset="260"
+                android:valueFrom="-260"
+                android:valueTo="0" />
+        </aapt:attr>
+    </target>
+
+    <target android:name="sphere_path">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="200"
+                android:propertyName="fillAlpha"
+                android:startOffset="260"
+                android:valueFrom="0"
+                android:valueTo="1" />
+        </aapt:attr>
+    </target>
+
+    <target android:name="overlap_path">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:duration="220"
+                    android:propertyName="fillAlpha"
+                    android:startOffset="680"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+                <objectAnimator
+                    android:duration="220"
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="680"
+                    android:valueFrom="0"
+                    android:valueTo="1" />
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>

@@ -23,6 +23,7 @@ import mx.equilibrio.ui.components.EqAlertBanner
 import mx.equilibrio.ui.components.EqButton
 import mx.equilibrio.ui.components.EqColorSlotPicker
 import mx.equilibrio.ui.components.EqInfoDialog
+import mx.equilibrio.ui.components.EqPremiumBadge
 import mx.equilibrio.ui.components.EqSegmentedControl
 import mx.equilibrio.ui.components.EqTextField
 import mx.equilibrio.ui.components.EqTopBar
@@ -50,6 +51,7 @@ fun AddAccountScreen(
             body = "El plan FREE permite hasta 2 cuentas de banco o tarjeta (Efectivo no cuenta). Actualiza a Premium para agregar más.",
             confirmLabel = "Entendido",
             onConfirm = { viewModel.onEvent(AddAccountEvent.FreemiumDialogDismissed) },
+            icon = { EqPremiumBadge() },
         )
     }
 

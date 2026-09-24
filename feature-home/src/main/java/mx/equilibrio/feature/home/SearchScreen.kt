@@ -24,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mx.equilibrio.ui.components.EqDomainToggleOption
 import mx.equilibrio.ui.components.EqEmptyState
+import mx.equilibrio.ui.components.EqIllustration
 import mx.equilibrio.ui.components.EqTextField
 import mx.equilibrio.ui.components.formatCents
 import mx.equilibrio.ui.theme.DomainTone
@@ -73,6 +74,7 @@ fun SearchScreen(
                 EqEmptyState(
                     title = "Sin resultados",
                     body = "No encontramos movimientos que coincidan con \"${state.query}\".",
+                    illustration = EqIllustration.NEUTRAL,
                 )
             }
         } else {

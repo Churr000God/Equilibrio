@@ -114,11 +114,13 @@ fun EqInfoDialog(
     body: String,
     confirmLabel: String,
     onConfirm: () -> Unit,
+    /** Reemplaza el ícono de info (p. ej. [EqPremiumBadge] en los avisos del plan). */
+    icon: (@Composable () -> Unit)? = null,
 ) {
     val colors = EquilibrioTheme.colors
     AlertDialog(
         onDismissRequest = onConfirm,
-        icon = {
+        icon = icon ?: {
             Icon(
                 Icons.Rounded.Info,
                 contentDescription = null,

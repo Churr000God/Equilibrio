@@ -37,6 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mx.equilibrio.domain.model.CategoryType
 import mx.equilibrio.ui.components.EqCard
 import mx.equilibrio.ui.components.EqEmptyState
+import mx.equilibrio.ui.components.EqIllustration
 import mx.equilibrio.ui.components.EqFab
 import mx.equilibrio.ui.components.EqSegmentedControl
 import mx.equilibrio.ui.components.EqSkeleton
@@ -73,6 +74,7 @@ fun CategoriesScreen(
                     EqEmptyState(
                         title = "Aún no tienes categorías",
                         body = "Agrega categorías para organizar tus ingresos y gastos.",
+                        illustration = EqIllustration.NEUTRAL,
                     )
                 }
 

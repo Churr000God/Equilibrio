@@ -12,15 +12,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mx.equilibrio.ui.components.EqButton
 import mx.equilibrio.ui.components.EqButtonVariant
+import mx.equilibrio.ui.components.EqLogo
 import mx.equilibrio.ui.components.EqSegmentedControl
 import mx.equilibrio.ui.components.EqTextField
 import mx.equilibrio.ui.components.EqTopBar
@@ -56,6 +59,15 @@ fun LoginScreen(
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(top = Spacing.base),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+            ) {
+                EqLogo(size = 112.dp, contentDescription = null)
+                Text(text = "Equilibrio", style = EquilibrioTheme.typography.h2, color = colors.ink)
+            }
+
             EqSegmentedControl(
                 options = MODE_OPTIONS.map { it.first },
                 selectedIndex = MODE_OPTIONS.indexOfFirst { it.second == state.mode },

@@ -33,6 +33,12 @@ import javax.inject.Inject
 
 private fun today() = Clock.System.todayIn(TimeZone.UTC)
 
+/**
+ * Combina cuentas, disponibilidad de crédito y alertas pendientes para la pantalla de Cuentas, y además
+ * administra el sub-estado de periodos de tarjeta ([cardPeriodsState]) y el diálogo de pago de la cuenta
+ * seleccionada. Ese sub-estado vive aparte de [state] porque depende de cuál cuenta está seleccionada,
+ * no de la lista completa de cuentas.
+ */
 @HiltViewModel
 class AccountsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -77,9 +83,12 @@ class AccountsViewModel @Inject constructor(
         viewModelScope.launch {
             selectedAccountId.filterNotNull().collectLatest { accountId ->
                 _cardPeriodsState.value = CardPeriodsUiState(accountId = accountId)
+                // Cierra periodos vencidos y genera las recurrencias pendientes de esta tarjeta antes de
+                // observarlos, para no mostrar un periodo que ya debería estar cerrado.
                 settleDuePeriods(accountId, today())
                 combine(observePeriods(accountId), observeTransactions()) { periods, transactions ->
                     periods.sortedByDescending { it.startAt }.map { period ->
+                        // Solo gasto (EXPENSE) del periodo; pagos y transacciones de otros periodos no cuentan aquí.
                         val spent = transactions
                             .filter { it.periodId == period.id && it.kind == TransactionKind.EXPENSE }
                             .sumOf { it.amountCents }

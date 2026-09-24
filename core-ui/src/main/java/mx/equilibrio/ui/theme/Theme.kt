@@ -173,6 +173,11 @@ fun EquilibrioTheme(
 ) {
     val baseColors = if (darkTheme) DarkEquilibrioColors else LightEquilibrioColors
     val colors = if (accessibilityMode) {
+        // Modo accesible: no se replican los 4 matices por tono (Deep/Mid/base) porque la
+        // diferencia entre ellos no es distinguible para todo tipo de daltonismo. Se colapsan
+        // a dos colores de alto contraste (azul/naranja); la distinción entre ingreso fijo,
+        // variable, esencial, etc. la da la iconografía extra que agrega esta pantalla
+        // (ver el switch "Modo Daltonismo" en ProfileScreen), no más variedad de color.
         baseColors.copy(
             green = AccessibleBlue,
             greenDeep = AccessibleBlueDeep,

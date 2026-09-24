@@ -3,12 +3,18 @@ package mx.equilibrio.data.local
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.room.migration.Migration
 
+/** Últimos 4 dígitos de la tarjeta, para identificar cuentas CREDIT_CARD/DEBIT en la UI. */
 val MIGRATION_1_2 = object : Migration(1, 2) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL("ALTER TABLE accounts ADD COLUMN last_digits INTEGER DEFAULT NULL")
     }
 }
 
+/**
+ * Categorías propias por usuario en la nueva tabla `categories`, en vez de la clave de texto
+ * libre `category_key` que traía `transactions`. Reconstruye `transactions` completa porque
+ * SQLite no permite alterar una columna para agregarle una FK real.
+ */
 val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(

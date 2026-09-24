@@ -12,6 +12,7 @@ interface AccountDao {
     @Query("SELECT * FROM accounts WHERE user_id = :userId AND is_deleted = 0")
     fun observeAll(userId: String): Flow<List<AccountEntity>>
 
+    // Cuentas que cuentan contra el límite del plan FREE (RF10); las de tipo CASH son ilimitadas.
     @Query("SELECT COUNT(*) FROM accounts WHERE user_id = :userId AND is_deleted = 0 AND type != 'CASH'")
     suspend fun countNonCash(userId: String): Int
 

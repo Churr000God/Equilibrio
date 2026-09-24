@@ -59,8 +59,12 @@ class GoogleAuthClient(private val context: Context) {
                 ),
             )
         } catch (e: GoogleIdTokenParsingException) {
+            // El token que devolvió Google no tiene el formato esperado (credencial corrupta/no-Google).
             Result.failure(e)
         } catch (e: androidx.credentials.exceptions.GetCredentialException) {
+            // Cubre tanto la cancelación del usuario (cerró el picker) como la ausencia de una
+            // cuenta Google guardada en el dispositivo: Credential Manager reporta ambas bajo esta
+            // misma jerarquía y hoy no se distinguen — quien llama solo ve un error genérico.
             Result.failure(e)
         }
     }

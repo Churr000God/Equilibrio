@@ -23,10 +23,13 @@ data class RecurringTransactionEntity(
     @ColumnInfo(name = "account_id") val accountId: String,
     val kind: String,
     val classification: String,
+    // Monto en centavos.
     @ColumnInfo(name = "amount_cents") val amountCents: Long,
     val note: String?,
     @ColumnInfo(name = "category_id") val categoryId: String? = null,
     val frequency: String,
+    // Día de anclaje según `frequency` (p. ej. día del mes o día de la semana); null si la
+    // frecuencia no lo requiere.
     @ColumnInfo(name = "anchor_day") val anchorDay: Int? = null,
     @ColumnInfo(name = "next_occurrence_at") val nextOccurrenceAt: Long,
     @ColumnInfo(name = "is_active") val isActive: Boolean = true,

@@ -105,6 +105,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun signIn(context: Context) {
+        // Evita relanzar Credential Manager si ya hay un intento en curso (p. ej. doble tap).
         if (_state.value.isSigningIn) return
         _state.update { it.copy(isSigningIn = true, signInError = null) }
 

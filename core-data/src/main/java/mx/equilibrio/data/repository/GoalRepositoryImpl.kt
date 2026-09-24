@@ -43,6 +43,10 @@ class GoalRepositoryImpl @Inject constructor(
         dao.markDeleted(id, now = System.currentTimeMillis())
     }
 
+    // Un abono a una meta se registra como un gasto real (mueve dinero de la cuenta) y, dentro
+    // de la misma transacción de BD, revisa si con este abono se alcanzó el objetivo para
+    // marcar la meta como completada. Ambas escrituras van atómicas para que la meta nunca
+    // quede en estado inconsistente con sus propios abonos.
     override suspend fun contribute(goalId: String, accountId: String, amountCents: Long, date: LocalDate) {
         val now = System.currentTimeMillis()
         database.withTransaction {
@@ -66,6 +70,8 @@ class GoalRepositoryImpl @Inject constructor(
                 ),
             )
 
+            // Solo promueve ACTIVE -> COMPLETED; si la meta ya estaba en otro estado
+            // (p. ej. ya completada) este abono extra no debe reescribirlo.
             val reached = goal.savedCents + amountCents >= goal.goal.targetCents
             if (reached && goal.goal.status == GoalStatus.ACTIVE.name) {
                 dao.updateStatus(goalId, GoalStatus.COMPLETED.name, now)

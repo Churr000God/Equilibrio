@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+/** Periodo de facturación de una cuenta CREDIT_CARD: [startAt, endAt) es el corte, [payAt] la fecha límite de pago. */
 @Entity(
     tableName = "periods",
     foreignKeys = [
@@ -22,6 +23,7 @@ data class PeriodEntity(
     @ColumnInfo(name = "end_at") val endAt: Long,
     @ColumnInfo(name = "pay_at") val payAt: Long,
     val state: String = "OPEN",
+    // Montos en centavos. Saldo que quedó sin pagar del periodo y se traslada al siguiente.
     @ColumnInfo(name = "carried_balance_cents") val carriedBalanceCents: Long = 0,
     @ColumnInfo(name = "amount_paid_cents") val amountPaidCents: Long = 0,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,

@@ -38,6 +38,9 @@ class CategoryRepositoryImpl @Inject constructor(
         dao.markDeleted(id, now = System.currentTimeMillis())
     }
 
+    // Fallback para cuando el usuario borra una categoría con movimientos: esos movimientos
+    // se reasignan a "Otros" en vez de quedar con un categoryId huérfano. isSystem=true evita
+    // que el usuario la borre a su vez; sortOrder=Int.MAX_VALUE la manda siempre al final de la lista.
     override suspend fun getOrCreateOtros(userId: String, type: CategoryType): Category {
         val existing = dao.findSystemByUserAndType(userId, type.name)
         if (existing != null) return existing.toDomain()

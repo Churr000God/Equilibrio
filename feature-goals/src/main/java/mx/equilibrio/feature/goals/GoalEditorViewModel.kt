@@ -45,6 +45,10 @@ sealed interface GoalEditorEvent {
     data object SaveClicked : GoalEditorEvent
 }
 
+/**
+ * Formulario de alta/edición de meta. Precarga la meta existente cuando [editingId] viene en el
+ * SavedStateHandle y valida nombre, monto objetivo y plazo antes de guardar.
+ */
 @HiltViewModel
 class GoalEditorViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -85,6 +89,8 @@ class GoalEditorViewModel @Inject constructor(
             is GoalEditorEvent.TargetChanged -> _state.update {
                 it.copy(targetInput = sanitizeAmountInput(event.raw), targetError = null)
             }
+            // El plazo es opcional, pero si se elige uno debe ser estrictamente futuro: una meta
+            // con fecha límite hoy o en el pasado no tiene sentido como plazo a cumplir.
             is GoalEditorEvent.DeadlineChanged -> _state.update {
                 it.copy(
                     deadline = event.date,
@@ -97,6 +103,8 @@ class GoalEditorViewModel @Inject constructor(
 
     private fun save() {
         val current = _state.value
+        // Se valida nombre y monto por separado (en vez de solo chequear canSave) para poder mostrar
+        // el mensaje de error específico de cada campo; canSave ya cubre estos casos más el de deadline.
         if (current.name.isBlank()) {
             _state.update { it.copy(nameError = "Ponle nombre a tu meta.") }
             return

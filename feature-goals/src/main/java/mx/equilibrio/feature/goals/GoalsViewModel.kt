@@ -26,6 +26,11 @@ import kotlin.time.Clock
 
 internal fun today(): LocalDate = Clock.System.todayIn(TimeZone.UTC)
 
+/**
+ * Lista de metas con racha de ahorro, más el estado transitorio de dos hojas modales (abonar y
+ * confirmar borrado) que no vienen de ningún caso de uso: se manejan acá como flows locales y se
+ * combinan con los datos reales para formar un único [GoalsUiState].
+ */
 @HiltViewModel
 class GoalsViewModel @Inject constructor(
     observeGoals: ObserveGoals,
@@ -84,6 +89,8 @@ class GoalsViewModel @Inject constructor(
     }
 
     private fun openContribute(goalId: String) {
+        // Se lee el snapshot actual de state (no un flow) porque solo hace falta el nombre de la
+        // meta para armar la hoja; no tiene sentido combinar un flow nuevo solo para esto.
         val goal = (state.value.featured?.takeIf { it.id == goalId }
             ?: state.value.others.firstOrNull { it.id == goalId }) ?: return
         viewModelScope.launch {

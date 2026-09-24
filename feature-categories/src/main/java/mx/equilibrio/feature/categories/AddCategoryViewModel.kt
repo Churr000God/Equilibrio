@@ -22,6 +22,12 @@ import mx.equilibrio.ui.components.sanitizeAmountInput
 import java.util.UUID
 import javax.inject.Inject
 
+/**
+ * Formulario de alta/edición de categoría. A diferencia de un ViewModel de simple mapeo,
+ * también resuelve el borrado (con reasignación opcional de movimientos a "Otros", ver
+ * [CategoryDeleteDialog]) y precarga los datos existentes cuando [editingId] viene en el
+ * SavedStateHandle.
+ */
 @HiltViewModel
 class AddCategoryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -97,6 +103,7 @@ class AddCategoryViewModel @Inject constructor(
                 return@launch
             }
 
+            // Categoría nueva: se agrega al final del orden actual; si ya existía, conserva su posición.
             val nextSortOrder = base?.sortOrder ?: getCategories().first().size
 
             saveCategory(

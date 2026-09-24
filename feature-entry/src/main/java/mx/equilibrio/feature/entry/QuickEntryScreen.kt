@@ -196,6 +196,9 @@ fun QuickEntryScreen(
                     )
 
                     EntryMode.CREDIT_PURCHASE -> {
+                        // Al revés que el resto de los modos: acá el selector SOLO ofrece tarjetas,
+                        // porque este es el único camino admitido para gastar contra una CREDIT_CARD
+                        // (ver SaveCreditPurchase / SaveTransaction en core-domain).
                         AccountPickerSection(
                             label = "Tarjeta",
                             accounts = state.accounts.filter { it.type == AccountType.CREDIT_CARD },
@@ -250,6 +253,9 @@ fun QuickEntryScreen(
                     }
 
                     EntryMode.EXPENSE, EntryMode.INCOME -> {
+                        // Un gasto/ingreso normal no puede apuntar a una CREDIT_CARD (SaveTransaction lo
+                        // rechaza): se filtra acá para no dejar elegir una opción que el guardado va a
+                        // rechazar después. La compra con tarjeta tiene su propio modo (CREDIT_PURCHASE).
                         AccountPickerSection(
                             label = "Cuenta",
                             accounts = state.accounts.filter { it.type != AccountType.CREDIT_CARD },
@@ -461,6 +467,8 @@ private fun TransferAccountsSection(
     onOriginSelected: (String) -> Unit,
     onDestinationSelected: (String) -> Unit,
 ) {
+    // CreateTransfer solo admite cuentas CASH/BANK en ambos extremos; una tarjeta no participa
+    // de una transferencia normal (ver CreateTransfer en core-domain).
     val transferable = accounts.filter { it.type != AccountType.CREDIT_CARD }
 
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
@@ -820,6 +828,8 @@ private fun EditFormSection(state: QuickEntryUiState, viewModel: QuickEntryViewM
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                 ) {
+                    // Editar acá siempre es un gasto/ingreso normal (las cuotas no llegan a este form,
+                    // ver KDoc de EditFormSection), así que aplica la misma exclusión de CREDIT_CARD.
                     state.accounts.filter { it.type != AccountType.CREDIT_CARD }.forEach { account ->
                         EqDomainToggleOption(
                             label = account.name,

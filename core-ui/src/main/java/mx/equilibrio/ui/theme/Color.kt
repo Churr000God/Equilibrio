@@ -2,6 +2,14 @@ package mx.equilibrio.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+/*
+ * Cada tono de dominio (Green, Purple) trae 4 variantes — base/Deep/Mid/Soft —
+ * no por preferencia estética: [DomainTone] las usa para separar tipos de
+ * movimiento dentro de la misma familia de color (p. ej. GreenDeep para
+ * ingreso fijo vs. GreenMid para ingreso variable) sin salirse del verde que
+ * el usuario ya asocia a "dinero entrando". Ver Tone.kt para el mapeo.
+ */
+
 // ── Light — dominio ──────────────────────────────────────────────────────────
 val Green = Color(0xFF2F7D5B)
 val GreenDeep = Color(0xFF1D4F3A)

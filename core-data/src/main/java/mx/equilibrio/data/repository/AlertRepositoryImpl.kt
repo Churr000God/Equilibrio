@@ -33,6 +33,7 @@ class AlertRepositoryImpl @Inject constructor(
                 userId = alert.userId,
                 type = alert.type.name,
                 referenceId = alert.referenceId,
+                // Room/SQLite no tiene boolean nativo; se persiste como 0/1 (ver AlertMapper.toDomain).
                 isRead = if (alert.isRead) 1 else 0,
                 triggeredAt = alert.triggeredAt,
                 updatedAt = now,

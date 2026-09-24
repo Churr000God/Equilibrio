@@ -42,6 +42,8 @@ fun CategoryDeleteDialog(
     onDismiss: () -> Unit,
 ) {
     val colors = EquilibrioTheme.colors
+    // "Moverlos a Otros" es la opción preseleccionada: es la no destructiva, conserva el historial
+    // del usuario aunque la categoría desaparezca.
     var reassign by remember { mutableStateOf(true) }
 
     AlertDialog(

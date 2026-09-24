@@ -21,6 +21,12 @@ import javax.inject.Inject
 
 private data class DeleteState(val isDeleting: Boolean = false, val deleted: Boolean = false)
 
+/**
+ * Detalle de una categoría (totales del mes, movimientos recientes, presupuesto) con su propio
+ * flujo de borrado. [userId] y [categoryType] se guardan al vuelo desde el último valor combinado
+ * porque [delete] los necesita fuera del `combine`, para reasignar movimientos a "Otros" sin volver
+ * a pedir el detalle completo.
+ */
 @HiltViewModel
 class CategoryDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,

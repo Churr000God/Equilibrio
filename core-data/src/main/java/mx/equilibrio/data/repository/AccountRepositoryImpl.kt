@@ -26,6 +26,8 @@ class AccountRepositoryImpl @Inject constructor(
     override suspend fun getById(id: String): Account? = dao.getById(id)?.toDomain()
 
     override suspend fun upsert(account: Account) {
+        // syncState = "PENDING": convención de todos los repos de core-data para marcar que
+        // esta escritura local todavía no fue confirmada por el motor de sync remoto.
         dao.upsert(
             account.toEntity(
                 syncState = "PENDING",

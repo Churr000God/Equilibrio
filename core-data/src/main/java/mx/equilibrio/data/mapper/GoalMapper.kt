@@ -10,12 +10,16 @@ fun GoalWithSaved.toDomain(): Goal = Goal(
     userId = goal.userId,
     name = goal.name,
     targetCents = goal.targetCents,
+    // savedCents no vive en GoalEntity: lo calcula el DAO sumando las transacciones
+    // ligadas a esta meta (goalId), no es un campo almacenado que se pueda desincronizar.
     savedCents = savedCents,
     deadline = goal.deadline?.toLocalDate(),
     status = GoalStatus.valueOf(goal.status),
     createdAt = goal.createdAt.toLocalDate(),
 )
 
+// No hay Goal.toEntity(savedCents): el monto ahorrado nunca se persiste en GoalEntity,
+// siempre se recalcula desde las transacciones (ver toDomain arriba).
 fun Goal.toEntity(syncState: String, updatedAt: Long, isDeleted: Boolean = false): GoalEntity = GoalEntity(
     id = id,
     userId = userId,

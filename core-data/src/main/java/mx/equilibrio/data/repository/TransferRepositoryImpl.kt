@@ -18,6 +18,10 @@ class TransferRepositoryImpl @Inject constructor(
     private val transactionDao: TransactionDao,
 ) : TransferRepository {
 
+    // Una transferencia entre cuentas propias se modela como dos transacciones (el egreso de
+    // una cuenta y el ingreso a la otra) más un registro Transfer que las liga. Las tres
+    // escrituras van en una sola transacción de BD para que nunca quede un egreso sin su
+    // ingreso correspondiente (o viceversa) si algo falla a la mitad.
     override suspend fun create(expense: Transaction, income: Transaction): Transfer = db.withTransaction {
         val now = System.currentTimeMillis()
         transactionDao.upsert(expense.toEntity(syncState = "PENDING", updatedAt = now))

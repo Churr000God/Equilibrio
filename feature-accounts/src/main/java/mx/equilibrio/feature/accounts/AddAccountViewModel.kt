@@ -18,6 +18,11 @@ import mx.equilibrio.domain.usecase.SaveAccount
 import java.util.UUID
 import javax.inject.Inject
 
+/**
+ * El límite freemium (máx. 2 cuentas BANK/CREDIT_CARD en plan FREE) se valida dos veces: al entrar
+ * (ver [init], issue #5) para avisar antes de que el usuario llene el formulario, y otra vez en [save]
+ * por si cambia el tipo después de ese aviso inicial.
+ */
 @HiltViewModel
 class AddAccountViewModel @Inject constructor(
     private val observeAccounts: ObserveAccounts,
@@ -96,6 +101,7 @@ class AddAccountViewModel @Inject constructor(
                 return@launch
             }
 
+            // Este ViewModel no tiene una fuente de sesión propia: toma el userId de cualquier cuenta existente.
             val ownerId = observeAccounts().first().firstOrNull()?.userId
             if (ownerId == null) {
                 _state.update { it.copy(isSaving = false) }

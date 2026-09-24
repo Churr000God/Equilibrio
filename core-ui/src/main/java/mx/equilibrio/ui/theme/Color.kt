@@ -59,3 +59,12 @@ val WarningDark = Color(0xFFD9A64A)
 val WarningSoftDark = Color(0xFF3A2E14)
 val InfoDark = Color(0xFF7FA6E8)
 val InfoSoftDark = Color(0xFF1C2740)
+
+// ── Daltonismo (Alto Contraste / Paleta Accesible) ───────────────────────────
+// Se sustituyen verdes y morados por azul y naranja de alto contraste
+val AccessibleBlue = Color(0xFF005AB5)
+val AccessibleBlueDeep = Color(0xFF003D7A)
+val AccessibleBlueSoft = Color(0xFFE6F0F9)
+val AccessibleOrange = Color(0xFFDC582A)
+val AccessibleOrangeDeep = Color(0xFFB04621)
+val AccessibleOrangeSoft = Color(0xFFFBECE6)

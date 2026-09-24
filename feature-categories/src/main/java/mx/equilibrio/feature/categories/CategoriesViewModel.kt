@@ -23,6 +23,11 @@ import javax.inject.Inject
 
 internal fun today(): LocalDate = Clock.System.todayIn(TimeZone.UTC)
 
+/**
+ * Lista de categorías con su gasto/ingreso del mes seleccionado. Combina tres flows (mes,
+ * categorías, transacciones) para recalcular totales y proporciones cada vez que cambia
+ * cualquiera de ellos.
+ */
 @HiltViewModel
 class CategoriesViewModel @Inject constructor(
     getCategories: GetCategories,
@@ -37,6 +42,8 @@ class CategoriesViewModel @Inject constructor(
         getCategories(),
         observeTransactions(),
     ) { month, categories, transactions ->
+        // Solo movimientos ya confirmados del mes; los abonos a metas (goalId != null) no cuentan aquí
+        // porque ya se reportan en feature-goals y duplicarían el gasto/ingreso por categoría.
         val monthTransactions = transactions.filter {
             it.status == TransactionStatus.COMPLETED && it.goalId == null && it.occurredAt in month
         }

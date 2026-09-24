@@ -50,6 +50,9 @@ class TransactionRepositoryImpl @Inject constructor(
         )
     }
 
+    // Una transferencia son dos transacciones (egreso + ingreso) ligadas por TransferEntity;
+    // si `id` pertenece a una, hay que confirmar ambas juntas para que no quede una cuenta
+    // confirmada y la otra pendiente.
     override suspend fun confirm(id: String, today: LocalDate) = db.withTransaction {
         val now = System.currentTimeMillis()
         val todayMillis = today.toEpochMillis()
@@ -62,6 +65,8 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
+    // Mismo motivo que confirm(): borrar solo un lado de una transferencia dejaría el balance
+    // de la otra cuenta reflejando un movimiento que ya no existe del otro lado.
     override suspend fun delete(id: String) = db.withTransaction {
         val now = System.currentTimeMillis()
         val transfer = transferDao.findByTransactionId(id)

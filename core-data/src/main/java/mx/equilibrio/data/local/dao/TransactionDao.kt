@@ -64,6 +64,8 @@ interface TransactionDao {
     )
     suspend fun deleteByCategory(categoryId: String, now: Long)
 
+    // Confirma un movimiento SCHEDULED: pasa a COMPLETED y, si su fecha original quedó en el
+    // futuro respecto a hoy, la recorta a hoy (no puede impactar el balance con fecha futura).
     @Query(
         """
         UPDATE transactions

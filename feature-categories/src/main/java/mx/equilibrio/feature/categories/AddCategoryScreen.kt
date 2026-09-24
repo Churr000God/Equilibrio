@@ -58,6 +58,7 @@ fun AddCategoryScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    // onSaved cierra la pantalla tanto si se guardó como si se borró: ambos flujos terminan igual, no hay nada más que editar.
     LaunchedEffect(state.saved, state.deleted) {
         if (state.saved || state.deleted) onSaved()
     }
@@ -84,6 +85,8 @@ fun AddCategoryScreen(
         EqTopBar(
             title = if (state.isEditing) "Editar categoría" else "Nueva categoría",
             onBack = onCancel,
+            // Las categorías de sistema (p. ej. "Otros") no se pueden borrar: son el destino de reasignación
+            // cuando se elimina otra categoría, así que siempre debe haber una disponible.
             trailing = if (state.isEditing && !state.isSystem) {
                 {
                     IconButton(onClick = { showDeleteConfirm = true }) {

@@ -75,6 +75,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun onGoogleSignIn(context: Context) {
+        // Evita relanzar Credential Manager si ya hay un intento en curso (p. ej. doble tap).
         if (_state.value.isGoogleSigningIn) return
         _state.update { it.copy(isGoogleSigningIn = true, googleError = null) }
 

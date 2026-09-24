@@ -23,6 +23,9 @@ class PeriodRepositoryImpl @Inject constructor(
 
     override suspend fun upsert(period: Period) {
         val now = System.currentTimeMillis()
+        // Period (dominio) no tiene createdAt; se preserva el de la fila existente si ya
+        // existía, o se usa "now" solo en el insert inicial, para no perder la fecha de
+        // creación real del periodo en cada actualización.
         val existing = dao.getById(period.id)
         dao.upsert(
             period.toEntity(

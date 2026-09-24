@@ -32,11 +32,13 @@ data class CategoryDetailUiState(
             CategoryType.EXPENSE -> "Gasto"
         }
 
+    // Se topa en 1f aunque el gasto supere el presupuesto: la barra de progreso no debe desbordarse visualmente.
     val budgetProgress: Float?
         get() = monthlyBudgetCents?.let { budget ->
             if (budget <= 0) 0f else (monthTotalCents.toFloat() / budget.toFloat()).coerceIn(0f, 1f)
         }
 
+    // Puede salir negativo: significa que ya se pasó del presupuesto ese monto (ver "Te pasaste..." en la UI).
     val budgetRemainingCents: Long?
         get() = monthlyBudgetCents?.let { it - monthTotalCents }
 }

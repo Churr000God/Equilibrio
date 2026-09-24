@@ -25,6 +25,7 @@ data class AddCategoryUiState(
     val canSave: Boolean
         get() = !isSaving && validate() == null
 
+    /** null = sin presupuesto asignado; el toggle desactivado nunca manda un monto aunque quede texto en el input. */
     val budgetCents: Long? get() = if (budgetEnabled) budgetInput.toCentsOrZero() else null
 }
 

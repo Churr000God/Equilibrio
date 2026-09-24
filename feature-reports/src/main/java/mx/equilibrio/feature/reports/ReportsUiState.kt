@@ -9,6 +9,7 @@ data class ReportsUiState(
     val report: Report? = null,
     val canGoForward: Boolean = false,
 ) {
+    // Vacío solo si ya terminó de cargar y el reporte no trae movimientos; mientras carga nunca se considera vacío.
     val isEmpty: Boolean get() = !isLoading && (report?.isEmpty ?: true)
 }
 

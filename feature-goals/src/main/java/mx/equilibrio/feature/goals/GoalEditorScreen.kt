@@ -53,6 +53,8 @@ fun GoalEditorScreen(
 
     var showDiscardConfirm by remember { mutableStateOf(false) }
 
+    // Solo se advierte por perder datos al crear una meta nueva con algo capturado; al editar una
+    // existente no hay nada que "descartar" (los cambios simplemente no se guardan).
     fun handleBack() {
         if (state.hasInput && !state.isEditing) showDiscardConfirm = true else onCancel()
     }

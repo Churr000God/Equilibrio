@@ -30,6 +30,7 @@ data class TransactionEntity(
     @ColumnInfo(name = "account_id") val accountId: String,
     val kind: String,
     val classification: String?,
+    // Monto en centavos.
     @ColumnInfo(name = "amount_cents") val amountCents: Long,
     @ColumnInfo(name = "occurred_at") val occurredAt: Long,
     val note: String?,
@@ -37,10 +38,14 @@ data class TransactionEntity(
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     @ColumnInfo(name = "sync_state") val syncState: String,
     @ColumnInfo(name = "is_deleted") val isDeleted: Boolean = false,
+    // COMPLETED impacta el balance ya; SCHEDULED es a futuro y todavía no (ver TransactionDao.confirm).
     @ColumnInfo(name = "status") val status: String = "COMPLETED",
+    // Periodo de tarjeta de crédito al que pertenece; null si la cuenta no es CREDIT_CARD.
     @ColumnInfo(name = "period_id") val periodId: String? = null,
     /** Abono espejo de una meta. Sin FK: la meta puede borrarse y el dinero ya salió. */
     @ColumnInfo(name = "goal_id") val goalId: String? = null,
+    // Los tres siguientes van juntos: identifican una compra a meses y la posición de esta
+    // cuota (installmentIndex de installmentCount) dentro del plan. null si no es una compra a meses.
     @ColumnInfo(name = "installment_plan_id") val installmentPlanId: String? = null,
     @ColumnInfo(name = "installment_index") val installmentIndex: Int? = null,
     @ColumnInfo(name = "installment_count") val installmentCount: Int? = null,

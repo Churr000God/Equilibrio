@@ -20,6 +20,7 @@ import mx.equilibrio.ui.theme.eqShadow
 fun EqCard(
     modifier: Modifier = Modifier,
     elevation: Elevation = Elevation.LEVEL_1,
+    /** Tarjeta destacada: esquinas más grandes (`ShapeLarge`) y padding por defecto mayor (`Spacing.lg`). */
     hero: Boolean = false,
     padding: androidx.compose.ui.unit.Dp = if (hero) Spacing.lg else Spacing.base,
     /** Si se pasa, la tarjeta completa es tocable (ripple recortado a su forma, sin cortar la sombra). */

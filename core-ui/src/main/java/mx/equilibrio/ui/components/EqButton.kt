@@ -28,6 +28,12 @@ import mx.equilibrio.ui.theme.ShapePill
 import mx.equilibrio.ui.theme.Spacing
 import mx.equilibrio.ui.theme.TouchTarget
 
+/**
+ * PRIMARY: acción principal (relleno verde). SECONDARY: acción secundaria, sin relleno.
+ * DESTRUCTIVE: elimina/irreversible, máximo peso visual (relleno de error).
+ * DESTRUCTIVE_LOW_EMPHASIS: también irreversible, pero pensada para pesar menos que
+ * "Cancelar" en un diálogo de confirmación (ver [EqDestructiveDialog]).
+ */
 enum class EqButtonVariant { PRIMARY, SECONDARY, DESTRUCTIVE, DESTRUCTIVE_LOW_EMPHASIS }
 
 @Composable

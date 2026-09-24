@@ -22,7 +22,9 @@ data class GoalEntity(
     @PrimaryKey val id: String,
     @ColumnInfo(name = "user_id") val userId: String,
     val name: String,
+    // Monto en centavos.
     @ColumnInfo(name = "target_cents") val targetCents: Long,
+    // null = meta sin fecha límite.
     val deadline: Long?,
     val status: String,
     @ColumnInfo(name = "created_at") val createdAt: Long,

@@ -49,6 +49,10 @@ class ReportRepositoryImpl @Inject constructor(
     private fun YearMonth.range(): Pair<Long, Long> = firstDay().toEpochMillis() to lastDay().toEpochMillis()
 }
 
+// El DAO devuelve una fila por combinación (kind, classification) ya sumada en SQL; acá solo
+// se distribuye cada fila al bucket de PeriodTotals que le corresponde. La clasificación manda
+// sobre el kind (fixed/variable/essential/recreational); solo cuando no hay clasificación se
+// cae a "unclassified" según sea ingreso o gasto.
 internal fun List<PeriodTotalRow>.toPeriodTotals(): PeriodTotals {
     var totals = PeriodTotals()
     for (row in this) {
@@ -66,6 +70,9 @@ internal fun List<PeriodTotalRow>.toPeriodTotals(): PeriodTotals {
     return totals
 }
 
+// window trae todos los meses de la ventana aunque no tengan movimientos (p. ej. un mes sin
+// actividad); byMonth[key].orEmpty() rellena esos huecos con 0 en vez de omitir el punto,
+// para que la tendencia no tenga meses faltantes en el eje.
 internal fun List<MonthlyRow>.toTrend(window: List<YearMonth>): List<MonthlyTrendPoint> {
     val byMonth = groupBy { it.month }
     return window.map { month ->
@@ -80,6 +87,8 @@ internal fun List<MonthlyRow>.toTrend(window: List<YearMonth>): List<MonthlyTren
 }
 
 internal fun List<CategoryRow>.toShares(): List<CategoryShare> {
+    // coerceAtLeast(1) evita división entre 0 cuando el mes no tuvo gasto en ninguna categoría;
+    // en ese caso share queda en 0 para todas en vez de NaN/crash.
     val total = sumOf { it.totalCents }.coerceAtLeast(1)
     return map { row ->
         CategoryShare(

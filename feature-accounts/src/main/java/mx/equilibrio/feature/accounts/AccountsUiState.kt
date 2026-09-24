@@ -42,6 +42,7 @@ private fun Alert.toUi() = AlertUi(
     message = "Tu gasto recreativo se desvió de tu equilibrio habitual.",
 )
 
+// Por ahora solo hay copy para alertas de desviación de balance; otros tipos de alerta se descartan aquí.
 fun List<Alert>.toUi(): List<AlertUi> = filter { it.type == AlertType.BALANCE_DEVIATION }.map { it.toUi() }
 
 data class AccountsUiState(

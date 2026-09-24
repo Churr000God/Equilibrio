@@ -44,6 +44,14 @@ import javax.inject.Inject
 
 fun today() = Clock.System.todayIn(TimeZone.UTC)
 
+/**
+ * Pantalla única para crear/editar los cuatro tipos de movimiento (gasto, ingreso,
+ * transferencia, compra con tarjeta) y también para crear categorías al vuelo sin salir
+ * del formulario. A diferencia de un ViewModel de un solo caso de uso, acá el estado no
+ * sale de un flow reactivo: se muta a mano con `_state.update` porque el formulario tiene
+ * que sobrevivir a acciones asíncronas propias (guardar, confirmar, guardar categoría) sin
+ * perder lo que el usuario ya capturó.
+ */
 @HiltViewModel
 class QuickEntryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -140,6 +148,10 @@ class QuickEntryViewModel @Inject constructor(
                     }
                     val currentIsCreditCard = it.accounts.firstOrNull { account -> account.id == it.accountId }
                         ?.type == AccountType.CREDIT_CARD
+                    // SaveTransaction rechaza un gasto/ingreso normal contra CREDIT_CARD, así que la
+                    // cuenta elegida se re-selecciona sola al cambiar de modo: entrando a
+                    // CREDIT_PURCHASE se ofrece una tarjeta (es lo único que ese modo guarda), y
+                    // saliendo hacia EXPENSE/INCOME se descarta la tarjeta si había quedado elegida.
                     val newAccountId = when {
                         event.mode == EntryMode.CREDIT_PURCHASE ->
                             it.accounts.firstOrNull { account -> account.type == AccountType.CREDIT_CARD }?.id

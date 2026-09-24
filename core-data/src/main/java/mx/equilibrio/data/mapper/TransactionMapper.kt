@@ -11,6 +11,9 @@ import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.TransactionStatus
 
+// Convención compartida por todos los mappers de core-data: las fechas se persisten como
+// epoch millis en UTC (inicio de día), nunca con la zona horaria del dispositivo, para que
+// dos dispositivos con distinto huso no desincronicen la fecha de un mismo movimiento.
 fun LocalDate.toEpochMillis(): Long = atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
 
 fun Long.toLocalDate(): LocalDate = Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date

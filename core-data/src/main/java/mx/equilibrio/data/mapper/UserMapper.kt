@@ -13,5 +13,7 @@ fun UserEntity.toDomain(): User = User(
     familyName = familyName,
     photoUrl = photoUrl,
     plan = PlanTier.valueOf(plan),
+    // hasPassword no se persiste: se deriva de si existe un hash guardado, para que la UI
+    // pueda decidir si ofrece "iniciar sesión con contraseña" sin exponer el hash al dominio.
     hasPassword = passwordHash != null,
 )

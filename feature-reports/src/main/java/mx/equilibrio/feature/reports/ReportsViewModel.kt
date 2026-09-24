@@ -24,6 +24,7 @@ class ReportsViewModel @Inject constructor(
     observeReport: ObserveReport,
 ) : ViewModel() {
 
+    // Mes de "hoy": tope para no dejar navegar el selector hacia meses futuros que todavía no existen.
     private val currentMonth = YearMonth.of(Clock.System.todayIn(TimeZone.UTC))
     private val selectedMonth = MutableStateFlow(currentMonth)
 
@@ -47,6 +48,7 @@ class ReportsViewModel @Inject constructor(
     fun onEvent(event: ReportsEvent) {
         when (event) {
             ReportsEvent.PreviousMonth -> selectedMonth.update { it.previous() }
+            // No hay reporte para meses que aún no pasaron: si ya se está en currentMonth, el evento no hace nada.
             ReportsEvent.NextMonth -> selectedMonth.update { if (it < currentMonth) it.next() else it }
         }
     }

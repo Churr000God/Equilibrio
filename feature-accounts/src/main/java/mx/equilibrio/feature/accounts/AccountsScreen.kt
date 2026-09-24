@@ -76,6 +76,7 @@ fun AccountsScreen(
                         )
 
                         val selectedAccount = state.accounts.firstOrNull { it.id == state.selectedAccountId }
+                        // Periodos de facturación solo aplican a tarjetas de crédito; débito/efectivo no tienen corte.
                         if (selectedAccount?.type == AccountType.CREDIT_CARD) {
                             CardPeriodsSection(
                                 periods = cardPeriodsState.periods,

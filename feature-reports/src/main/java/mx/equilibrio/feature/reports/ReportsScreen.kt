@@ -55,6 +55,11 @@ import mx.equilibrio.ui.theme.ShapeMedium
 import mx.equilibrio.ui.theme.ShapePill
 import mx.equilibrio.ui.theme.Spacing
 
+/**
+ * Pantalla de reportes del mes. [focusSection] llega cuando se entra desde un atajo de
+ * Inicio (p. ej. tocar la tarjeta de "Matriz" ahí): la lista arranca scrolleada hasta esa
+ * sección en vez de siempre desde arriba. En `null` (entrada normal por navegación) no hace nada.
+ */
 @Composable
 fun ReportsScreen(
     modifier: Modifier = Modifier,
@@ -186,6 +191,7 @@ private fun MatrixCard(matrix: CrossMatrix, insight: MatrixInsight) {
         )
         Spacer(Modifier.height(Spacing.base))
 
+        // Caso sin datos: todavía no hay transacciones clasificadas para cruzar; solo se muestra el insight.
         if (matrix.isEmpty) {
             Text(insight.text(), style = EquilibrioTheme.typography.bodySmall, color = colors.inkMuted)
             return@EqCard

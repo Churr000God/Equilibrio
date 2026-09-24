@@ -1,6 +1,7 @@
 package mx.equilibrio.feature.entry
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -9,17 +10,25 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.rounded.AccountBalanceWallet
+import androidx.compose.material.icons.rounded.CalendarToday
+import androidx.compose.material.icons.rounded.Category
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Notes
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -29,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.text.input.KeyboardType
@@ -67,6 +77,7 @@ import mx.equilibrio.ui.theme.EquilibrioColors
 import mx.equilibrio.ui.theme.EquilibrioTheme
 import mx.equilibrio.ui.theme.ShapeSmall
 import mx.equilibrio.ui.theme.Spacing
+import mx.equilibrio.ui.theme.TouchTarget
 
 /** Slots de color fijos para categorías (mismo criterio que categoryColor en :feature-categories). */
 private const val CategoryColorSlotCount = 3
@@ -145,6 +156,9 @@ fun QuickEntryScreen(
                     state = state,
                     onConfirmClicked = { viewModel.onEvent(QuickEntryEvent.ConfirmClicked) },
                 )
+            } else if (state.isEditing && state.viewTab == EntryViewTab.EDIT) {
+                // Restyle solo para editar (mockup de Transacciones) — la creación de abajo no se toca.
+                EditFormSection(state = state, viewModel = viewModel)
             } else {
                 val hasCreditCard = state.accounts.any { it.type == AccountType.CREDIT_CARD }
                 val modeOptions = buildList {
@@ -659,6 +673,284 @@ private fun CreditPeriodInfo(period: Period?, available: CreditAvailability?) {
                     modifier = Modifier.padding(top = Spacing.xs),
                 )
             }
+        }
+    }
+}
+
+/**
+ * Restyle de edición del mockup de Transacciones: filas compactas (ícono+etiqueta+valor+chevron)
+ * en vez del formulario expandido de creación — cada una abre su propio diálogo. Sin sección de
+ * "Compra en cuotas": el botón Editar ya está oculto para cuotas en TransactionDetailScreen, este
+ * caso no es alcanzable acá. "Recurrente" sí es alcanzable (una ocurrencia SÍ es editable) y se
+ * muestra solo informativo, nunca interactivo — convertir/desconvertir la serie queda fuera de alcance.
+ */
+@Composable
+private fun EditFormSection(state: QuickEntryUiState, viewModel: QuickEntryViewModel) {
+    var showDescriptionDialog by remember { mutableStateOf(false) }
+    var showCategoryDialog by remember { mutableStateOf(false) }
+    var showAccountDialog by remember { mutableStateOf(false) }
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    val accountName = state.accounts.firstOrNull { it.id == state.accountId }?.name ?: "Elegir cuenta"
+    val categoryName = state.categories.firstOrNull { it.id == state.categoryId }?.name ?: "Sin categoría"
+
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.lg)) {
+        EqSegmentedControl(
+            options = listOf("Gasto", "Ingreso"),
+            selectedIndex = if (state.mode == EntryMode.EXPENSE) 0 else 1,
+            onSelect = { index ->
+                viewModel.onEvent(QuickEntryEvent.EntryModeChanged(if (index == 0) EntryMode.EXPENSE else EntryMode.INCOME))
+            },
+        )
+
+        EqTextField(
+            value = state.amountInput,
+            onValueChange = { viewModel.onEvent(QuickEntryEvent.AmountChanged(it)) },
+            label = "Monto",
+            keyboardType = KeyboardType.Decimal,
+            isError = state.amountError != null,
+            helperOrError = state.amountError,
+        )
+
+        ClassificationSection(
+            kind = state.kind,
+            selected = state.classification,
+            onSelect = { viewModel.onEvent(QuickEntryEvent.ClassificationChanged(it)) },
+        )
+
+        Column {
+            EditRow(
+                icon = Icons.Rounded.Notes,
+                label = "Descripción",
+                value = state.note.ifBlank { "Agregar descripción" },
+                onClick = { showDescriptionDialog = true },
+            )
+            EditRow(
+                icon = Icons.Rounded.Category,
+                label = "Categoría",
+                value = categoryName,
+                onClick = { showCategoryDialog = true },
+            )
+            EditRow(
+                icon = Icons.Rounded.AccountBalanceWallet,
+                label = "Cuenta",
+                value = accountName,
+                onClick = { showAccountDialog = true },
+            )
+            EditRow(
+                icon = Icons.Rounded.CalendarToday,
+                label = "Fecha",
+                value = state.occurredAt.toString(),
+                onClick = { showDatePicker = true },
+            )
+        }
+
+        ConfirmedToggle(
+            isConfirmed = state.status == TransactionStatus.COMPLETED,
+            canConfirm = state.occurredAt <= today(),
+            isConfirming = state.isConfirming,
+            onConfirmClicked = { viewModel.onEvent(QuickEntryEvent.ConfirmClicked) },
+        )
+        state.confirmError?.let { EqInlineValidation(it) }
+
+        if (state.editingIsRecurringOccurrence) {
+            Text(
+                text = "Recurrente — esto solo cambia este movimiento, no la serie.",
+                style = EquilibrioTheme.typography.caption,
+                color = EquilibrioTheme.colors.inkMuted,
+            )
+        }
+
+        EqButton(
+            text = "Guardar cambios",
+            onClick = { viewModel.onEvent(QuickEntryEvent.SaveClicked) },
+            enabled = state.canSave,
+            loading = state.isSaving,
+            modifier = Modifier.padding(vertical = Spacing.base),
+        )
+    }
+
+    if (showDescriptionDialog) {
+        var draft by remember(state.note) { mutableStateOf(state.note) }
+        AlertDialog(
+            onDismissRequest = { showDescriptionDialog = false },
+            title = { Text("Descripción") },
+            text = {
+                EqTextField(value = draft, onValueChange = { draft = it }, label = "Descripción")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.onEvent(QuickEntryEvent.NoteChanged(draft))
+                    showDescriptionDialog = false
+                }) { Text("Aceptar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDescriptionDialog = false }) { Text("Cancelar") }
+            },
+        )
+    }
+
+    if (showCategoryDialog) {
+        AlertDialog(
+            onDismissRequest = { showCategoryDialog = false },
+            title = { Text("Categoría") },
+            text = {
+                CategoryPickerList(
+                    kind = state.kind,
+                    categories = state.categories,
+                    selectedId = state.categoryId,
+                    onSelect = {
+                        viewModel.onEvent(QuickEntryEvent.CategorySelected(it))
+                        showCategoryDialog = false
+                    },
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showCategoryDialog = false }) { Text("Cerrar") }
+            },
+        )
+    }
+
+    if (showAccountDialog) {
+        AlertDialog(
+            onDismissRequest = { showAccountDialog = false },
+            title = { Text("Cuenta") },
+            text = {
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                ) {
+                    state.accounts.filter { it.type != AccountType.CREDIT_CARD }.forEach { account ->
+                        EqDomainToggleOption(
+                            label = account.name,
+                            tone = DomainTone.NEUTRAL,
+                            selected = state.accountId == account.id,
+                            onClick = {
+                                viewModel.onEvent(QuickEntryEvent.AccountSelected(account.id))
+                                showAccountDialog = false
+                            },
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAccountDialog = false }) { Text("Cerrar") }
+            },
+        )
+    }
+
+    if (showDatePicker) {
+        val maxDate = if (state.status == TransactionStatus.COMPLETED) today() else null
+        val selectableDates = remember(maxDate) {
+            if (maxDate == null) {
+                androidx.compose.material3.DatePickerDefaults.AllDates
+            } else {
+                object : androidx.compose.material3.SelectableDates {
+                    override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                        Instant.fromEpochMilliseconds(utcTimeMillis).toLocalDateTime(TimeZone.UTC).date <= maxDate
+                }
+            }
+        }
+        val pickerState = rememberDatePickerState(selectableDates = selectableDates)
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    pickerState.selectedDateMillis?.let { millis ->
+                        viewModel.onEvent(
+                            QuickEntryEvent.DateChanged(Instant.fromEpochMilliseconds(millis).toLocalDateTime(TimeZone.UTC).date),
+                        )
+                    }
+                    showDatePicker = false
+                }) { Text("Aceptar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+            },
+        ) {
+            DatePicker(state = pickerState)
+        }
+    }
+}
+
+@Composable
+private fun EditRow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String, onClick: () -> Unit) {
+    val colors = EquilibrioTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = TouchTarget.minRowHeight)
+            .clickable(onClick = onClick)
+            .padding(vertical = Spacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+    ) {
+        Icon(icon, contentDescription = null, tint = colors.inkMuted)
+        Text(text = label, style = EquilibrioTheme.typography.body, color = colors.ink, modifier = Modifier.weight(1f))
+        Text(text = value, style = EquilibrioTheme.typography.bodyStrong, color = colors.inkMuted)
+        Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = colors.inkFaint)
+    }
+}
+
+@Composable
+private fun CategoryPickerList(
+    kind: TransactionKind,
+    categories: List<Category>,
+    selectedId: String?,
+    onSelect: (String?) -> Unit,
+) {
+    val type = if (kind == TransactionKind.EXPENSE) CategoryType.EXPENSE else CategoryType.INCOME
+    val tone = if (kind == TransactionKind.EXPENSE) DomainTone.RECREATIONAL else DomainTone.INCOME_FIXED
+    val filtered = categories.filter { it.type == type }.sortedBy { it.name }
+
+    Row(
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+    ) {
+        EqDomainToggleOption(
+            label = "Sin categoría",
+            tone = DomainTone.NEUTRAL,
+            selected = selectedId == null,
+            onClick = { onSelect(null) },
+        )
+        filtered.forEach { category ->
+            EqDomainToggleOption(
+                label = category.name,
+                tone = tone,
+                selected = selectedId == category.id,
+                onClick = { onSelect(category.id) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ConfirmedToggle(
+    isConfirmed: Boolean,
+    canConfirm: Boolean,
+    isConfirming: Boolean,
+    onConfirmClicked: () -> Unit,
+) {
+    val colors = EquilibrioTheme.colors
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(text = "Confirmada", style = EquilibrioTheme.typography.body, color = colors.ink)
+            Switch(
+                checked = isConfirmed,
+                onCheckedChange = { if (!isConfirmed) onConfirmClicked() },
+                enabled = !isConfirmed && canConfirm && !isConfirming,
+            )
+        }
+        if (!isConfirmed && !canConfirm) {
+            Text(
+                text = "No se puede confirmar con fecha futura",
+                style = EquilibrioTheme.typography.caption,
+                color = colors.inkMuted,
+            )
         }
     }
 }

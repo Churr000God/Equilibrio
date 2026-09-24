@@ -91,6 +91,7 @@ class TransactionDetailViewModel @Inject constructor(
             amountCents = target.amountCents,
             occurredAt = target.occurredAt,
             note = target.note,
+            classification = target.classification,
             accountName = accountsById[target.accountId]?.name,
             categoryName = target.categoryId?.let { categoriesById[it]?.name },
             categoryIcon = target.categoryId?.let { categoriesById[it]?.icon },

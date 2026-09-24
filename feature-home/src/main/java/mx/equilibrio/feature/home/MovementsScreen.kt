@@ -14,11 +14,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Schedule
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -64,6 +67,8 @@ private enum class MovementsTab(val label: String) {
 fun MovementsScreen(
     onAddClicked: () -> Unit,
     onTransactionClicked: (String) -> Unit,
+    onSearchClicked: () -> Unit,
+    onFiltersClicked: () -> Unit,
     modifier: Modifier = Modifier,
     trailing: (@Composable () -> Unit)? = null,
     viewModel: HomeViewModel = hiltViewModel(),
@@ -72,7 +77,31 @@ fun MovementsScreen(
     var selectedTab by remember { mutableStateOf(MovementsTab.ALL) }
 
     Column(modifier = modifier.fillMaxSize().background(EquilibrioTheme.colors.background)) {
-        EqTopBar(title = "Transacciones", trailing = trailing)
+        EqTopBar(
+            title = "Transacciones",
+            trailing = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onSearchClicked) {
+                        Icon(Icons.Rounded.Search, contentDescription = "Buscar", tint = EquilibrioTheme.colors.ink)
+                    }
+                    Box {
+                        IconButton(onClick = onFiltersClicked) {
+                            Icon(Icons.Rounded.FilterList, contentDescription = "Filtros", tint = EquilibrioTheme.colors.ink)
+                        }
+                        if (state.hasActiveFilters) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = 6.dp, end = 6.dp)
+                                    .size(8.dp)
+                                    .background(EquilibrioTheme.colors.purple, CircleShape),
+                            )
+                        }
+                    }
+                    trailing?.invoke()
+                }
+            },
+        )
 
         Box(modifier = Modifier.weight(1f)) {
             if (state.isLoading) {
@@ -105,14 +134,24 @@ fun MovementsScreen(
                             onDismiss = { viewModel.onEvent(HomeEvent.AlertDismissed(alert.id)) },
                         )
                     }
-                    item(key = "month_selector") {
+                    item(key = "date_scope_header") {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            MonthSelector(
-                                label = state.month.label(),
-                                canGoForward = state.canGoForward,
-                                onPrevious = { viewModel.onEvent(HomeEvent.PreviousMonth) },
-                                onNext = { viewModel.onEvent(HomeEvent.NextMonth) },
-                            )
+                            if (state.dateScope == DateScope.MONTH) {
+                                MonthSelector(
+                                    label = state.month.label(),
+                                    canGoForward = state.canGoForward,
+                                    onPrevious = { viewModel.onEvent(HomeEvent.PreviousMonth) },
+                                    onNext = { viewModel.onEvent(HomeEvent.NextMonth) },
+                                )
+                            } else {
+                                // Semana/Año/Rango se eligen en Filtros — acá solo se muestra el resultado,
+                                // sin flechas: no tiene sentido "navegar" un rango custom mes a mes.
+                                Text(
+                                    text = dateScopeLabel(state),
+                                    style = EquilibrioTheme.typography.label,
+                                    color = EquilibrioTheme.colors.inkMuted,
+                                )
+                            }
                         }
                     }
                     item(key = "balance_header") {
@@ -162,6 +201,17 @@ fun MovementsScreen(
 
             EqFab(onClick = onAddClicked, modifier = Modifier.align(Alignment.BottomEnd).padding(Spacing.lg))
         }
+    }
+}
+
+private fun dateScopeLabel(state: HomeUiState): String = when (state.dateScope) {
+    DateScope.WEEK -> "Esta semana"
+    DateScope.MONTH -> state.month.label()
+    DateScope.YEAR -> state.month.year.toString()
+    DateScope.RANGE -> {
+        val start = state.rangeStart?.longLabel() ?: "?"
+        val end = state.rangeEnd?.longLabel() ?: "?"
+        "$start – $end"
     }
 }
 

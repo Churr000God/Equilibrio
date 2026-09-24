@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -25,8 +27,11 @@ import mx.equilibrio.feature.categories.CategoryDetailScreen
 import mx.equilibrio.feature.entry.QuickEntryScreen
 import mx.equilibrio.feature.goals.GoalEditorScreen
 import mx.equilibrio.feature.goals.GoalsScreen
+import mx.equilibrio.feature.home.FiltersScreen
 import mx.equilibrio.feature.home.HomeDashboardScreen
+import mx.equilibrio.feature.home.HomeViewModel
 import mx.equilibrio.feature.home.MovementsScreen
+import mx.equilibrio.feature.home.SearchScreen
 import mx.equilibrio.feature.home.TransactionDetailScreen
 import mx.equilibrio.domain.model.report.ReportSection
 import mx.equilibrio.feature.reports.ReportsScreen
@@ -73,6 +78,9 @@ private fun quickEntryRoute(transactionId: String? = null) =
 private const val ROUTE_TRANSACTION_DETAIL = "transaction_detail/{$ARG_TRANSACTION_ID}"
 
 private fun transactionDetailRoute(transactionId: String) = "transaction_detail/$transactionId"
+
+private const val ROUTE_FILTERS = "movements_filters"
+private const val ROUTE_SEARCH = "movements_search"
 
 private const val ARG_GOAL_ID = "goalId"
 private const val ROUTE_GOAL_EDITOR = "goal_editor?goalId={$ARG_GOAL_ID}"
@@ -172,7 +180,25 @@ fun EquilibrioNavHost(navController: NavHostController = rememberNavController()
                 MovementsScreen(
                     onAddClicked = { navController.navigate(quickEntryRoute()) },
                     onTransactionClicked = { id -> navController.navigate(transactionDetailRoute(id)) },
+                    onSearchClicked = { navController.navigate(ROUTE_SEARCH) },
+                    onFiltersClicked = { navController.navigate(ROUTE_FILTERS) },
                     trailing = { ProfileHud(onOpenProfile = { navController.navigate(ROUTE_PROFILE) }) },
+                )
+            }
+            composable(ROUTE_FILTERS) {
+                // Comparte el HomeViewModel de Transacciones (mismo back stack entry) en vez de un
+                // resultado de navegación — los filtros ya quedan aplicados al volver, es el mismo estado.
+                val movementsEntry = remember(navController) { navController.getBackStackEntry(ROUTE_MOVEMENTS) }
+                FiltersScreen(
+                    onApply = { navController.popBackStack() },
+                    onClosed = { navController.popBackStack() },
+                    viewModel = hiltViewModel(movementsEntry),
+                )
+            }
+            composable(ROUTE_SEARCH) {
+                SearchScreen(
+                    onTransactionClicked = { id -> navController.navigate(transactionDetailRoute(id)) },
+                    onClosed = { navController.popBackStack() },
                 )
             }
             composable(

@@ -1,14 +1,19 @@
 package mx.equilibrio.feature.home
 
 import kotlinx.datetime.LocalDate
+import mx.equilibrio.domain.model.Account
 import mx.equilibrio.domain.model.Alert
 import mx.equilibrio.domain.model.AlertType
+import mx.equilibrio.domain.model.Category
 import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.Transaction
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.TransactionStatus
 import mx.equilibrio.domain.model.YearMonth
 import mx.equilibrio.ui.theme.DomainTone
+
+/** Alcance de fecha de la pantalla de Filtros — MONTH reusa el selector de mes ya existente. */
+enum class DateScope { WEEK, MONTH, YEAR, RANGE }
 
 data class TransactionUi(
     val id: String,
@@ -127,6 +132,22 @@ data class HomeUiState(
     val canGoForward: Boolean = false,
     val transactions: List<TransactionUi> = emptyList(),
     val pendingAlerts: List<AlertUi> = emptyList(),
+    val accounts: List<Account> = emptyList(),
+    val categories: List<Category> = emptyList(),
+    val dateScope: DateScope = DateScope.MONTH,
+    val rangeStart: LocalDate? = null,
+    val rangeEnd: LocalDate? = null,
+    val filterTypes: Set<TransactionKind> = emptySet(),
+    val filterAccountIds: Set<String> = emptySet(),
+    val filterCategoryIds: Set<String> = emptySet(),
+    val filterStatuses: Set<TransactionStatus> = emptySet(),
 ) {
     val isEmpty: Boolean get() = !isLoading && transactions.isEmpty()
+
+    val hasActiveFilters: Boolean
+        get() = dateScope != DateScope.MONTH ||
+            filterTypes.isNotEmpty() ||
+            filterAccountIds.isNotEmpty() ||
+            filterCategoryIds.isNotEmpty() ||
+            filterStatuses.isNotEmpty()
 }

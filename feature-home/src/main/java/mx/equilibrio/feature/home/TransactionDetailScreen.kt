@@ -15,6 +15,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -56,6 +59,7 @@ fun TransactionDetailScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showStopRecurringConfirm by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.deleted) {
         if (state.deleted) onClosed()
@@ -98,8 +102,20 @@ fun TransactionDetailScreen(
             title = "Detalle",
             onBack = onClosed,
             trailing = {
-                IconButton(onClick = { showDeleteConfirm = true }) {
-                    Icon(Icons.Rounded.Delete, contentDescription = "Eliminar movimiento", tint = EquilibrioTheme.colors.error)
+                Box {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(Icons.Rounded.MoreVert, contentDescription = "Más opciones", tint = EquilibrioTheme.colors.ink)
+                    }
+                    DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Eliminar", color = EquilibrioTheme.colors.error) },
+                            leadingIcon = { Icon(Icons.Rounded.Delete, contentDescription = null, tint = EquilibrioTheme.colors.error) },
+                            onClick = {
+                                showMenu = false
+                                showDeleteConfirm = true
+                            },
+                        )
+                    }
                 }
             },
         )
@@ -153,6 +169,7 @@ fun TransactionDetailScreen(
                     EqButton(
                         text = "Editar",
                         onClick = { onEditClicked(state.id) },
+                        variant = EqButtonVariant.SECONDARY,
                         enabled = !state.isDeleting,
                         modifier = Modifier.padding(vertical = Spacing.base),
                     )
@@ -189,9 +206,9 @@ private fun AmountHeaderSection(state: TransactionDetailUiState) {
             modifier = Modifier.padding(top = Spacing.sm),
         )
         val subtitle = if (state.isInstallment) {
-            "Cuota ${state.installmentIndex} de ${state.installmentCount}" + (state.categoryName?.let { " · $it" } ?: "")
+            "Cuota ${state.installmentIndex} de ${state.installmentCount}" + (state.note?.takeIf { it.isNotBlank() }?.let { " · $it" } ?: "")
         } else {
-            state.categoryName ?: state.typeLabel
+            state.classificationLabel + (state.note?.takeIf { it.isNotBlank() }?.let { " · $it" } ?: "")
         }
         Text(text = subtitle, style = EquilibrioTheme.typography.body, color = colors.inkMuted, modifier = Modifier.padding(top = Spacing.xs))
         StatusBadge(label = state.statusLabel, isScheduled = state.isScheduled)

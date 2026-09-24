@@ -1,6 +1,7 @@
 package mx.equilibrio.feature.home
 
 import kotlinx.datetime.LocalDate
+import mx.equilibrio.domain.model.Classification
 import mx.equilibrio.domain.model.RecurrenceFrequency
 import mx.equilibrio.domain.model.TransactionKind
 import mx.equilibrio.domain.model.TransactionStatus
@@ -23,6 +24,7 @@ data class TransactionDetailUiState(
     val amountCents: Long = 0,
     val occurredAt: LocalDate? = null,
     val note: String? = null,
+    val classification: Classification? = null,
     val accountName: String? = null,
     val categoryName: String? = null,
     val categoryIcon: String? = null,
@@ -51,6 +53,18 @@ data class TransactionDetailUiState(
             isRecurringOccurrence -> "Ingreso recurrente"
             isExpense -> "Gasto"
             else -> "Ingreso"
+        }
+
+    /** Fijo/Variable/Esencial/Recreativo — igual criterio que `TransactionUi.label` en HomeUiState. */
+    val classificationLabel: String
+        get() = if (isSavings) {
+            "Ahorro"
+        } else when (classification) {
+            Classification.FIXED -> "Fijo"
+            Classification.VARIABLE -> "Variable"
+            Classification.ESSENTIAL -> "Esencial"
+            Classification.RECREATIONAL -> "Recreativo"
+            null -> "Transferencia"
         }
 
     val recurrenceLabel: String?

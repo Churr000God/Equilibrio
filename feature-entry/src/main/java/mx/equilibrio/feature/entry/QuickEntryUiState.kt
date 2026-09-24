@@ -60,6 +60,9 @@ data class QuickEntryUiState(
     val installmentCount: Int = 6,
     val isRecurring: Boolean = false,
     val recurrenceFrequency: RecurrenceFrequency = RecurrenceFrequency.MONTHLY,
+    /** Solo al editar: si la transacción cargada YA es una ocurrencia recurrente — informativo,
+     * nunca editable acá (ver comentario en `EditFormSection` de QuickEntryScreen.kt). */
+    val editingIsRecurringOccurrence: Boolean = false,
 ) {
     val amountCents: Long
         get() = amountInput.toDoubleOrNull()?.let { (it * 100).toLong() } ?: 0L

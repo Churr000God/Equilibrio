@@ -93,6 +93,7 @@ class QuickEntryViewModel @Inject constructor(
                         isEditing = true,
                         status = existing.status,
                         viewTab = EntryViewTab.VIEW,
+                        editingIsRecurringOccurrence = existing.recurringSeriesId != null,
                         loadedSnapshot = EntrySnapshot(
                             amountInput = amountInput,
                             classification = existing.classification,

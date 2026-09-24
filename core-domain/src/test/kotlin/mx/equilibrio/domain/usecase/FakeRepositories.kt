@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.LocalDate
 import mx.equilibrio.domain.model.Account
+import mx.equilibrio.domain.model.AccountType
 import mx.equilibrio.domain.model.Period
 import mx.equilibrio.domain.model.PeriodState
 import mx.equilibrio.domain.model.RecurringTransaction
@@ -21,6 +22,7 @@ import mx.equilibrio.domain.repository.UserRepository
 
 /** Fake mínimo para probar los use cases de login sin depender de UserRepositoryImpl. */
 class FakeUserRepository(
+    private val currentUser: User? = null,
     private var signInResult: Result<User> = Result.failure(IllegalStateException("no configurado")),
     private var registerResult: Result<User> = Result.failure(IllegalStateException("no configurado")),
 ) : UserRepository {
@@ -30,7 +32,7 @@ class FakeUserRepository(
     var lastRegisterArgs: Triple<String?, String, String>? = null
         private set
 
-    override suspend fun getCurrentUser(): User? = null
+    override suspend fun getCurrentUser(): User? = currentUser
     override fun observeCurrentUser(): Flow<User?> = MutableStateFlow(null)
 
     override suspend fun signInWithGoogle(
@@ -70,7 +72,7 @@ class FakeAccountRepository(
     private val accountsById: Map<String, Account> = emptyMap(),
 ) : AccountRepository {
     override fun observeAll(): Flow<List<Account>> = MutableStateFlow(accountsById.values.toList())
-    override suspend fun count(): Int = accountsById.size
+    override suspend fun countNonCash(): Int = accountsById.values.count { it.type != AccountType.CASH }
     override suspend fun getById(id: String): Account? = accountsById[id]
     override suspend fun upsert(account: Account) = throw NotImplementedError("no usado en estos tests")
     override suspend fun delete(id: String) = throw NotImplementedError("no usado en estos tests")

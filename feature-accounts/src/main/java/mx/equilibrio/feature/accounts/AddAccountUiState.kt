@@ -23,7 +23,11 @@ data class AddAccountUiState(
     val isSaving: Boolean = false,
     val saved: Boolean = false,
     val freemiumLimitReached: Boolean = false,
+    /** El plan FREE ya no admite más cuentas BANK/CREDIT_CARD; solo Efectivo. */
+    val nonCashLimitReached: Boolean = false,
 ) {
+    val blockedByFreemium: Boolean get() = nonCashLimitReached && type != AccountType.CASH
+
     val balanceCents: Long? get() = amountToCentsOrNull(balanceInput)
     val creditLimitCents: Long? get() = amountToCentsOrNull(creditLimitInput)
     val statementDay: Int? get() = statementDayInput.toIntOrNull()
@@ -31,7 +35,7 @@ data class AddAccountUiState(
     val lastDigits: Int? get() = lastDigitsInput.toIntOrNull()
 
     val canSave: Boolean
-        get() = !isSaving && validate() == null
+        get() = !isSaving && !blockedByFreemium && validate() == null
 }
 
 private fun amountToCentsOrNull(input: String): Long? =

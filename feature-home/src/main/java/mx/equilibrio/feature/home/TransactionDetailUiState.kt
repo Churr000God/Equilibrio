@@ -39,11 +39,17 @@ data class TransactionDetailUiState(
     val isPausingRecurring: Boolean = false,
     val isDeleting: Boolean = false,
     val deleted: Boolean = false,
+    val isConfirming: Boolean = false,
+    val confirmError: String? = null,
 ) {
     val isInstallment: Boolean get() = installmentPlanId != null
     val isRecurringOccurrence: Boolean get() = recurringSeriesId != null
     val isExpense: Boolean get() = kind == TransactionKind.EXPENSE
     val isScheduled: Boolean get() = status == TransactionStatus.SCHEDULED
+
+    /** Confirmar directo desde el detalle (issue #9); las cuotas se liquidan con su periodo, no a mano. */
+    val showConfirm: Boolean get() = isScheduled && !isInstallment
+    val isFutureDated: Boolean get() = occurredAt?.let { it > today() } ?: false
 
     val typeLabel: String
         get() = when {
@@ -83,4 +89,5 @@ data class TransactionDetailUiState(
 sealed interface TransactionDetailEvent {
     data object DeleteConfirmed : TransactionDetailEvent
     data object StopRecurringConfirmed : TransactionDetailEvent
+    data object ConfirmClicked : TransactionDetailEvent
 }

@@ -977,12 +977,21 @@ private fun TransactionViewSection(
         }
 
         if (state.status == TransactionStatus.SCHEDULED) {
+            val canConfirm = state.occurredAt <= today()
             EqButton(
                 text = "Confirmar",
                 onClick = onConfirmClicked,
+                enabled = canConfirm,
                 loading = state.isConfirming,
                 modifier = Modifier.padding(top = Spacing.base),
             )
+            if (!canConfirm) {
+                Text(
+                    text = "No se puede confirmar con fecha futura",
+                    style = EquilibrioTheme.typography.caption,
+                    color = EquilibrioTheme.colors.inkMuted,
+                )
+            }
             state.confirmError?.let { EqInlineValidation(it) }
         }
     }

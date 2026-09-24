@@ -38,6 +38,7 @@ import mx.equilibrio.ui.components.CategoryIcons
 import mx.equilibrio.ui.components.EqAmount
 import mx.equilibrio.ui.components.EqButton
 import mx.equilibrio.ui.components.EqButtonVariant
+import mx.equilibrio.ui.components.EqInlineValidation
 import mx.equilibrio.ui.components.EqCard
 import mx.equilibrio.ui.components.EqDestructiveDialog
 import mx.equilibrio.ui.components.EqProgressBar
@@ -171,8 +172,30 @@ fun TransactionDetailScreen(
                         onClick = { onEditClicked(state.id) },
                         variant = EqButtonVariant.SECONDARY,
                         enabled = !state.isDeleting,
-                        modifier = Modifier.padding(vertical = Spacing.base),
+                        modifier = Modifier.padding(top = Spacing.base, bottom = if (state.showConfirm) 0.dp else Spacing.base),
                     )
+                }
+
+                if (state.showConfirm) {
+                    Column(
+                        modifier = Modifier.padding(bottom = Spacing.base),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                    ) {
+                        EqButton(
+                            text = "Confirmar",
+                            onClick = { viewModel.onEvent(TransactionDetailEvent.ConfirmClicked) },
+                            enabled = !state.isFutureDated && !state.isDeleting,
+                            loading = state.isConfirming,
+                        )
+                        if (state.isFutureDated) {
+                            Text(
+                                text = "No se puede confirmar con fecha futura",
+                                style = EquilibrioTheme.typography.caption,
+                                color = EquilibrioTheme.colors.inkMuted,
+                            )
+                        }
+                        state.confirmError?.let { EqInlineValidation(it) }
+                    }
                 }
             }
         }

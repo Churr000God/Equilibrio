@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -62,10 +63,14 @@ fun EqBottomNav(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         EqNavDestination.entries.forEach { destination ->
+            val isSelected = destination == selected
             EqBottomNavItem(
                 destination = destination,
-                isSelected = destination == selected,
+                isSelected = isSelected,
                 onClick = { onSelect(destination) },
+                // La pestaña activa (con texto) solo toma el espacio que sobra: en pantallas
+                // angostas o con fuente grande su texto se corta en vez de empujar a los demás iconos.
+                modifier = if (isSelected) Modifier.weight(1f, fill = false) else Modifier,
             )
         }
     }
@@ -102,7 +107,7 @@ private fun EqBottomNavItem(
                 style = EquilibrioTheme.typography.label,
                 color = tint,
                 maxLines = 1,
-                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

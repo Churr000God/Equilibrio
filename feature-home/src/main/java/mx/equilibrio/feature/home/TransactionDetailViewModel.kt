@@ -16,6 +16,7 @@ import mx.equilibrio.domain.model.Account
 import mx.equilibrio.domain.model.Category
 import mx.equilibrio.domain.model.RecurringTransaction
 import mx.equilibrio.domain.model.TransactionStatus
+import mx.equilibrio.domain.usecase.ConfirmTransaction
 import mx.equilibrio.domain.usecase.DeleteInstallmentPlan
 import mx.equilibrio.domain.usecase.DeleteTransaction
 import mx.equilibrio.domain.usecase.GetCategories
@@ -27,6 +28,7 @@ import javax.inject.Inject
 
 private data class DeleteState(val isDeleting: Boolean = false, val deleted: Boolean = false)
 private data class PauseState(val isPausing: Boolean = false)
+private data class ConfirmState(val isConfirming: Boolean = false, val error: String? = null)
 
 @HiltViewModel
 class TransactionDetailViewModel @Inject constructor(
@@ -37,6 +39,7 @@ class TransactionDetailViewModel @Inject constructor(
     private val getRecurringTransaction: GetRecurringTransaction,
     private val deleteTransaction: DeleteTransaction,
     private val deleteInstallmentPlan: DeleteInstallmentPlan,
+    private val confirmTransaction: ConfirmTransaction,
     private val pauseRecurringTransaction: PauseRecurringTransaction,
 ) : ViewModel() {
 
@@ -44,6 +47,7 @@ class TransactionDetailViewModel @Inject constructor(
 
     private val _deleteState = MutableStateFlow(DeleteState())
     private val _pauseState = MutableStateFlow(PauseState())
+    private val _confirmState = MutableStateFlow(ConfirmState())
 
     /** Lectura puntual (no reactiva): el `recurringSeriesId` de una transacción no cambia en la
      * vida de esta pantalla — se refresca a mano después de pausar, en [stopRecurring]. */
@@ -63,8 +67,8 @@ class TransactionDetailViewModel @Inject constructor(
         getCategories(),
         observeAccounts(),
         _recurringSeries,
-        combine(_deleteState, _pauseState, ::Pair),
-    ) { transactions, categories, accounts, series, (deleteState, pauseState) ->
+        combine(_deleteState, _pauseState, _confirmState, ::Triple),
+    ) { transactions, categories, accounts, series, (deleteState, pauseState, confirmState) ->
         val target = transactions.find { it.id == transactionId }
             ?: return@combine TransactionDetailUiState(isLoading = false, found = false, deleted = deleteState.deleted)
 
@@ -106,6 +110,8 @@ class TransactionDetailViewModel @Inject constructor(
             isPausingRecurring = pauseState.isPausing,
             isDeleting = deleteState.isDeleting,
             deleted = deleteState.deleted,
+            isConfirming = confirmState.isConfirming,
+            confirmError = confirmState.error,
         )
     }
         .stateIn(
@@ -118,6 +124,26 @@ class TransactionDetailViewModel @Inject constructor(
         when (event) {
             TransactionDetailEvent.DeleteConfirmed -> delete()
             TransactionDetailEvent.StopRecurringConfirmed -> stopRecurring()
+            TransactionDetailEvent.ConfirmClicked -> confirm()
+        }
+    }
+
+    private fun confirm() {
+        val current = state.value
+        if (!current.showConfirm || current.isConfirming) return
+        _confirmState.value = ConfirmState(isConfirming = true)
+        viewModelScope.launch {
+            // ConfirmTransaction rechaza fechas futuras (issue #6); el botón ya viene deshabilitado
+            // en ese caso, esto solo cubre la carrera con el cambio de día.
+            val error = try {
+                confirmTransaction(current.id, today())
+                null
+            } catch (e: IllegalArgumentException) {
+                e.message ?: "No se pudo confirmar el movimiento."
+            } catch (e: IllegalStateException) {
+                e.message ?: "No se pudo confirmar el movimiento."
+            }
+            _confirmState.value = ConfirmState(error = error)
         }
     }
 

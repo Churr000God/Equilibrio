@@ -4,6 +4,117 @@ Registro de avance funcional de Equilibrio, por sesión de trabajo. Complementa
 `PLAN_DESARROLLO.md` (que describe el diseño objetivo) con lo que ya está
 construido.
 
+## 2026-09-24 — Freemium, comentarios de código, daltonismo, logo de marca
+
+**Merges de ramas externas** (PR #10, #11, #12, #13 — trabajo de otros
+integrantes del equipo, verificado y reconciliado por el orquestador antes de
+mergear)
+- PR #10 `feature/home-dashboard` (issues #4/#5/#6/#8/#9): cuenta "Efectivo"
+  sembrada ya no cuenta para el límite del plan FREE (FREE = Efectivo + 2
+  cuentas banco/tarjeta); aviso de límite al abrir "Nueva cuenta" en vez de al
+  guardar; `ConfirmTransaction` rechaza fechas futuras en el dominio (no solo
+  en la UI) y el detalle de una transacción programada gana un botón
+  "Confirmar". **Conflicto real encontrado**: la rama del PR era anterior a
+  que este equipo agregara la pestaña "Transacciones" a la barra inferior —
+  el auto-merge de git la borró en 3 lugares (`EqBottomNav.kt`,
+  `EquilibrioNavHost.kt` x2) SIN marcar conflicto de texto. Se restauró a
+  mano tras revisar archivo por archivo contra ambas puntas del merge; el fix
+  de overflow de texto que sí traía el PR se conservó.
+- PR #11 `feature/daltonismo-fijo`: soporte de daltonismo (paleta alternativa
+  en `Color.kt`/`Theme.kt`), con una corrección propia del equipo externo
+  (`EquilibrioColors.onGradient` se había perdido en su propio merge —
+  commit `2950c32` lo restaura).
+- PR #12 `feature/logo-branding`: ícono adaptativo con el logo de marca
+  (capa monochrome Android 13+, ícono Play Store), splash animado
+  (`AnimatedVectorDrawable`), `EqLogo`/`EqPremiumBadge`/`EqIllustration`
+  nuevos en `:core-ui`, `EqEmptyState` acepta ilustración de marca (Inicio,
+  Transacciones, Metas, Reportes, Categorías, Búsqueda), Login con logo,
+  sello Premium en el aviso de límite FREE.
+- PR #13 "Comentado": pasada de comentarios de documentación sobre archivos
+  ya existentes (auth, migraciones, DAOs), sin cambios de lógica.
+
+**Verificación**: build completo (`compileDebugKotlin
+compileDebugUnitTestKotlin testDebugUnitTest :core-domain:test
+:core-data:testDebugUnitTest`) en verde después de cada merge.
+
+## 2026-09-23/24 — Transacciones recurrentes (solo efectivo/débito)
+
+- Plantilla en tabla propia (`recurring_transactions`, migración Room
+  v13→v14) + columna `transactions.recurring_series_id`. Deliberadamente
+  opuesto a "compras a meses": pausar o borrar la serie NUNCA toca las
+  ocurrencias ya generadas (son movimientos normales, editables/borrables
+  individualmente).
+- Frecuencias: semanal, quincenal, mensual (ancla por día del mes, reusa
+  `addMonthsClamped` para no derivar el ancla tras un mes corto).
+- **Generación de la siguiente ocurrencia**: se dispara al confirmar
+  manualmente la ocurrencia anterior (`ConfirmTransaction`), no por
+  auto-confirmación al vencer la fecha — corregido en base a feedback
+  explícito del usuario tras una primera implementación con auto-confirm.
+  `GenerateDueRecurringTransactions` quedó como red de seguridad: solo
+  materializa la primera ocurrencia de una serie que todavía no generó
+  ninguna.
+- Se agrega desde QuickEntry (gasto/ingreso, no transferencias ni tarjeta);
+  el detalle de movimiento muestra la frecuencia y permite "Dejar de
+  repetir".
+
+## 2026-09-23 — Saldo actual vs Saldo proyectado
+
+- Antes había dos cálculos de saldo distintos según la pantalla (Inicio vs
+  Transacciones), ninguno correcto: uno sumaba transacciones de tarjeta como
+  si fueran efectivo (doble conteo al pagar un periodo), el otro excluía
+  tarjetas por completo. Unificado en un solo `ObserveBalance`.
+- **Saldo actual** = solo efectivo/banco (`COMPLETED` + saldo inicial).
+  **Saldo proyectado** = eso, más/menos transacciones `SCHEDULED` de
+  efectivo/banco, menos el total a pagar de todas las tarjetas (todos los
+  periodos no-`CLOSED`, cuotas futuras incluidas — no el máximo de un solo
+  periodo, que es una regla de límite de crédito distinta).
+- Selector de mes en Transacciones ya no topa al mes actual: permite
+  navegar hasta el mes más lejano que tenga alguna transacción.
+
+## 2026-09-23 — Rediseño de Transacciones (lista, detalle, filtros, búsqueda, editar)
+
+- Mockup de diseño generado con pen.dev (`designs/transacciones.pen`),
+  aprobado por el usuario antes de implementar.
+- Lista agrupada por día, tabs Todos/Gastos/Ingresos/Programadas, tarjeta de
+  saldo con Ingresos/Gastos del mes.
+- Pantalla de detalle nueva (antes se entraba directo a editar): plan de
+  cuotas con progreso si es una cuota, menú de eliminar, botón editar.
+- Pantallas nuevas de Filtros (alcance de fecha, tipo, cuenta, categoría,
+  estado, con conteo de resultados en vivo — comparte el mismo ViewModel que
+  la lista vía scope del nav graph) y Búsqueda (por nota/categoría/cuenta,
+  búsquedas recientes en memoria de sesión).
+- Editar movimiento restyleado a filas tipo lista (Descripción, Categoría,
+  Cuenta, Fecha); toggle Confirmada deshabilitado con fecha futura.
+- Fix de raíz de un bug de superposición visual que afectaba 14 pantallas:
+  `Scaffold(topBar=...)` + `calculateTopPadding()` tenía un desajuste de
+  medición — reemplazado por `Column` secuencial (topBar primero, contenido
+  después), elimina la fuente del bug en vez de compensarla.
+
+## 2026-09-22/23 — Categorías: edición, eliminación, presupuesto y detalle
+
+- Bug de la versión anterior: no se podían editar ni eliminar categorías, y
+  las de ingreso/egreso salían mezcladas. Mockup de diseño generado con
+  pen.dev (`designs/categorias.pen`), aprobado antes de implementar.
+- Tabs Ingreso/Gasto con selector de mes y totales por categoría.
+- Presupuesto mensual opcional por categoría (migración Room v12→v13,
+  `monthly_budget_cents`).
+- Pantalla de detalle de categoría (mes actual, movimientos recientes,
+  progreso de presupuesto).
+- Borrado con dos opciones: reasignar movimientos a una categoría "Otros"
+  (creada bajo demanda si no existe) o eliminarlos en cascada — nunca una
+  cascada silenciosa por defecto.
+
+## 2026-09-22 — Fix fecha futura + Compras a meses
+
+- Una transacción `CONFIRMADA` (`COMPLETED`) nunca puede tener fecha futura
+  — bloqueado tanto en dominio (`SaveTransaction`) como en la UI (selector
+  de fecha al editar).
+- Compras a meses (installments): `SaveInstallmentPurchase` genera todas las
+  cuotas de una compra por adelantado, vinculadas por `installmentPlanId`,
+  validadas de una sola vez contra el límite de crédito proyectado
+  (`CreditLimitRules`). No editable individualmente — solo se borra el plan
+  completo. Migración Room v11→v12.
+
 ## 2026-09-21 (tarde) — Metas y Reportes (PR #3, `feature/metas-reportes`)
 
 **Metas de ahorro (RF08)**

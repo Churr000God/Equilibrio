@@ -28,6 +28,17 @@ class AddAccountViewModel @Inject constructor(
     private val _state = MutableStateFlow(AddAccountUiState())
     val state: StateFlow<AddAccountUiState> = _state.asStateFlow()
 
+    init {
+        // Avisa del límite FREE al entrar, antes de que el usuario llene el formulario (issue #5).
+        viewModelScope.launch {
+            if (checkFreemiumLimit(AccountType.BANK) == FreemiumResult.LIMIT_REACHED) {
+                _state.update {
+                    it.copy(type = AccountType.CASH, nonCashLimitReached = true, freemiumLimitReached = true)
+                }
+            }
+        }
+    }
+
     fun onEvent(event: AddAccountEvent) {
         when (event) {
             is AddAccountEvent.TypeChanged -> _state.update {

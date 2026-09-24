@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mx.equilibrio.domain.model.AccountType
+import mx.equilibrio.ui.components.EqAlertBanner
 import mx.equilibrio.ui.components.EqButton
 import mx.equilibrio.ui.components.EqColorSlotPicker
 import mx.equilibrio.ui.components.EqInfoDialog
@@ -68,6 +69,13 @@ fun AddAccountScreen(
                 selectedIndex = TYPE_OPTIONS.indexOfFirst { it.second == state.type },
                 onSelect = { index -> viewModel.onEvent(AddAccountEvent.TypeChanged(TYPE_OPTIONS[index].second)) },
             )
+
+            if (state.blockedByFreemium) {
+                EqAlertBanner(
+                    message = "Llegaste al límite de 2 cuentas de banco o tarjeta del plan FREE. Puedes agregar cuentas de Efectivo.",
+                    onDismiss = { viewModel.onEvent(AddAccountEvent.TypeChanged(AccountType.CASH)) },
+                )
+            }
 
             EqTextField(
                 value = state.name,
